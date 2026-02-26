@@ -1,0 +1,189 @@
+{
+  "design_system": {
+    "identity": {
+      "name": "NailCost Pro",
+      "vibe": "Minimalist, Elegant, Professional, Trustworthy",
+      "archetype": "Organic & Earthy",
+      "emotion": "Clarity, Control, Aspirations"
+    },
+    "typography": {
+      "font_family": {
+        "headings": "Playfair Display, serif",
+        "body": "Manrope, sans-serif",
+        "mono": "JetBrains Mono, monospace"
+      },
+      "scale": {
+        "h1": "text-4xl md:text-5xl lg:text-6xl font-medium tracking-tight leading-tight",
+        "h2": "text-3xl md:text-4xl font-medium tracking-tight",
+        "h3": "text-2xl md:text-3xl font-medium tracking-normal",
+        "body_lg": "text-lg leading-relaxed",
+        "body_base": "text-base leading-relaxed text-stone-600",
+        "caption": "text-sm text-stone-500 uppercase tracking-widest"
+      },
+      "imports": [
+        "https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Manrope:wght@300;400;500;600;700&display=swap"
+      ]
+    },
+    "colors": {
+      "palette": {
+        "primary": {
+          "DEFAULT": "#A16E5E",
+          "foreground": "#FFFFFF",
+          "hover": "#8C5E50",
+          "light": "#D4B5AC",
+          "50": "#FDF8F7",
+          "100": "#F2EBE9",
+          "500": "#A16E5E",
+          "900": "#4A2E26"
+        },
+        "secondary": {
+          "DEFAULT": "#849686",
+          "foreground": "#FFFFFF",
+          "hover": "#6E8070",
+          "light": "#C3CDC4"
+        },
+        "background": {
+          "app": "#FAFAF9",
+          "card": "#FFFFFF",
+          "subtle": "#F5F5F4"
+        },
+        "text": {
+          "main": "#1C1917",
+          "muted": "#78716C",
+          "light": "#A8A29E"
+        },
+        "border": {
+          "DEFAULT": "#E7E5E4",
+          "focus": "#A16E5E"
+        },
+        "status": {
+          "success": "#849686",
+          "warning": "#D4A373",
+          "error": "#E11D48",
+          "info": "#7CA1B3"
+        }
+      },
+      "gradients": {
+        "hero": "linear-gradient(135deg, #FAFAF9 0%, #F5F5F4 100%)",
+        "card_hover": "linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(161,110,94,0.03) 100%)",
+        "gold_accent": "linear-gradient(45deg, #D4A373 0%, #E6CFA8 50%, #D4A373 100%)"
+      }
+    },
+    "layout": {
+      "spacing": {
+        "container_padding": "p-6 md:p-8 lg:p-12",
+        "section_gap": "gap-8 md:gap-12",
+        "card_padding": "p-6 md:p-8"
+      },
+      "grid": {
+        "dashboard": "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6",
+        "calculator": "grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12"
+      },
+      "radius": {
+        "card": "rounded-2xl",
+        "button": "rounded-full",
+        "input": "rounded-xl"
+      }
+    },
+    "components": {
+      "buttons": {
+        "primary": "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg transition-all duration-300 rounded-full px-8 py-3 font-medium tracking-wide text-sm uppercase",
+        "secondary": "bg-stone-100 text-stone-800 hover:bg-stone-200 transition-all duration-200 rounded-full px-6 py-3 font-medium text-sm",
+        "outline": "border-2 border-stone-200 text-stone-700 hover:border-primary hover:text-primary transition-all duration-200 rounded-full px-6 py-3 font-medium text-sm"
+      },
+      "cards": {
+        "default": "bg-white rounded-2xl border border-stone-100 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden",
+        "interactive": "bg-white rounded-2xl border border-stone-100 shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:-translate-y-1 transition-all duration-300 cursor-pointer group"
+      },
+      "inputs": {
+        "default": "bg-stone-50 border-0 ring-1 ring-stone-200 focus:ring-2 focus:ring-primary/50 rounded-xl px-4 py-3 text-stone-800 placeholder:text-stone-400 transition-all duration-200 font-sans"
+      }
+    },
+    "visual_enhancers": {
+      "shadows": {
+        "soft": "0 4px 20px -2px rgba(28, 25, 23, 0.05)",
+        "floating": "0 20px 40px -4px rgba(28, 25, 23, 0.08)"
+      },
+      "textures": {
+        "grain": "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E\")"
+      }
+    }
+  },
+  "assets": {
+    "images": [
+      {
+        "category": "hero_bg",
+        "url": "https://images.pexels.com/photos/5238077/pexels-photo-5238077.jpeg",
+        "description": "Minimalist white polish on textured surface, perfect for soft background headers"
+      },
+      {
+        "category": "nail_style_elegant",
+        "url": "https://images.pexels.com/photos/9393756/pexels-photo-9393756.jpeg",
+        "description": "Elegant red manicure with gold rings"
+      },
+      {
+        "category": "nail_art_creative",
+        "url": "https://images.unsplash.com/photo-1659990668491-9bcdc5b06338",
+        "description": "Artistic painted nails"
+      },
+      {
+        "category": "products_vibrant",
+        "url": "https://images.pexels.com/photos/29100941/pexels-photo-29100941.jpeg",
+        "description": "Vibrant nail polish bottles for Products section"
+      },
+      {
+        "category": "products_soft",
+        "url": "https://images.unsplash.com/photo-1616247380767-5ebadc9b869e",
+        "description": "Pink polish bottle on textile"
+      }
+    ],
+    "icons": {
+      "library": "lucide-react",
+      "style": "Stroke width 1.5px, color text-stone-600"
+    }
+  },
+  "implementation_instructions": {
+    "general": [
+      "Use 'Playfair Display' for all H1, H2, H3 headings. Import from Google Fonts in index.css.",
+      "Use 'Manrope' for all body text and UI elements.",
+      "Set the app background to #FAFAF9 (bg-stone-50).",
+      "Do NOT use default shadcn borders. Override with softer border-stone-200 or border-stone-100.",
+      "NO Authentication pages. The app should load directly into the Dashboard.",
+      "Use Context API or LocalStorage to persist data (Costs, Styles, etc.) between reloads.",
+      "Ensure all currency values are formatted as USD ($).",
+      "Language MUST be Spanish (Español)."
+    ],
+    "dashboard": [
+      "Implement a Bento Grid layout for the main dashboard.",
+      "Top left: 'Resumen de Ganancias' (Profit Summary) - Large card.",
+      "Top right: 'Alertas' (Stock low, Margin low) - List card.",
+      "Bottom: Quick actions (New Calculation, Add Product).",
+      "Use the 'grain' texture overlay on the Dashboard background for a premium feel."
+    ],
+    "calculator": [
+      "Split screen layout: Left side for inputs (Step-by-step or Accordion), Right side for 'Live Receipt' (Recibo en vivo).",
+      "The 'Live Receipt' should look like a physical paper receipt or a high-end invoice, floating on the screen.",
+      "Auto-calculate as user types."
+    ],
+    "products_styles": [
+      "Use masonry layout or grid for Nail Styles gallery.",
+      "Product list should be a clean table with 'pill' status badges for stock levels."
+    ],
+    "universal_guidelines": [
+      "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients",
+      "Don't make generic centered layouts, simplistic gradients, and uniform styling.",
+      "Create depth through layered design elements with z-index hierarchy",
+      "Use glass-morphism effects with backdrop filters (12-24px blur)",
+      "You MUST NOT apply universal transition. Eg: transition: all. This results in breaking transforms. Always add transitions for specific interactive elements like button, input excluding transforms",
+      "You MUST NOT center align the app container, ie do not add .App { text-align: center; } in the css file. This disrupts the human natural reading flow of text",
+      "Always use modern button styles like pill-shaped, or sharp button with interaction animations & color relevant to the app style",
+      "NEVER: use AI assistant Emoji characters like 🤖🧠💭💡🔮 for icons.",
+      "Every interaction needs micro-animations - hover states, transitions, parallax effects.",
+      "Use 2-3x more spacing than feels comfortable. Cramped designs look cheap.",
+      "Prioritize using pre-existing components from src/components/ui when applicable",
+      "Components MUST use named exports",
+      "Pages MUST use default exports",
+      "Use 'sonner' for toasts"
+    ]
+  }
+}
