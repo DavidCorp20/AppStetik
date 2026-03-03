@@ -9,20 +9,27 @@ import {
   Calculator, 
   FileText,
   Menu,
-  X
+  X,
+  Users,
+  Calendar,
+  BarChart3,
+  Target
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/clientes", icon: Users, label: "Clientes" },
+  { to: "/agenda", icon: Calendar, label: "Agenda" },
   { to: "/productos", icon: Package, label: "Productos" },
   { to: "/estilos", icon: Palette, label: "Estilos" },
   { to: "/disenos", icon: Sparkles, label: "Diseños" },
   { to: "/gastos", icon: Receipt, label: "Gastos" },
   { to: "/ganancias", icon: TrendingUp, label: "Ganancias" },
   { to: "/calculadora", icon: Calculator, label: "Calculadora" },
-  { to: "/reporte", icon: FileText, label: "Reporte" },
+  { to: "/reportes-mensuales", icon: BarChart3, label: "Reportes" },
+  { to: "/simulacion", icon: Target, label: "Simulación" },
 ];
 
 export const Layout = () => {

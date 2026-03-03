@@ -11,6 +11,10 @@ import { GastosPage } from "@/pages/GastosPage";
 import { GananciasPage } from "@/pages/GananciasPage";
 import { CalculadoraPage } from "@/pages/CalculadoraPage";
 import { ReportePage } from "@/pages/ReportePage";
+import { ClientesPage } from "@/pages/ClientesPage";
+import { AgendaPage } from "@/pages/AgendaPage";
+import { ReportesMensualesPage } from "@/pages/ReportesMensualesPage";
+import { SimulacionPage } from "@/pages/SimulacionPage";
 
 function App() {
   return (
@@ -26,6 +30,10 @@ function App() {
             <Route path="ganancias" element={<GananciasPage />} />
             <Route path="calculadora" element={<CalculadoraPage />} />
             <Route path="reporte" element={<ReportePage />} />
+            <Route path="clientes" element={<ClientesPage />} />
+            <Route path="agenda" element={<AgendaPage />} />
+            <Route path="reportes-mensuales" element={<ReportesMensualesPage />} />
+            <Route path="simulacion" element={<SimulacionPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

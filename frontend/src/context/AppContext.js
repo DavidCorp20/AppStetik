@@ -20,6 +20,9 @@ export const AppProvider = ({ children }) => {
   const [disenos, setDisenos] = useState([]);
   const [gastos, setGastos] = useState(null);
   const [configGanancias, setConfigGanancias] = useState(null);
+  const [clientes, setClientes] = useState([]);
+  const [citas, setCitas] = useState([]);
+  const [alertas, setAlertas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -28,12 +31,15 @@ export const AppProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      const [prodRes, estilosRes, disenosRes, gastosRes, ganRes] = await Promise.all([
+      const [prodRes, estilosRes, disenosRes, gastosRes, ganRes, clientesRes, citasRes, alertasRes] = await Promise.all([
         axios.get(`${API}/productos`),
         axios.get(`${API}/estilos`),
         axios.get(`${API}/disenos`),
         axios.get(`${API}/gastos`),
         axios.get(`${API}/ganancias/config`),
+        axios.get(`${API}/clientes`),
+        axios.get(`${API}/citas`),
+        axios.get(`${API}/alertas`),
       ]);
       
       setProductos(prodRes.data);
@@ -41,6 +47,9 @@ export const AppProvider = ({ children }) => {
       setDisenos(disenosRes.data);
       setGastos(gastosRes.data);
       setConfigGanancias(ganRes.data);
+      setClientes(clientesRes.data);
+      setCitas(citasRes.data);
+      setAlertas(alertasRes.data);
     } catch (err) {
       console.error('Error fetching data:', err);
       setError('Error al cargar los datos');
@@ -143,6 +152,89 @@ export const AppProvider = ({ children }) => {
     return res.data;
   };
 
+  // CRUD Clientes
+  const addCliente = async (cliente) => {
+    const res = await axios.post(`${API}/clientes`, cliente);
+    setClientes(prev => [...prev, res.data]);
+    return res.data;
+  };
+
+  const updateCliente = async (id, cliente) => {
+    const res = await axios.put(`${API}/clientes/${id}`, cliente);
+    setClientes(prev => prev.map(c => c.id === id ? res.data : c));
+    return res.data;
+  };
+
+  const deleteCliente = async (id) => {
+    await axios.delete(`${API}/clientes/${id}`);
+    setClientes(prev => prev.filter(c => c.id !== id));
+  };
+
+  // CRUD Citas
+  const addCita = async (cita) => {
+    const res = await axios.post(`${API}/citas`, cita);
+    setCitas(prev => [...prev, res.data]);
+    return res.data;
+  };
+
+  const updateCita = async (id, cita) => {
+    const res = await axios.put(`${API}/citas/${id}`, cita);
+    setCitas(prev => prev.map(c => c.id === id ? res.data : c));
+    return res.data;
+  };
+
+  const deleteCita = async (id) => {
+    await axios.delete(`${API}/citas/${id}`);
+    setCitas(prev => prev.filter(c => c.id !== id));
+  };
+
+  const getCitasProximas = async () => {
+    const res = await axios.get(`${API}/citas/proximas`);
+    return res.data;
+  };
+
+  // Servicios Realizados
+  const addServicio = async (servicio) => {
+    const res = await axios.post(`${API}/servicios`, servicio);
+    return res.data;
+  };
+
+  const getServicios = async (mes, anio) => {
+    let url = `${API}/servicios`;
+    if (mes && anio) {
+      url += `?mes=${mes}&anio=${anio}`;
+    }
+    const res = await axios.get(url);
+    return res.data;
+  };
+
+  // Reportes
+  const getReporteMensual = async (anio, mes) => {
+    const res = await axios.get(`${API}/reportes/mensual/${anio}/${mes}`);
+    return res.data;
+  };
+
+  const getComparativa = async () => {
+    const res = await axios.get(`${API}/reportes/comparativa`);
+    return res.data;
+  };
+
+  // Simulación
+  const simularIngresos = async (serviciosPorDia, diasTrabajo) => {
+    const res = await axios.post(`${API}/simulacion/mensual?servicios_por_dia=${serviciosPorDia}&dias_trabajo=${diasTrabajo}`);
+    return res.data;
+  };
+
+  // Refresh alertas
+  const refreshAlertas = async () => {
+    try {
+      const res = await axios.get(`${API}/alertas`);
+      setAlertas(res.data);
+    } catch (err) {
+      console.error('Error fetching alertas:', err);
+    }
+  };
+
   useEffect(() => {
     fetchAllData();
   }, [fetchAllData]);
@@ -153,6 +245,9 @@ export const AppProvider = ({ children }) => {
     disenos,
     gastos,
     configGanancias,
+    clientes,
+    citas,
+    alertas,
     loading,
     error,
     fetchAllData,
@@ -170,6 +265,19 @@ export const AppProvider = ({ children }) => {
     updateConfigGanancias,
     calcularPrecio,
     getReporte,
+    addCliente,
+    updateCliente,
+    deleteCliente,
+    addCita,
+    updateCita,
+    deleteCita,
+    getCitasProximas,
+    addServicio,
+    getServicios,
+    getReporteMensual,
+    getComparativa,
+    simularIngresos,
+    refreshAlertas,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

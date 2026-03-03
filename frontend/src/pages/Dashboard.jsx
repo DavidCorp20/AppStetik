@@ -3,6 +3,7 @@ import { useApp } from "@/context/AppContext";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { 
   Package, 
   Palette, 
@@ -14,7 +15,10 @@ import {
   DollarSign,
   Clock,
   Loader2,
-  Database
+  Database,
+  Users,
+  Calendar,
+  Bell
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -24,7 +28,10 @@ export default function Dashboard() {
     estilos, 
     disenos, 
     gastos, 
-    configGanancias, 
+    configGanancias,
+    clientes,
+    alertas,
+    getCitasProximas,
     loading, 
     seedData,
     getReporte 
@@ -32,9 +39,10 @@ export default function Dashboard() {
   
   const [reporte, setReporte] = useState(null);
   const [seeding, setSeeding] = useState(false);
+  const [citasProximas, setCitasProximas] = useState([]);
 
   useEffect(() => {
-    const fetchReporte = async () => {
+    const fetchData = async () => {
       if (estilos.length > 0) {
         try {
           const data = await getReporte();
@@ -43,9 +51,15 @@ export default function Dashboard() {
           console.error('Error fetching reporte:', err);
         }
       }
+      try {
+        const citas = await getCitasProximas();
+        setCitasProximas(citas);
+      } catch (err) {
+        console.error('Error fetching citas:', err);
+      }
     };
-    fetchReporte();
-  }, [estilos, getReporte]);
+    fetchData();
+  }, [estilos, getReporte, getCitasProximas]);
 
   const handleSeedData = async () => {
     setSeeding(true);
@@ -245,6 +259,39 @@ export default function Dashboard() {
 
         {/* Alerts & Quick Actions */}
         <div className="space-y-6">
+          {/* Citas Próximas */}
+          {citasProximas.length > 0 && (
+            <Card className="bg-blue-50 border-blue-200" data-testid="citas-proximas-card">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-lg text-blue-800" style={{ fontFamily: 'Playfair Display, serif' }}>
+                  <Bell className="w-5 h-5" />
+                  Citas Próximas
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {citasProximas.slice(0, 3).map((cita, idx) => (
+                  <div key={idx} className="p-3 bg-white rounded-xl border border-blue-100">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-stone-800">{cita.cliente_nombre}</p>
+                        <p className="text-xs text-stone-500">{cita.estilo_nombre}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium text-blue-700">{cita.hora}</p>
+                        <p className="text-xs text-stone-500">{cita.fecha}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <Link to="/agenda">
+                  <Button variant="link" className="p-0 h-auto text-blue-700">
+                    Ver agenda completa <ArrowRight className="w-3 h-3 ml-1" />
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Alerts */}
           <Card className="bg-white border-stone-100" data-testid="alerts-card">
             <CardHeader className="pb-2">
@@ -253,8 +300,24 @@ export default function Dashboard() {
                 Alertas
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              {isEmpty ? (
+            <CardContent className="space-y-2">
+              {alertas.length > 0 ? (
+                alertas.map((alerta, idx) => (
+                  <div key={idx} className={`p-3 rounded-xl border ${
+                    alerta.tipo === 'warning' ? 'bg-amber-50 border-amber-200' :
+                    alerta.tipo === 'error' ? 'bg-rose-50 border-rose-200' :
+                    'bg-blue-50 border-blue-200'
+                  }`}>
+                    <p className={`text-sm ${
+                      alerta.tipo === 'warning' ? 'text-amber-800' :
+                      alerta.tipo === 'error' ? 'text-rose-800' :
+                      'text-blue-800'
+                    }`}>
+                      {alerta.mensaje}
+                    </p>
+                  </div>
+                ))
+              ) : isEmpty ? (
                 <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
                   <p className="text-sm text-amber-800">
                     Comienza agregando productos y estilos para calcular tus costos.
@@ -263,7 +326,7 @@ export default function Dashboard() {
               ) : gastos && calcGastoTotal() === 0 ? (
                 <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
                   <p className="text-sm text-amber-800">
-                    No has configurado tus gastos operativos. Esto afecta el cálculo de precios.
+                    No has configurado tus gastos operativos.
                   </p>
                   <Link to="/gastos">
                     <Button variant="link" className="p-0 h-auto mt-1 text-amber-700">
