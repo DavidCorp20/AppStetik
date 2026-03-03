@@ -4,6 +4,11 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { 
   Package, 
   Palette, 
@@ -16,11 +21,101 @@ import {
   Clock,
   Loader2,
   Database,
-  Users,
-  Calendar,
-  Bell
+  Bell,
+  ChevronDown
 } from "lucide-react";
 import { toast } from "sonner";
+
+// Alerts Card Component with "Ver más" functionality
+const AlertsCard = ({ alertas, isEmpty, gastos, calcGastoTotal }) => {
+  const [showAll, setShowAll] = useState(false);
+  
+  const visibleAlertas = showAll ? alertas : alertas.slice(0, 3);
+  const hasMore = alertas.length > 3;
+
+  const getAlertStyle = (tipo) => {
+    switch (tipo) {
+      case 'warning':
+        return 'bg-amber-50 border-amber-200 text-amber-800';
+      case 'error':
+        return 'bg-rose-50 border-rose-200 text-rose-800';
+      default:
+        return 'bg-blue-50 border-blue-200 text-blue-800';
+    }
+  };
+
+  return (
+    <Card className="bg-white border-stone-100" data-testid="alerts-card">
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2 text-lg" style={{ fontFamily: 'Playfair Display, serif' }}>
+            <AlertTriangle className="w-5 h-5 text-amber-500" />
+            Alertas
+          </CardTitle>
+          {alertas.length > 0 && (
+            <Badge variant="secondary" className="bg-amber-100 text-amber-700">
+              {alertas.length}
+            </Badge>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {alertas.length > 0 ? (
+          <>
+            {visibleAlertas.map((alerta, idx) => (
+              <div 
+                key={idx} 
+                className={`p-3 rounded-xl border text-sm ${getAlertStyle(alerta.tipo)}`}
+              >
+                {alerta.mensaje}
+              </div>
+            ))}
+            
+            {hasMore && (
+              <Collapsible open={showAll} onOpenChange={setShowAll}>
+                <CollapsibleTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-center text-stone-500 hover:text-stone-700 h-8"
+                    data-testid="ver-mas-alertas"
+                  >
+                    <span className="text-sm">
+                      {showAll ? 'Ver menos' : `Ver más (${alertas.length - 3})`}
+                    </span>
+                    <ChevronDown className={`w-4 h-4 ml-1 transition-transform ${showAll ? 'rotate-180' : ''}`} />
+                  </Button>
+                </CollapsibleTrigger>
+              </Collapsible>
+            )}
+          </>
+        ) : isEmpty ? (
+          <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
+            <p className="text-sm text-amber-800">
+              Comienza agregando productos y estilos para calcular tus costos.
+            </p>
+          </div>
+        ) : gastos && calcGastoTotal() === 0 ? (
+          <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
+            <p className="text-sm text-amber-800">
+              No has configurado tus gastos operativos.
+            </p>
+            <Link to="/gastos">
+              <Button variant="link" className="p-0 h-auto mt-1 text-amber-700">
+                Configurar ahora <ArrowRight className="w-3 h-3 ml-1" />
+              </Button>
+            </Link>
+          </div>
+        ) : (
+          <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-200">
+            <p className="text-sm text-emerald-800">
+              Todo está configurado correctamente
+            </p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
 
 export default function Dashboard() {
   const { 
@@ -29,7 +124,6 @@ export default function Dashboard() {
     disenos, 
     gastos, 
     configGanancias,
-    clientes,
     alertas,
     getCitasProximas,
     loading, 
@@ -292,57 +386,13 @@ export default function Dashboard() {
             </Card>
           )}
 
-          {/* Alerts */}
-          <Card className="bg-white border-stone-100" data-testid="alerts-card">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-lg" style={{ fontFamily: 'Playfair Display, serif' }}>
-                <AlertTriangle className="w-5 h-5 text-amber-500" />
-                Alertas
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {alertas.length > 0 ? (
-                alertas.map((alerta, idx) => (
-                  <div key={idx} className={`p-3 rounded-xl border ${
-                    alerta.tipo === 'warning' ? 'bg-amber-50 border-amber-200' :
-                    alerta.tipo === 'error' ? 'bg-rose-50 border-rose-200' :
-                    'bg-blue-50 border-blue-200'
-                  }`}>
-                    <p className={`text-sm ${
-                      alerta.tipo === 'warning' ? 'text-amber-800' :
-                      alerta.tipo === 'error' ? 'text-rose-800' :
-                      'text-blue-800'
-                    }`}>
-                      {alerta.mensaje}
-                    </p>
-                  </div>
-                ))
-              ) : isEmpty ? (
-                <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
-                  <p className="text-sm text-amber-800">
-                    Comienza agregando productos y estilos para calcular tus costos.
-                  </p>
-                </div>
-              ) : gastos && calcGastoTotal() === 0 ? (
-                <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
-                  <p className="text-sm text-amber-800">
-                    No has configurado tus gastos operativos.
-                  </p>
-                  <Link to="/gastos">
-                    <Button variant="link" className="p-0 h-auto mt-1 text-amber-700">
-                      Configurar ahora <ArrowRight className="w-3 h-3 ml-1" />
-                    </Button>
-                  </Link>
-                </div>
-              ) : (
-                <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-200">
-                  <p className="text-sm text-emerald-800">
-                    Todo está configurado correctamente
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          {/* Alerts with "Ver más" */}
+          <AlertsCard 
+            alertas={alertas} 
+            isEmpty={isEmpty} 
+            gastos={gastos} 
+            calcGastoTotal={calcGastoTotal} 
+          />
 
           {/* Quick Actions */}
           <Card className="bg-white border-stone-100" data-testid="quick-actions">

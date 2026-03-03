@@ -131,14 +131,17 @@ export const Layout = () => {
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-stone-100">
         <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14">
-            {/* Logo - Simplified */}
-            <NavLink to="/" className="flex items-center gap-2" data-testid="logo-link">
-              <div className="w-8 h-8 rounded-lg bg-stone-800 flex items-center justify-center">
-                <span className="text-white font-semibold text-sm" style={{ fontFamily: 'Playfair Display, serif' }}>N</span>
+            {/* Logo */}
+            <NavLink to="/" className="flex items-center gap-2.5" data-testid="logo-link">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-stone-700 to-stone-900 flex items-center justify-center shadow-sm">
+                <Sparkles className="w-4 h-4 text-white" />
               </div>
-              <span className="text-lg font-medium text-stone-800 hidden sm:block" style={{ fontFamily: 'Playfair Display, serif' }}>
-                NailCost
-              </span>
+              <div className="hidden sm:flex items-baseline gap-1">
+                <span className="text-lg font-semibold text-stone-800" style={{ fontFamily: 'Playfair Display, serif' }}>
+                  NailCost
+                </span>
+                <span className="text-xs font-medium text-stone-400 uppercase tracking-wider">Pro</span>
+              </div>
             </NavLink>
 
             {/* Desktop Navigation */}
