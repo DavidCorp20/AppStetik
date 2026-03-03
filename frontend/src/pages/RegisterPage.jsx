@@ -186,7 +186,7 @@ export default function RegisterPage() {
 
             {/* Features */}
             <div className="mt-6 pt-4 border-t border-stone-100">
-              <p className="text-xs text-stone-500 mb-2">Plan Gratuito incluye:</p>
+              <p className="text-xs text-stone-500 mb-2">Plan Básico incluye:</p>
               <div className="grid grid-cols-2 gap-1">
                 {features.map((feature, idx) => (
                   <div key={idx} className="flex items-center gap-1 text-xs text-stone-600">

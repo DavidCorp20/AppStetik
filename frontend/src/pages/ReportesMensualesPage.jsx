@@ -47,10 +47,19 @@ import {
   ChevronRight
 } from "lucide-react";
 import { toast } from "sonner";
+import { PremiumGate } from "@/components/PremiumGate";
 
 const COLORS = ['#A16E5E', '#849686', '#D4A373', '#7CA1B3', '#E6CFA8', '#C3CDC4'];
 
 export default function ReportesMensualesPage() {
+  return (
+    <PremiumGate feature="Los reportes mensuales">
+      <ReportesMensualesContent />
+    </PremiumGate>
+  );
+}
+
+function ReportesMensualesContent() {
   const { getReporteMensual, getComparativa, estilos, clientes } = useApp();
   const [loading, setLoading] = useState(true);
   const [reporte, setReporte] = useState(null);

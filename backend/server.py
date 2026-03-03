@@ -55,6 +55,10 @@ class PlanType(str, Enum):
     FREE = "free"
     PREMIUM = "premium"
 
+class UserRole(str, Enum):
+    USER = "user"
+    ADMIN = "admin"
+
 # ======================
 # AUTH MODELS
 # ======================
@@ -76,6 +80,7 @@ class UserResponse(BaseModel):
     nombre_negocio: str
     telefono: str
     plan: PlanType
+    role: str = "user"
     created_at: str
 
 class TokenResponse(BaseModel):
@@ -400,6 +405,7 @@ async def register(user_data: UserRegister):
         "nombre_negocio": user_data.nombre_negocio,
         "telefono": user_data.telefono,
         "plan": "free",
+        "role": "user",
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     
@@ -417,6 +423,7 @@ async def register(user_data: UserRegister):
             nombre_negocio=user_doc["nombre_negocio"],
             telefono=user_doc["telefono"],
             plan=user_doc["plan"],
+            role=user_doc["role"],
             created_at=user_doc["created_at"]
         )
     )
@@ -441,6 +448,7 @@ async def login(credentials: UserLogin):
             nombre_negocio=user.get("nombre_negocio", ""),
             telefono=user.get("telefono", ""),
             plan=user.get("plan", "free"),
+            role=user.get("role", "user"),
             created_at=user["created_at"]
         )
     )
@@ -454,6 +462,7 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         nombre_negocio=current_user.get("nombre_negocio", ""),
         telefono=current_user.get("telefono", ""),
         plan=current_user.get("plan", "free"),
+        role=current_user.get("role", "user"),
         created_at=current_user["created_at"]
     )
 
@@ -507,6 +516,65 @@ async def upgrade_plan(current_user: dict = Depends(get_current_user)):
         {"$set": {"plan": "premium"}}
     )
     return {"message": "Plan actualizado a Premium", "plan": "premium"}
+
+# ======================
+# ADMIN ENDPOINTS
+# ======================
+async def get_admin_user(current_user: dict = Depends(get_current_user)):
+    """Check if user is admin"""
+    if current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Acceso denegado. Se requiere rol de administrador.")
+    return current_user
+
+@api_router.get("/admin/users")
+async def admin_get_users(admin: dict = Depends(get_admin_user)):
+    """Get all users (admin only)"""
+    users = await db.users.find({}, {"_id": 0, "password": 0}).to_list(1000)
+    
+    # Add usage stats for each user
+    for user in users:
+        user_id = user["id"]
+        user["stats"] = {
+            "productos": await db.productos.count_documents({"user_id": user_id}),
+            "estilos": await db.estilos.count_documents({"user_id": user_id}),
+            "disenos": await db.disenos.count_documents({"user_id": user_id}),
+            "clientes": await db.clientes.count_documents({"user_id": user_id}),
+        }
+    
+    return users
+
+@api_router.put("/admin/users/{user_id}/plan")
+async def admin_update_user_plan(user_id: str, plan: str, admin: dict = Depends(get_admin_user)):
+    """Update a user's plan (admin only)"""
+    if plan not in ["free", "premium"]:
+        raise HTTPException(status_code=400, detail="Plan inválido. Usa 'free' o 'premium'.")
+    
+    result = await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"plan": plan}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    return {"message": f"Plan actualizado a {plan}", "user_id": user_id, "plan": plan}
+
+@api_router.get("/admin/stats")
+async def admin_get_stats(admin: dict = Depends(get_admin_user)):
+    """Get overall system stats (admin only)"""
+    total_users = await db.users.count_documents({})
+    premium_users = await db.users.count_documents({"plan": "premium"})
+    free_users = await db.users.count_documents({"plan": "free"})
+    
+    return {
+        "total_users": total_users,
+        "premium_users": premium_users,
+        "free_users": free_users,
+        "total_productos": await db.productos.count_documents({}),
+        "total_estilos": await db.estilos.count_documents({}),
+        "total_clientes": await db.clientes.count_documents({}),
+        "total_citas": await db.citas.count_documents({}),
+    }
 
 # ======================
 # ENDPOINTS - Productos (Protected)

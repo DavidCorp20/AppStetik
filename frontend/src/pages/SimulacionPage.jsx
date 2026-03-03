@@ -33,8 +33,17 @@ import {
   Sparkles
 } from "lucide-react";
 import { toast } from "sonner";
+import { PremiumGate } from "@/components/PremiumGate";
 
 export default function SimulacionPage() {
+  return (
+    <PremiumGate feature="La simulación de ingresos">
+      <SimulacionContent />
+    </PremiumGate>
+  );
+}
+
+function SimulacionContent() {
   const { simularIngresos, configGanancias, loading } = useApp();
   const [serviciosPorDia, setServiciosPorDia] = useState(3);
   const [diasTrabajo, setDiasTrabajo] = useState(22);

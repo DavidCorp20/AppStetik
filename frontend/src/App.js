@@ -18,6 +18,7 @@ import { ReportesMensualesPage } from "@/pages/ReportesMensualesPage";
 import { SimulacionPage } from "@/pages/SimulacionPage";
 import { LoginPage } from "@/pages/LoginPage";
 import { RegisterPage } from "@/pages/RegisterPage";
+import { AdminPage } from "@/pages/AdminPage";
 import { Loader2 } from "lucide-react";
 
 // Protected Route wrapper
@@ -85,6 +86,7 @@ function AppRoutes() {
           <Route path="agenda" element={<AgendaPage />} />
           <Route path="reportes-mensuales" element={<ReportesMensualesPage />} />
           <Route path="simulacion" element={<SimulacionPage />} />
+          <Route path="admin" element={<AdminPage />} />
         </Route>
       </Route>
 

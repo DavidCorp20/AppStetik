@@ -18,7 +18,8 @@ import {
   Wallet,
   LogOut,
   User,
-  Crown
+  Crown,
+  Shield
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -168,10 +169,21 @@ const UserMenu = () => {
                 "text-xs px-2 py-0.5 rounded-full",
                 isPremium ? "bg-amber-100 text-amber-700" : "bg-stone-100 text-stone-600"
               )}>
-                Plan {isPremium ? "Premium" : "Gratuito"}
+                Plan {isPremium ? "Premium" : "Básico"}
               </span>
             </div>
           </div>
+          {user?.role === "admin" && (
+            <NavLink
+              to="/admin"
+              onClick={() => setOpen(false)}
+              className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-violet-600 hover:bg-violet-50 transition-colors"
+              data-testid="admin-link"
+            >
+              <Shield className="w-4 h-4" />
+              <span>Panel Admin</span>
+            </NavLink>
+          )}
           <button
             onClick={handleLogout}
             className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
