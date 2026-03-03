@@ -6,7 +6,7 @@ Calculadora Inteligente de Costos para Uñas - Sistema profesional de cálculo d
 ## Preferencias del Usuario
 - **Idioma:** Español
 - **Moneda:** USD
-- **Almacenamiento:** Solo sesión (sin autenticación)
+- **Almacenamiento:** Multi-usuario con autenticación JWT
 - **Estilo:** Minimalista y elegante
 - **Extra:** Compartir reportes, Exportar PDF/Excel
 
@@ -15,7 +15,7 @@ Calculadora Inteligente de Costos para Uñas - Sistema profesional de cálculo d
 2. **Dueña de Salón:** Propietaria de un salón de belleza
 3. **Emprendedora Beauty:** Persona iniciando en el negocio
 
-## Lo Implementado (Enero 2026)
+## Lo Implementado
 
 ### MVP Inicial ✅
 - Dashboard con resumen de rentabilidad
@@ -27,7 +27,7 @@ Calculadora Inteligente de Costos para Uñas - Sistema profesional de cálculo d
 - Calculadora de Precio Final con alertas inteligentes
 - Reporte de Rentabilidad con compartir
 
-### Mejoras Fase 2 ✅ (Enero 2026)
+### Mejoras Fase 2 ✅
 - **Gestión de Clientes:** Nombre, teléfono, email, notas, historial de visitas
 - **Sistema de Agenda:** Vista semanal, crear/editar/completar citas
 - **Alertas de Citas Próximas:** En dashboard y sidebar
@@ -39,37 +39,62 @@ Calculadora Inteligente de Costos para Uñas - Sistema profesional de cálculo d
 - **Simulación de Ingresos:** Proyecciones según capacidad
 - **Ranking de Servicios:** Por rentabilidad/hora
 
+### Sistema de Autenticación ✅ (Marzo 2026)
+- **Registro de usuarios:** Email, contraseña, nombre, negocio
+- **Login/Logout:** JWT con token de 30 días
+- **Rutas protegidas:** Todas las rutas requieren autenticación
+- **Multi-tenancy:** Aislamiento completo de datos por usuario
+- **Planes de suscripción:** Free y Premium con límites
+- **Menú de usuario:** Con información del plan y logout
+
 ### Stack Tecnológico
 - **Frontend:** React 19, Tailwind CSS, Shadcn/UI, Recharts, Lucide Icons
-- **Backend:** FastAPI, Motor (MongoDB async)
-- **Base de Datos:** MongoDB
+- **Backend:** FastAPI, Motor (MongoDB async), python-jose, passlib
+- **Base de Datos:** MongoDB con aislamiento por user_id
+- **Autenticación:** JWT con bcrypt para contraseñas
 
 ## Fórmula de Precio
 ```
 Precio = Costo Productos + Gasto Operativo/Servicio + Costo Tiempo + Costo Diseños + Margen Ganancia
 ```
 
+## Límites por Plan
+| Recurso | Free | Premium |
+|---------|------|---------|
+| Productos | 10 | Ilimitado |
+| Estilos | 5 | Ilimitado |
+| Diseños | 5 | Ilimitado |
+| Clientes | 20 | Ilimitado |
+| Exportar | No | Sí |
+| Simulación | No | Sí |
+| Reportes | No | Sí |
+
 ## Backlog - Features Pendientes
 
-### P1 (Media Prioridad)
+### P1 (Alta Prioridad)
+- Acciones rápidas personalizables en Dashboard
+- Integración de pagos para plan Premium
+
+### P2 (Media Prioridad)
 - Notificaciones por email/WhatsApp
 - Duplicar estilos existentes
 - Modo oscuro
 
-### P2 (Baja Prioridad)
+### P3 (Baja Prioridad)
 - Soporte multi-moneda
 - Backup/restaurar datos (JSON)
 - Comparador de precios con competencia
 - App móvil nativa
+- Recordatorios SMS (Twilio)
+- Temas personalizables
 
 ## Métricas de Éxito
 - Usuarios pueden calcular precios en menos de 1 minuto
 - Dashboards muestran datos en tiempo real
 - Exportaciones funcionan sin errores
 - Agenda muestra citas correctamente
+- Login/Registro sin fricciones
 
-## Próximos Pasos Sugeridos
-1. Agregar clientes reales al sistema
-2. Crear citas y registrar servicios
-3. Ver reportes mensuales con datos reales
-4. Usar simulación para planificar crecimiento
+## Credenciales de Prueba
+- Email: test@nailcost.com
+- Password: test123

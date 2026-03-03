@@ -1,15 +1,18 @@
-from fastapi import FastAPI, APIRouter, HTTPException
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 from pathlib import Path
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, EmailStr
 from typing import List, Optional
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from enum import Enum
+from passlib.context import CryptContext
+from jose import JWTError, jwt
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -18,6 +21,17 @@ load_dotenv(ROOT_DIR / '.env')
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
+
+# JWT Configuration
+SECRET_KEY = os.environ.get('JWT_SECRET', 'nailcost-pro-secret-key-2024')
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_DAYS = 30
+
+# Password hashing
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# Security
+security = HTTPBearer()
 
 # Create the main app
 app = FastAPI(title="NailCost Pro API")
@@ -36,6 +50,113 @@ class NivelDificultad(str, Enum):
     BAJO = "bajo"
     MEDIO = "medio"
     ALTO = "alto"
+
+class PlanType(str, Enum):
+    FREE = "free"
+    PREMIUM = "premium"
+
+# ======================
+# AUTH MODELS
+# ======================
+class UserRegister(BaseModel):
+    email: str
+    password: str
+    nombre: str
+    nombre_negocio: str = ""
+    telefono: str = ""
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
+class UserResponse(BaseModel):
+    id: str
+    email: str
+    nombre: str
+    nombre_negocio: str
+    telefono: str
+    plan: PlanType
+    created_at: str
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse
+
+# Plan Limits
+PLAN_LIMITS = {
+    "free": {
+        "max_productos": 10,
+        "max_estilos": 5,
+        "max_disenos": 5,
+        "max_clientes": 20,
+        "can_export": False,
+        "can_simulate": False,
+        "can_view_reports": False,
+    },
+    "premium": {
+        "max_productos": 999,
+        "max_estilos": 999,
+        "max_disenos": 999,
+        "max_clientes": 999,
+        "can_export": True,
+        "can_simulate": True,
+        "can_view_reports": True,
+    }
+}
+
+# ======================
+# AUTH HELPERS
+# ======================
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
+
+def get_password_hash(password: str) -> str:
+    return pwd_context.hash(password)
+
+def create_access_token(data: dict) -> str:
+    to_encode = data.copy()
+    expire = datetime.now(timezone.utc) + timedelta(days=ACCESS_TOKEN_EXPIRE_DAYS)
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    token = credentials.credentials
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="Token inválido")
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Token inválido o expirado")
+    
+    user = await db.users.find_one({"id": user_id}, {"_id": 0, "password": 0})
+    if user is None:
+        raise HTTPException(status_code=401, detail="Usuario no encontrado")
+    return user
+
+async def check_plan_limit(user: dict, resource: str, current_count: int):
+    """Check if user can add more of a resource based on their plan"""
+    plan = user.get("plan", "free")
+    limits = PLAN_LIMITS.get(plan, PLAN_LIMITS["free"])
+    limit_key = f"max_{resource}"
+    
+    if limit_key in limits and current_count >= limits[limit_key]:
+        raise HTTPException(
+            status_code=403, 
+            detail=f"Has alcanzado el límite de {resource} en tu plan {plan}. Actualiza a Premium para más."
+        )
+
+async def check_premium_feature(user: dict, feature: str):
+    """Check if user has access to a premium feature"""
+    plan = user.get("plan", "free")
+    limits = PLAN_LIMITS.get(plan, PLAN_LIMITS["free"])
+    
+    if not limits.get(feature, False):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Esta función requiere plan Premium. Actualiza tu plan para acceder."
+        )
 
 # ======================
 # MODELS
@@ -258,15 +379,149 @@ class ReporteCompleto(BaseModel):
     rentabilidad_mensual_estimada: float
 
 # ======================
-# ENDPOINTS - Productos
+# ENDPOINTS - Auth
+# ======================
+@api_router.post("/auth/register", response_model=TokenResponse)
+async def register(user_data: UserRegister):
+    # Check if email exists
+    existing = await db.users.find_one({"email": user_data.email.lower()})
+    if existing:
+        raise HTTPException(status_code=400, detail="Este email ya está registrado")
+    
+    # Create user
+    user_id = str(uuid.uuid4())
+    hashed_password = get_password_hash(user_data.password)
+    
+    user_doc = {
+        "id": user_id,
+        "email": user_data.email.lower(),
+        "password": hashed_password,
+        "nombre": user_data.nombre,
+        "nombre_negocio": user_data.nombre_negocio,
+        "telefono": user_data.telefono,
+        "plan": "free",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    
+    await db.users.insert_one(user_doc)
+    
+    # Create token
+    access_token = create_access_token(data={"sub": user_id})
+    
+    return TokenResponse(
+        access_token=access_token,
+        user=UserResponse(
+            id=user_id,
+            email=user_doc["email"],
+            nombre=user_doc["nombre"],
+            nombre_negocio=user_doc["nombre_negocio"],
+            telefono=user_doc["telefono"],
+            plan=user_doc["plan"],
+            created_at=user_doc["created_at"]
+        )
+    )
+
+@api_router.post("/auth/login", response_model=TokenResponse)
+async def login(credentials: UserLogin):
+    user = await db.users.find_one({"email": credentials.email.lower()})
+    if not user:
+        raise HTTPException(status_code=401, detail="Email o contraseña incorrectos")
+    
+    if not verify_password(credentials.password, user["password"]):
+        raise HTTPException(status_code=401, detail="Email o contraseña incorrectos")
+    
+    access_token = create_access_token(data={"sub": user["id"]})
+    
+    return TokenResponse(
+        access_token=access_token,
+        user=UserResponse(
+            id=user["id"],
+            email=user["email"],
+            nombre=user["nombre"],
+            nombre_negocio=user.get("nombre_negocio", ""),
+            telefono=user.get("telefono", ""),
+            plan=user.get("plan", "free"),
+            created_at=user["created_at"]
+        )
+    )
+
+@api_router.get("/auth/me", response_model=UserResponse)
+async def get_me(current_user: dict = Depends(get_current_user)):
+    return UserResponse(
+        id=current_user["id"],
+        email=current_user["email"],
+        nombre=current_user["nombre"],
+        nombre_negocio=current_user.get("nombre_negocio", ""),
+        telefono=current_user.get("telefono", ""),
+        plan=current_user.get("plan", "free"),
+        created_at=current_user["created_at"]
+    )
+
+@api_router.put("/auth/profile")
+async def update_profile(
+    nombre: Optional[str] = None,
+    nombre_negocio: Optional[str] = None,
+    telefono: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    update_data = {}
+    if nombre: update_data["nombre"] = nombre
+    if nombre_negocio is not None: update_data["nombre_negocio"] = nombre_negocio
+    if telefono is not None: update_data["telefono"] = telefono
+    
+    if update_data:
+        await db.users.update_one({"id": current_user["id"]}, {"$set": update_data})
+    
+    updated = await db.users.find_one({"id": current_user["id"]}, {"_id": 0, "password": 0})
+    return updated
+
+@api_router.get("/auth/plan-limits")
+async def get_plan_limits(current_user: dict = Depends(get_current_user)):
+    """Get current user's plan limits and usage"""
+    user_id = current_user["id"]
+    plan = current_user.get("plan", "free")
+    limits = PLAN_LIMITS.get(plan, PLAN_LIMITS["free"])
+    
+    # Get current counts
+    productos_count = await db.productos.count_documents({"user_id": user_id})
+    estilos_count = await db.estilos.count_documents({"user_id": user_id})
+    disenos_count = await db.disenos.count_documents({"user_id": user_id})
+    clientes_count = await db.clientes.count_documents({"user_id": user_id})
+    
+    return {
+        "plan": plan,
+        "limits": limits,
+        "usage": {
+            "productos": productos_count,
+            "estilos": estilos_count,
+            "disenos": disenos_count,
+            "clientes": clientes_count,
+        }
+    }
+
+@api_router.post("/auth/upgrade")
+async def upgrade_plan(current_user: dict = Depends(get_current_user)):
+    """Upgrade user to premium (placeholder for payment integration)"""
+    await db.users.update_one(
+        {"id": current_user["id"]},
+        {"$set": {"plan": "premium"}}
+    )
+    return {"message": "Plan actualizado a Premium", "plan": "premium"}
+
+# ======================
+# ENDPOINTS - Productos (Protected)
 # ======================
 @api_router.get("/productos", response_model=List[Producto])
-async def get_productos():
-    productos = await db.productos.find({}, {"_id": 0}).to_list(1000)
+async def get_productos(current_user: dict = Depends(get_current_user)):
+    productos = await db.productos.find({"user_id": current_user["id"]}, {"_id": 0}).to_list(1000)
     return productos
 
 @api_router.post("/productos", response_model=Producto)
-async def create_producto(producto: ProductoCreate):
+async def create_producto(producto: ProductoCreate, current_user: dict = Depends(get_current_user)):
+    # Check plan limit
+    count = await db.productos.count_documents({"user_id": current_user["id"]})
+    await check_plan_limit(current_user, "productos", count)
+    
     producto_dict = producto.model_dump()
     producto_obj = Producto(**producto_dict)
     # Calcular costo unitario
@@ -275,11 +530,12 @@ async def create_producto(producto: ProductoCreate):
     
     doc = producto_obj.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
+    doc['user_id'] = current_user["id"]
     await db.productos.insert_one(doc)
     return producto_obj
 
 @api_router.put("/productos/{producto_id}", response_model=Producto)
-async def update_producto(producto_id: str, producto: ProductoCreate):
+async def update_producto(producto_id: str, producto: ProductoCreate, current_user: dict = Depends(get_current_user)):
     producto_dict = producto.model_dump()
     # Calcular costo unitario
     costo_unitario = 0.0
@@ -289,7 +545,7 @@ async def update_producto(producto_id: str, producto: ProductoCreate):
     producto_dict['costo_unitario'] = costo_unitario
     
     result = await db.productos.update_one(
-        {"id": producto_id},
+        {"id": producto_id, "user_id": current_user["id"]},
         {"$set": producto_dict}
     )
     if result.matched_count == 0:
@@ -299,52 +555,56 @@ async def update_producto(producto_id: str, producto: ProductoCreate):
     return updated
 
 @api_router.delete("/productos/{producto_id}")
-async def delete_producto(producto_id: str):
-    result = await db.productos.delete_one({"id": producto_id})
+async def delete_producto(producto_id: str, current_user: dict = Depends(get_current_user)):
+    result = await db.productos.delete_one({"id": producto_id, "user_id": current_user["id"]})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
     return {"message": "Producto eliminado"}
 
 # ======================
-# ENDPOINTS - Estilos
+# ENDPOINTS - Estilos (Protected)
 # ======================
 @api_router.get("/estilos", response_model=List[Estilo])
-async def get_estilos():
-    estilos = await db.estilos.find({}, {"_id": 0}).to_list(1000)
+async def get_estilos(current_user: dict = Depends(get_current_user)):
+    estilos = await db.estilos.find({"user_id": current_user["id"]}, {"_id": 0}).to_list(1000)
     return estilos
 
 @api_router.post("/estilos", response_model=Estilo)
-async def create_estilo(estilo: EstiloCreate):
+async def create_estilo(estilo: EstiloCreate, current_user: dict = Depends(get_current_user)):
+    count = await db.estilos.count_documents({"user_id": current_user["id"]})
+    await check_plan_limit(current_user, "estilos", count)
+    
     estilo_dict = estilo.model_dump()
     estilo_obj = Estilo(**estilo_dict)
     
     # Calcular costo de productos
     costo_total = 0.0
     for prod_uso in estilo_obj.productos_usados:
-        producto = await db.productos.find_one({"id": prod_uso.producto_id}, {"_id": 0})
+        producto = await db.productos.find_one({"id": prod_uso.producto_id, "user_id": current_user["id"]}, {"_id": 0})
         if producto:
             costo_total += producto['costo_unitario'] * prod_uso.cantidad
     estilo_obj.costo_productos = costo_total
     
     doc = estilo_obj.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
+    doc['user_id'] = current_user["id"]
     await db.estilos.insert_one(doc)
     return estilo_obj
 
 @api_router.put("/estilos/{estilo_id}", response_model=Estilo)
-async def update_estilo(estilo_id: str, estilo: EstiloCreate):
+async def update_estilo(estilo_id: str, estilo: EstiloCreate, current_user: dict = Depends(get_current_user)):
     estilo_dict = estilo.model_dump()
     
     # Recalcular costo de productos
     costo_total = 0.0
     for prod_uso in estilo_dict['productos_usados']:
-        producto = await db.productos.find_one({"id": prod_uso['producto_id']}, {"_id": 0})
+        producto = await db.productos.find_one({"id": prod_uso['producto_id'], "user_id": current_user["id"]}, {"_id": 0})
         if producto:
             costo_total += producto['costo_unitario'] * prod_uso['cantidad']
     estilo_dict['costo_productos'] = costo_total
     
     result = await db.estilos.update_one(
-        {"id": estilo_id},
+        {"id": estilo_id, "user_id": current_user["id"]},
         {"$set": estilo_dict}
     )
     if result.matched_count == 0:
@@ -354,36 +614,40 @@ async def update_estilo(estilo_id: str, estilo: EstiloCreate):
     return updated
 
 @api_router.delete("/estilos/{estilo_id}")
-async def delete_estilo(estilo_id: str):
-    result = await db.estilos.delete_one({"id": estilo_id})
+async def delete_estilo(estilo_id: str, current_user: dict = Depends(get_current_user)):
+    result = await db.estilos.delete_one({"id": estilo_id, "user_id": current_user["id"]})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Estilo no encontrado")
     return {"message": "Estilo eliminado"}
 
 # ======================
-# ENDPOINTS - Diseños
+# ENDPOINTS - Diseños (Protected)
 # ======================
 @api_router.get("/disenos", response_model=List[Diseno])
-async def get_disenos():
-    disenos = await db.disenos.find({}, {"_id": 0}).to_list(1000)
+async def get_disenos(current_user: dict = Depends(get_current_user)):
+    disenos = await db.disenos.find({"user_id": current_user["id"]}, {"_id": 0}).to_list(1000)
     return disenos
 
 @api_router.post("/disenos", response_model=Diseno)
-async def create_diseno(diseno: DisenoCreate):
+async def create_diseno(diseno: DisenoCreate, current_user: dict = Depends(get_current_user)):
+    count = await db.disenos.count_documents({"user_id": current_user["id"]})
+    await check_plan_limit(current_user, "disenos", count)
+    
     diseno_dict = diseno.model_dump()
     diseno_obj = Diseno(**diseno_dict)
     
     doc = diseno_obj.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
+    doc['user_id'] = current_user["id"]
     await db.disenos.insert_one(doc)
     return diseno_obj
 
 @api_router.put("/disenos/{diseno_id}", response_model=Diseno)
-async def update_diseno(diseno_id: str, diseno: DisenoCreate):
+async def update_diseno(diseno_id: str, diseno: DisenoCreate, current_user: dict = Depends(get_current_user)):
     diseno_dict = diseno.model_dump()
     
     result = await db.disenos.update_one(
-        {"id": diseno_id},
+        {"id": diseno_id, "user_id": current_user["id"]},
         {"$set": diseno_dict}
     )
     if result.matched_count == 0:
@@ -393,88 +657,95 @@ async def update_diseno(diseno_id: str, diseno: DisenoCreate):
     return updated
 
 @api_router.delete("/disenos/{diseno_id}")
-async def delete_diseno(diseno_id: str):
-    result = await db.disenos.delete_one({"id": diseno_id})
+async def delete_diseno(diseno_id: str, current_user: dict = Depends(get_current_user)):
+    result = await db.disenos.delete_one({"id": diseno_id, "user_id": current_user["id"]})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Diseño no encontrado")
     return {"message": "Diseño eliminado"}
 
 # ======================
-# ENDPOINTS - Gastos Operativos
+# ENDPOINTS - Gastos Operativos (Protected)
 # ======================
 @api_router.get("/gastos", response_model=GastosOperativos)
-async def get_gastos():
-    gastos = await db.gastos_operativos.find_one({}, {"_id": 0})
+async def get_gastos(current_user: dict = Depends(get_current_user)):
+    gastos = await db.gastos_operativos.find_one({"user_id": current_user["id"]}, {"_id": 0})
     if not gastos:
-        # Crear documento por defecto
         default_gastos = GastosOperativos()
-        await db.gastos_operativos.insert_one(default_gastos.model_dump())
+        doc = default_gastos.model_dump()
+        doc['user_id'] = current_user["id"]
+        await db.gastos_operativos.insert_one(doc)
         return default_gastos
     return gastos
 
 @api_router.put("/gastos", response_model=GastosOperativos)
-async def update_gastos(gastos: GastosOperativosUpdate):
+async def update_gastos(gastos: GastosOperativosUpdate, current_user: dict = Depends(get_current_user)):
     update_data = {k: v for k, v in gastos.model_dump().items() if v is not None}
     
-    existing = await db.gastos_operativos.find_one({})
+    existing = await db.gastos_operativos.find_one({"user_id": current_user["id"]})
     if existing:
-        await db.gastos_operativos.update_one({}, {"$set": update_data})
+        await db.gastos_operativos.update_one({"user_id": current_user["id"]}, {"$set": update_data})
     else:
         default_gastos = GastosOperativos(**update_data)
-        await db.gastos_operativos.insert_one(default_gastos.model_dump())
+        doc = default_gastos.model_dump()
+        doc['user_id'] = current_user["id"]
+        await db.gastos_operativos.insert_one(doc)
     
-    updated = await db.gastos_operativos.find_one({}, {"_id": 0})
+    updated = await db.gastos_operativos.find_one({"user_id": current_user["id"]}, {"_id": 0})
     return updated
 
 # ======================
-# ENDPOINTS - Configuración Ganancias
+# ENDPOINTS - Configuración Ganancias (Protected)
 # ======================
 @api_router.get("/ganancias/config", response_model=ConfigGanancias)
-async def get_config_ganancias():
-    config = await db.config_ganancias.find_one({}, {"_id": 0})
+async def get_config_ganancias(current_user: dict = Depends(get_current_user)):
+    config = await db.config_ganancias.find_one({"user_id": current_user["id"]}, {"_id": 0})
     if not config:
         default_config = ConfigGanancias()
-        await db.config_ganancias.insert_one(default_config.model_dump())
+        doc = default_config.model_dump()
+        doc['user_id'] = current_user["id"]
+        await db.config_ganancias.insert_one(doc)
         return default_config
     return config
 
 @api_router.put("/ganancias/config", response_model=ConfigGanancias)
-async def update_config_ganancias(config: ConfigGananciasUpdate):
+async def update_config_ganancias(config: ConfigGananciasUpdate, current_user: dict = Depends(get_current_user)):
     update_data = {k: v for k, v in config.model_dump().items() if v is not None}
     
-    existing = await db.config_ganancias.find_one({})
+    existing = await db.config_ganancias.find_one({"user_id": current_user["id"]})
     if existing:
-        await db.config_ganancias.update_one({}, {"$set": update_data})
+        await db.config_ganancias.update_one({"user_id": current_user["id"]}, {"$set": update_data})
     else:
         default_config = ConfigGanancias(**update_data)
-        await db.config_ganancias.insert_one(default_config.model_dump())
+        doc = default_config.model_dump()
+        doc['user_id'] = current_user["id"]
+        await db.config_ganancias.insert_one(doc)
     
-    updated = await db.config_ganancias.find_one({}, {"_id": 0})
+    updated = await db.config_ganancias.find_one({"user_id": current_user["id"]}, {"_id": 0})
     return updated
 
 # ======================
-# ENDPOINTS - Cálculo de Precio
+# ENDPOINTS - Cálculo de Precio (Protected)
 # ======================
 @api_router.post("/calcular-precio", response_model=CalculoPrecioResponse)
-async def calcular_precio(request: CalculoPrecioRequest):
+async def calcular_precio(request: CalculoPrecioRequest, current_user: dict = Depends(get_current_user)):
     # Obtener estilo
-    estilo = await db.estilos.find_one({"id": request.estilo_id}, {"_id": 0})
+    estilo = await db.estilos.find_one({"id": request.estilo_id, "user_id": current_user["id"]}, {"_id": 0})
     if not estilo:
         raise HTTPException(status_code=404, detail="Estilo no encontrado")
     
     # Obtener gastos y config
-    gastos = await db.gastos_operativos.find_one({}, {"_id": 0})
+    gastos = await db.gastos_operativos.find_one({"user_id": current_user["id"]}, {"_id": 0})
     if not gastos:
         gastos = GastosOperativos().model_dump()
     
-    config = await db.config_ganancias.find_one({}, {"_id": 0})
+    config = await db.config_ganancias.find_one({"user_id": current_user["id"]}, {"_id": 0})
     if not config:
         config = ConfigGanancias().model_dump()
     
     # Calcular costo de productos del estilo
     costo_productos = 0.0
     for prod_uso in estilo.get('productos_usados', []):
-        producto = await db.productos.find_one({"id": prod_uso['producto_id']}, {"_id": 0})
+        producto = await db.productos.find_one({"id": prod_uso['producto_id'], "user_id": current_user["id"]}, {"_id": 0})
         if producto:
             costo_productos += producto['costo_unitario'] * prod_uso['cantidad']
     
@@ -499,7 +770,7 @@ async def calcular_precio(request: CalculoPrecioRequest):
     costo_disenos = 0.0
     tiempo_disenos = 0
     for diseno_id in request.disenos_ids:
-        diseno = await db.disenos.find_one({"id": diseno_id}, {"_id": 0})
+        diseno = await db.disenos.find_one({"id": diseno_id, "user_id": current_user["id"]}, {"_id": 0})
         if diseno:
             costo_disenos += diseno.get('costo_adicional', 0)
             tiempo_disenos += diseno.get('tiempo_adicional_minutos', 0)
@@ -555,21 +826,23 @@ async def calcular_precio(request: CalculoPrecioRequest):
     )
 
 # ======================
-# ENDPOINTS - Reporte
+# ENDPOINTS - Reporte (Protected)
 # ======================
 @api_router.get("/reporte", response_model=ReporteCompleto)
-async def get_reporte():
-    gastos = await db.gastos_operativos.find_one({}, {"_id": 0})
+async def get_reporte(current_user: dict = Depends(get_current_user)):
+    user_id = current_user["id"]
+    
+    gastos = await db.gastos_operativos.find_one({"user_id": user_id}, {"_id": 0})
     if not gastos:
         gastos = GastosOperativos().model_dump()
     
-    config = await db.config_ganancias.find_one({}, {"_id": 0})
+    config = await db.config_ganancias.find_one({"user_id": user_id}, {"_id": 0})
     if not config:
         config = ConfigGanancias().model_dump()
     
-    productos = await db.productos.find({}, {"_id": 0}).to_list(1000)
-    estilos = await db.estilos.find({}, {"_id": 0}).to_list(1000)
-    disenos = await db.disenos.find({}, {"_id": 0}).to_list(1000)
+    productos = await db.productos.find({"user_id": user_id}, {"_id": 0}).to_list(1000)
+    estilos = await db.estilos.find({"user_id": user_id}, {"_id": 0}).to_list(1000)
+    disenos = await db.disenos.find({"user_id": user_id}, {"_id": 0}).to_list(1000)
     
     # Calcular gasto total
     gasto_total = (
@@ -587,7 +860,7 @@ async def get_reporte():
     for estilo in estilos:
         costo_productos = 0.0
         for prod_uso in estilo.get('productos_usados', []):
-            producto = await db.productos.find_one({"id": prod_uso['producto_id']}, {"_id": 0})
+            producto = await db.productos.find_one({"id": prod_uso['producto_id'], "user_id": user_id}, {"_id": 0})
             if producto:
                 costo_productos += producto.get('costo_unitario', 0) * prod_uso.get('cantidad', 0)
         
@@ -629,11 +902,13 @@ async def get_reporte():
     )
 
 # ======================
-# SEED DATA
+# SEED DATA (Protected)
 # ======================
 @api_router.post("/seed")
-async def seed_data():
-    """Crear datos de ejemplo"""
+async def seed_data(current_user: dict = Depends(get_current_user)):
+    """Crear datos de ejemplo para el usuario actual"""
+    user_id = current_user["id"]
+    
     # Productos de ejemplo
     productos_ejemplo = [
         {"nombre": "Acrílico", "tipo": "insumo", "precio_compra": 25.0, "cantidad_comprada": 50, "unidad": "gramos", "uso_por_servicio": 3},
@@ -648,19 +923,20 @@ async def seed_data():
         {"nombre": "Torno", "tipo": "herramienta", "precio_compra": 120.0, "cantidad_comprada": 1000, "unidad": "usos", "uso_por_servicio": 1},
     ]
     
-    # Limpiar y crear productos
-    await db.productos.delete_many({})
+    # Limpiar datos del usuario y crear productos
+    await db.productos.delete_many({"user_id": user_id})
     created_productos = []
     for p in productos_ejemplo:
         producto = Producto(**p)
         producto.costo_unitario = p['precio_compra'] / p['cantidad_comprada'] * p['uso_por_servicio']
         doc = producto.model_dump()
         doc['created_at'] = doc['created_at'].isoformat()
+        doc['user_id'] = user_id
         await db.productos.insert_one(doc)
         created_productos.append(producto)
     
     # Estilos de ejemplo
-    await db.estilos.delete_many({})
+    await db.estilos.delete_many({"user_id": user_id})
     estilos_ejemplo = [
         {"nombre": "Uñas Naturales", "descripcion": "Limado y esmaltado básico", "productos_usados": [], "tiempo_trabajo_minutos": 30, "nivel_dificultad": "bajo"},
         {"nombre": "Acrílicas Cortas", "descripcion": "Extensión acrílica corta", "productos_usados": [{"producto_id": created_productos[0].id, "cantidad": 1}, {"producto_id": created_productos[6].id, "cantidad": 1}], "tiempo_trabajo_minutos": 90, "nivel_dificultad": "medio"},
@@ -678,10 +954,11 @@ async def seed_data():
         estilo = Estilo(**e, costo_productos=costo)
         doc = estilo.model_dump()
         doc['created_at'] = doc['created_at'].isoformat()
+        doc['user_id'] = user_id
         await db.estilos.insert_one(doc)
     
     # Diseños de ejemplo
-    await db.disenos.delete_many({})
+    await db.disenos.delete_many({"user_id": user_id})
     disenos_ejemplo = [
         {"nombre": "French", "costo_adicional": 5.0, "tiempo_adicional_minutos": 15, "nivel_complejidad": "bajo"},
         {"nombre": "Baby Boomer", "costo_adicional": 8.0, "tiempo_adicional_minutos": 20, "nivel_complejidad": "medio"},
@@ -697,39 +974,44 @@ async def seed_data():
         diseno = Diseno(**d)
         doc = diseno.model_dump()
         doc['created_at'] = doc['created_at'].isoformat()
+        doc['user_id'] = user_id
         await db.disenos.insert_one(doc)
     
     return {"message": "Datos de ejemplo creados exitosamente"}
 
 # ======================
-# ENDPOINTS - Clientes
+# ENDPOINTS - Clientes (Protected)
 # ======================
 @api_router.get("/clientes", response_model=List[Cliente])
-async def get_clientes():
-    clientes = await db.clientes.find({}, {"_id": 0}).to_list(1000)
+async def get_clientes(current_user: dict = Depends(get_current_user)):
+    clientes = await db.clientes.find({"user_id": current_user["id"]}, {"_id": 0}).to_list(1000)
     return clientes
 
 @api_router.get("/clientes/{cliente_id}", response_model=Cliente)
-async def get_cliente(cliente_id: str):
-    cliente = await db.clientes.find_one({"id": cliente_id}, {"_id": 0})
+async def get_cliente(cliente_id: str, current_user: dict = Depends(get_current_user)):
+    cliente = await db.clientes.find_one({"id": cliente_id, "user_id": current_user["id"]}, {"_id": 0})
     if not cliente:
         raise HTTPException(status_code=404, detail="Cliente no encontrado")
     return cliente
 
 @api_router.post("/clientes", response_model=Cliente)
-async def create_cliente(cliente: ClienteCreate):
+async def create_cliente(cliente: ClienteCreate, current_user: dict = Depends(get_current_user)):
+    count = await db.clientes.count_documents({"user_id": current_user["id"]})
+    await check_plan_limit(current_user, "clientes", count)
+    
     cliente_dict = cliente.model_dump()
     cliente_obj = Cliente(**cliente_dict)
     doc = cliente_obj.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
+    doc['user_id'] = current_user["id"]
     await db.clientes.insert_one(doc)
     return cliente_obj
 
 @api_router.put("/clientes/{cliente_id}", response_model=Cliente)
-async def update_cliente(cliente_id: str, cliente: ClienteCreate):
+async def update_cliente(cliente_id: str, cliente: ClienteCreate, current_user: dict = Depends(get_current_user)):
     cliente_dict = cliente.model_dump()
     result = await db.clientes.update_one(
-        {"id": cliente_id},
+        {"id": cliente_id, "user_id": current_user["id"]},
         {"$set": cliente_dict}
     )
     if result.matched_count == 0:
@@ -738,18 +1020,18 @@ async def update_cliente(cliente_id: str, cliente: ClienteCreate):
     return updated
 
 @api_router.delete("/clientes/{cliente_id}")
-async def delete_cliente(cliente_id: str):
-    result = await db.clientes.delete_one({"id": cliente_id})
+async def delete_cliente(cliente_id: str, current_user: dict = Depends(get_current_user)):
+    result = await db.clientes.delete_one({"id": cliente_id, "user_id": current_user["id"]})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Cliente no encontrado")
     return {"message": "Cliente eliminado"}
 
 # ======================
-# ENDPOINTS - Citas
+# ENDPOINTS - Citas (Protected)
 # ======================
 @api_router.get("/citas", response_model=List[Cita])
-async def get_citas(fecha_desde: Optional[str] = None, fecha_hasta: Optional[str] = None):
-    query = {}
+async def get_citas(fecha_desde: Optional[str] = None, fecha_hasta: Optional[str] = None, current_user: dict = Depends(get_current_user)):
+    query = {"user_id": current_user["id"]}
     if fecha_desde:
         query["fecha"] = {"$gte": fecha_desde}
     if fecha_hasta:
@@ -761,13 +1043,13 @@ async def get_citas(fecha_desde: Optional[str] = None, fecha_hasta: Optional[str
     return citas
 
 @api_router.get("/citas/proximas")
-async def get_citas_proximas():
+async def get_citas_proximas(current_user: dict = Depends(get_current_user)):
     """Obtener citas de hoy y mañana para alertas"""
-    from datetime import timedelta
     hoy = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     manana = (datetime.now(timezone.utc) + timedelta(days=1)).strftime("%Y-%m-%d")
     
     citas = await db.citas.find({
+        "user_id": current_user["id"],
         "fecha": {"$in": [hoy, manana]},
         "estado": {"$in": ["pendiente", "confirmada"]}
     }, {"_id": 0}).sort([("fecha", 1), ("hora", 1)]).to_list(100)
@@ -775,8 +1057,8 @@ async def get_citas_proximas():
     # Enrich with client and style info
     enriched = []
     for cita in citas:
-        cliente = await db.clientes.find_one({"id": cita.get("cliente_id")}, {"_id": 0})
-        estilo = await db.estilos.find_one({"id": cita.get("estilo_id")}, {"_id": 0})
+        cliente = await db.clientes.find_one({"id": cita.get("cliente_id"), "user_id": current_user["id"]}, {"_id": 0})
+        estilo = await db.estilos.find_one({"id": cita.get("estilo_id"), "user_id": current_user["id"]}, {"_id": 0})
         enriched.append({
             **cita,
             "cliente_nombre": cliente.get("nombre") if cliente else "Desconocido",
@@ -785,22 +1067,23 @@ async def get_citas_proximas():
     return enriched
 
 @api_router.post("/citas", response_model=Cita)
-async def create_cita(cita: CitaCreate):
+async def create_cita(cita: CitaCreate, current_user: dict = Depends(get_current_user)):
     cita_dict = cita.model_dump()
     cita_obj = Cita(**cita_dict)
     doc = cita_obj.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
+    doc['user_id'] = current_user["id"]
     await db.citas.insert_one(doc)
     return cita_obj
 
 @api_router.put("/citas/{cita_id}", response_model=Cita)
-async def update_cita(cita_id: str, cita: CitaUpdate):
+async def update_cita(cita_id: str, cita: CitaUpdate, current_user: dict = Depends(get_current_user)):
     update_data = {k: v for k, v in cita.model_dump().items() if v is not None}
     if not update_data:
         raise HTTPException(status_code=400, detail="No hay datos para actualizar")
     
     result = await db.citas.update_one(
-        {"id": cita_id},
+        {"id": cita_id, "user_id": current_user["id"]},
         {"$set": update_data}
     )
     if result.matched_count == 0:
@@ -809,38 +1092,38 @@ async def update_cita(cita_id: str, cita: CitaUpdate):
     return updated
 
 @api_router.delete("/citas/{cita_id}")
-async def delete_cita(cita_id: str):
-    result = await db.citas.delete_one({"id": cita_id})
+async def delete_cita(cita_id: str, current_user: dict = Depends(get_current_user)):
+    result = await db.citas.delete_one({"id": cita_id, "user_id": current_user["id"]})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Cita no encontrada")
     return {"message": "Cita eliminada"}
 
 # ======================
-# ENDPOINTS - Servicios Realizados
+# ENDPOINTS - Servicios Realizados (Protected)
 # ======================
 @api_router.get("/servicios", response_model=List[ServicioRealizado])
-async def get_servicios(mes: Optional[str] = None, anio: Optional[str] = None):
-    query = {}
+async def get_servicios(mes: Optional[str] = None, anio: Optional[str] = None, current_user: dict = Depends(get_current_user)):
+    query = {"user_id": current_user["id"]}
     if mes and anio:
-        # Filter by month (fecha format: YYYY-MM-DD)
         prefix = f"{anio}-{mes.zfill(2)}"
         query["fecha"] = {"$regex": f"^{prefix}"}
     servicios = await db.servicios_realizados.find(query, {"_id": 0}).sort("fecha", -1).to_list(1000)
     return servicios
 
 @api_router.post("/servicios", response_model=ServicioRealizado)
-async def create_servicio(servicio: ServicioRealizadoCreate):
+async def create_servicio(servicio: ServicioRealizadoCreate, current_user: dict = Depends(get_current_user)):
     servicio_dict = servicio.model_dump()
     servicio_obj = ServicioRealizado(**servicio_dict)
     servicio_obj.ganancia = servicio_obj.precio_cobrado - servicio_obj.costo_real
     
     doc = servicio_obj.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
+    doc['user_id'] = current_user["id"]
     await db.servicios_realizados.insert_one(doc)
     
     # Update client visit count
     await db.clientes.update_one(
-        {"id": servicio.cliente_id},
+        {"id": servicio.cliente_id, "user_id": current_user["id"]},
         {
             "$inc": {"total_visitas": 1},
             "$set": {"ultima_visita": servicio.fecha}
@@ -850,28 +1133,31 @@ async def create_servicio(servicio: ServicioRealizadoCreate):
     return servicio_obj
 
 @api_router.delete("/servicios/{servicio_id}")
-async def delete_servicio(servicio_id: str):
-    result = await db.servicios_realizados.delete_one({"id": servicio_id})
+async def delete_servicio(servicio_id: str, current_user: dict = Depends(get_current_user)):
+    result = await db.servicios_realizados.delete_one({"id": servicio_id, "user_id": current_user["id"]})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Servicio no encontrado")
     return {"message": "Servicio eliminado"}
 
 # ======================
-# ENDPOINTS - Reportes Mensuales
+# ENDPOINTS - Reportes Mensuales (Protected - Premium)
 # ======================
 @api_router.get("/reportes/mensual/{anio}/{mes}")
-async def get_reporte_mensual(anio: str, mes: str):
+async def get_reporte_mensual(anio: str, mes: str, current_user: dict = Depends(get_current_user)):
     """Reporte mensual completo"""
+    await check_premium_feature(current_user, "can_view_reports")
+    
+    user_id = current_user["id"]
     prefix = f"{anio}-{mes.zfill(2)}"
     
     # Get all services for the month
     servicios = await db.servicios_realizados.find(
-        {"fecha": {"$regex": f"^{prefix}"}},
+        {"user_id": user_id, "fecha": {"$regex": f"^{prefix}"}},
         {"_id": 0}
     ).to_list(1000)
     
     # Get gastos
-    gastos = await db.gastos_operativos.find_one({}, {"_id": 0})
+    gastos = await db.gastos_operativos.find_one({"user_id": user_id}, {"_id": 0})
     if not gastos:
         gastos = GastosOperativos().model_dump()
     
@@ -892,7 +1178,7 @@ async def get_reporte_mensual(anio: str, mes: str):
     for s in servicios:
         estilo_id = s.get('estilo_id')
         if estilo_id not in estilos_stats:
-            estilo = await db.estilos.find_one({"id": estilo_id}, {"_id": 0})
+            estilo = await db.estilos.find_one({"id": estilo_id, "user_id": user_id}, {"_id": 0})
             estilos_stats[estilo_id] = {
                 "nombre": estilo.get('nombre') if estilo else "Desconocido",
                 "cantidad": 0,
@@ -932,9 +1218,10 @@ async def get_reporte_mensual(anio: str, mes: str):
     }
 
 @api_router.get("/reportes/comparativa")
-async def get_comparativa_mensual():
+async def get_comparativa_mensual(current_user: dict = Depends(get_current_user)):
     """Comparativa de últimos 6 meses"""
     from datetime import timedelta
+    user_id = current_user["id"]
     
     meses = []
     for i in range(6):
@@ -944,7 +1231,7 @@ async def get_comparativa_mensual():
         prefix = f"{anio}-{mes}"
         
         servicios = await db.servicios_realizados.find(
-            {"fecha": {"$regex": f"^{prefix}"}},
+            {"user_id": user_id, "fecha": {"$regex": f"^{prefix}"}},
             {"_id": 0}
         ).to_list(1000)
         
@@ -962,17 +1249,18 @@ async def get_comparativa_mensual():
     return {"meses": list(reversed(meses))}
 
 # ======================
-# ENDPOINTS - Simulación
+# ENDPOINTS - Simulación (Protected)
 # ======================
 @api_router.post("/simulacion/mensual")
-async def simular_ingresos_mensual(servicios_por_dia: int = 3, dias_trabajo: int = 22):
+async def simular_ingresos_mensual(servicios_por_dia: int = 3, dias_trabajo: int = 22, current_user: dict = Depends(get_current_user)):
     """Simulación de ingresos mensuales"""
-    estilos = await db.estilos.find({}, {"_id": 0}).to_list(100)
-    config = await db.config_ganancias.find_one({}, {"_id": 0})
+    user_id = current_user["id"]
+    estilos = await db.estilos.find({"user_id": user_id}, {"_id": 0}).to_list(100)
+    config = await db.config_ganancias.find_one({"user_id": user_id}, {"_id": 0})
     if not config:
         config = ConfigGanancias().model_dump()
     
-    gastos = await db.gastos_operativos.find_one({}, {"_id": 0})
+    gastos = await db.gastos_operativos.find_one({"user_id": user_id}, {"_id": 0})
     if not gastos:
         gastos = GastosOperativos().model_dump()
     
@@ -1026,8 +1314,9 @@ async def simular_ingresos_mensual(servicios_por_dia: int = 3, dias_trabajo: int
     }
 
 @api_router.get("/alertas")
-async def get_alertas():
+async def get_alertas(current_user: dict = Depends(get_current_user)):
     """Obtener alertas del sistema"""
+    user_id = current_user["id"]
     alertas = []
     
     # Check citas próximas
@@ -1036,10 +1325,12 @@ async def get_alertas():
     manana = (datetime.now(timezone.utc) + timedelta(days=1)).strftime("%Y-%m-%d")
     
     citas_hoy = await db.citas.count_documents({
+        "user_id": user_id,
         "fecha": hoy,
         "estado": {"$in": ["pendiente", "confirmada"]}
     })
     citas_manana = await db.citas.count_documents({
+        "user_id": user_id,
         "fecha": manana,
         "estado": {"$in": ["pendiente", "confirmada"]}
     })
@@ -1058,8 +1349,8 @@ async def get_alertas():
         })
     
     # Check low profitability services
-    estilos = await db.estilos.find({}, {"_id": 0}).to_list(100)
-    config = await db.config_ganancias.find_one({}, {"_id": 0})
+    estilos = await db.estilos.find({"user_id": user_id}, {"_id": 0}).to_list(100)
+    config = await db.config_ganancias.find_one({"user_id": user_id}, {"_id": 0})
     if not config:
         config = ConfigGanancias().model_dump()
     

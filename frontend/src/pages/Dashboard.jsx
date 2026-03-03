@@ -408,7 +408,7 @@ export default function Dashboard() {
                   data-testid="quick-calc-btn"
                 >
                   <Calculator className="w-4 h-4 mr-2" />
-                  Nueva Calculación
+                  Nuevo Cálculo
                 </Button>
               </Link>
               <Link to="/productos" className="block">

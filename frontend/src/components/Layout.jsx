@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { 
   LayoutDashboard, 
   Package, 
@@ -15,10 +15,15 @@ import {
   Target,
   ChevronDown,
   Layers,
-  Wallet
+  Wallet,
+  LogOut,
+  User,
+  Crown
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
+import { Button } from "@/components/ui/button";
 
 // Grouped navigation
 const mainNavItems = [
@@ -103,6 +108,78 @@ const NavDropdown = ({ group, isActive }) => {
               <span>{item.label}</span>
             </NavLink>
           ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// User Menu Component
+const UserMenu = () => {
+  const { user, logout, isPremium } = useAuth();
+  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
+  return (
+    <div className="relative" ref={menuRef}>
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-stone-100 hover:bg-stone-200 transition-colors"
+        data-testid="user-menu-btn"
+      >
+        <div className="w-6 h-6 rounded-full bg-stone-800 flex items-center justify-center">
+          <User className="w-3.5 h-3.5 text-white" />
+        </div>
+        <span className="text-sm font-medium text-stone-700 hidden sm:inline max-w-[100px] truncate">
+          {user?.nombre || "Usuario"}
+        </span>
+        {isPremium && <Crown className="w-3.5 h-3.5 text-amber-500" />}
+        <ChevronDown className={cn("w-3 h-3 text-stone-500 transition-transform", open && "rotate-180")} />
+      </button>
+
+      {open && (
+        <div className="absolute top-full right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-stone-200 py-2 z-50 animate-fade-in">
+          <div className="px-4 py-2 border-b border-stone-100">
+            <p className="font-medium text-stone-800 truncate">{user?.nombre}</p>
+            <p className="text-xs text-stone-500 truncate">{user?.email}</p>
+            {user?.nombre_negocio && (
+              <p className="text-xs text-stone-400 truncate mt-0.5">{user?.nombre_negocio}</p>
+            )}
+          </div>
+          <div className="px-4 py-2 border-b border-stone-100">
+            <div className="flex items-center gap-2">
+              <span className={cn(
+                "text-xs px-2 py-0.5 rounded-full",
+                isPremium ? "bg-amber-100 text-amber-700" : "bg-stone-100 text-stone-600"
+              )}>
+                Plan {isPremium ? "Premium" : "Gratuito"}
+              </span>
+            </div>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+            data-testid="logout-btn"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>Cerrar Sesión</span>
+          </button>
         </div>
       )}
     </div>
@@ -200,14 +277,22 @@ export const Layout = () => {
               ))}
             </nav>
 
+            {/* User Menu - Desktop */}
+            <div className="hidden lg:block">
+              <UserMenu />
+            </div>
+
             {/* Mobile menu button */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 rounded-lg hover:bg-stone-100 transition-colors"
-              data-testid="mobile-menu-toggle"
-            >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
+            <div className="flex items-center gap-2 lg:hidden">
+              <UserMenu />
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="p-2 rounded-lg hover:bg-stone-100 transition-colors"
+                data-testid="mobile-menu-toggle"
+              >
+                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </button>
+            </div>
           </div>
         </div>
       </header>
