@@ -19,12 +19,14 @@ import {
   LogOut,
   User,
   Crown,
-  Shield
+  Shield,
+  Building2
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
+import { FloatingCalculator } from "@/components/FloatingCalculator";
 
 // Grouped navigation
 const mainNavItems = [
@@ -117,7 +119,7 @@ const NavDropdown = ({ group, isActive }) => {
 
 // User Menu Component
 const UserMenu = () => {
-  const { user, logout, isPremium } = useAuth();
+  const { user, logout, isPremium, isBusinessUser } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const menuRef = useRef(null);
@@ -144,8 +146,13 @@ const UserMenu = () => {
         className="flex items-center gap-2 px-3 py-2 rounded-full bg-[#FDF2F7] hover:bg-[#FCE7F0] transition-colors border border-[#FCE7F0]"
         data-testid="user-menu-btn"
       >
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#E84A8A] to-[#FF6B9D] flex items-center justify-center shadow-sm">
-          <User className="w-4 h-4 text-white" />
+        <div className={cn(
+          "w-8 h-8 rounded-full flex items-center justify-center shadow-sm",
+          isBusinessUser 
+            ? "bg-gradient-to-br from-[#8B5CF6] to-[#A78BFA]" 
+            : "bg-gradient-to-br from-[#E84A8A] to-[#FF6B9D]"
+        )}>
+          {isBusinessUser ? <Building2 className="w-4 h-4 text-white" /> : <User className="w-4 h-4 text-white" />}
         </div>
         <span className="text-sm font-medium text-[#1A1A2E] hidden sm:inline max-w-[100px] truncate">
           {user?.nombre || "Usuario"}
@@ -155,9 +162,17 @@ const UserMenu = () => {
       </button>
 
       {open && (
-        <div className="absolute top-full right-0 mt-2 w-60 bg-white rounded-2xl shadow-xl border border-[#FCE7F0] py-2 z-50 animate-fade-in">
+        <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-[#FCE7F0] py-2 z-50 animate-fade-in">
           <div className="px-4 py-3 border-b border-[#FCE7F0]">
-            <p className="font-semibold text-[#1A1A2E] truncate">{user?.nombre}</p>
+            <div className="flex items-center gap-2 mb-1">
+              <p className="font-semibold text-[#1A1A2E] truncate">{user?.nombre}</p>
+              <span className={cn(
+                "text-[10px] px-2 py-0.5 rounded-full font-medium",
+                isBusinessUser ? "bg-purple-100 text-purple-700" : "bg-pink-100 text-pink-700"
+              )}>
+                {isBusinessUser ? "Negocio" : "Personal"}
+              </span>
+            </div>
             <p className="text-xs text-[#64748B] truncate">{user?.email}</p>
             {user?.nombre_negocio && (
               <p className="text-xs text-[#E84A8A] truncate mt-0.5">{user?.nombre_negocio}</p>

@@ -59,6 +59,10 @@ class UserRole(str, Enum):
     USER = "user"
     ADMIN = "admin"
 
+class UserType(str, Enum):
+    PERSONAL = "personal"
+    BUSINESS = "business"
+
 # ======================
 # AUTH MODELS
 # ======================
@@ -68,6 +72,7 @@ class UserRegister(BaseModel):
     nombre: str
     nombre_negocio: str = ""
     telefono: str = ""
+    user_type: str = "personal"  # personal or business
 
 class UserLogin(BaseModel):
     email: str
@@ -81,12 +86,48 @@ class UserResponse(BaseModel):
     telefono: str
     plan: PlanType
     role: str = "user"
+    user_type: str = "personal"
     created_at: str
 
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserResponse
+
+# Calculation History Model
+class CalculationHistory(BaseModel):
+    id: str = ""
+    user_id: str = ""
+    estilo_id: str
+    estilo_nombre: str = ""
+    disenos_ids: List[str] = []
+    disenos_nombres: List[str] = []
+    precio_recomendado: float = 0
+    costo_total: float = 0
+    ganancia: float = 0
+    created_at: str = ""
+    cliente_nombre: str = ""
+    notas: str = ""
+
+# Employee Model (for business users)
+class Employee(BaseModel):
+    id: str = ""
+    user_id: str = ""
+    nombre: str
+    email: str = ""
+    telefono: str = ""
+    especialidad: str = ""
+    comision_porcentaje: float = 0
+    activo: bool = True
+    created_at: str = ""
+
+# Inventory Alert Model
+class InventoryAlert(BaseModel):
+    producto_id: str
+    producto_nombre: str
+    cantidad_actual: float
+    cantidad_minima: float
+    tipo: str  # "bajo", "agotado"
 
 # Plan Limits
 PLAN_LIMITS = {
@@ -406,6 +447,7 @@ async def register(user_data: UserRegister):
         "telefono": user_data.telefono,
         "plan": "free",
         "role": "user",
+        "user_type": user_data.user_type,
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     
@@ -424,6 +466,7 @@ async def register(user_data: UserRegister):
             telefono=user_doc["telefono"],
             plan=user_doc["plan"],
             role=user_doc["role"],
+            user_type=user_doc.get("user_type", "personal"),
             created_at=user_doc["created_at"]
         )
     )
@@ -449,6 +492,7 @@ async def login(credentials: UserLogin):
             telefono=user.get("telefono", ""),
             plan=user.get("plan", "free"),
             role=user.get("role", "user"),
+            user_type=user.get("user_type", "personal"),
             created_at=user["created_at"]
         )
     )
@@ -463,6 +507,7 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         telefono=current_user.get("telefono", ""),
         plan=current_user.get("plan", "free"),
         role=current_user.get("role", "user"),
+        user_type=current_user.get("user_type", "personal"),
         created_at=current_user["created_at"]
     )
 
@@ -575,6 +620,263 @@ async def admin_get_stats(admin: dict = Depends(get_admin_user)):
         "total_clientes": await db.clientes.count_documents({}),
         "total_citas": await db.citas.count_documents({}),
     }
+
+# ======================
+# ENDPOINTS - Calculation History
+# ======================
+@api_router.get("/historial-calculos")
+async def get_historial_calculos(current_user: dict = Depends(get_current_user)):
+    """Get calculation history for user"""
+    historial = await db.historial_calculos.find(
+        {"user_id": current_user["id"]}, 
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    return historial
+
+@api_router.post("/historial-calculos")
+async def save_calculo(calculo: dict, current_user: dict = Depends(get_current_user)):
+    """Save a calculation to history"""
+    calculo_doc = {
+        "id": str(uuid.uuid4()),
+        "user_id": current_user["id"],
+        "estilo_id": calculo.get("estilo_id", ""),
+        "estilo_nombre": calculo.get("estilo_nombre", ""),
+        "disenos_ids": calculo.get("disenos_ids", []),
+        "disenos_nombres": calculo.get("disenos_nombres", []),
+        "precio_recomendado": calculo.get("precio_recomendado", 0),
+        "costo_total": calculo.get("costo_total", 0),
+        "ganancia": calculo.get("ganancia", 0),
+        "cliente_nombre": calculo.get("cliente_nombre", ""),
+        "notas": calculo.get("notas", ""),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.historial_calculos.insert_one(calculo_doc)
+    calculo_doc.pop("_id", None)
+    return calculo_doc
+
+@api_router.delete("/historial-calculos/{calculo_id}")
+async def delete_calculo(calculo_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete a calculation from history"""
+    result = await db.historial_calculos.delete_one({
+        "id": calculo_id, 
+        "user_id": current_user["id"]
+    })
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Cálculo no encontrado")
+    return {"message": "Cálculo eliminado"}
+
+# ======================
+# ENDPOINTS - Employees (Business Users)
+# ======================
+@api_router.get("/empleados")
+async def get_empleados(current_user: dict = Depends(get_current_user)):
+    """Get employees for business user"""
+    if current_user.get("user_type") != "business":
+        return []
+    empleados = await db.empleados.find(
+        {"user_id": current_user["id"]}, 
+        {"_id": 0}
+    ).to_list(100)
+    return empleados
+
+@api_router.post("/empleados")
+async def create_empleado(empleado: dict, current_user: dict = Depends(get_current_user)):
+    """Create a new employee"""
+    if current_user.get("user_type") != "business":
+        raise HTTPException(status_code=403, detail="Solo usuarios de negocio pueden agregar empleados")
+    
+    empleado_doc = {
+        "id": str(uuid.uuid4()),
+        "user_id": current_user["id"],
+        "nombre": empleado.get("nombre", ""),
+        "email": empleado.get("email", ""),
+        "telefono": empleado.get("telefono", ""),
+        "especialidad": empleado.get("especialidad", ""),
+        "comision_porcentaje": empleado.get("comision_porcentaje", 0),
+        "activo": True,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.empleados.insert_one(empleado_doc)
+    return {k: v for k, v in empleado_doc.items() if k != "_id"}
+
+@api_router.put("/empleados/{empleado_id}")
+async def update_empleado(empleado_id: str, empleado: dict, current_user: dict = Depends(get_current_user)):
+    """Update an employee"""
+    result = await db.empleados.update_one(
+        {"id": empleado_id, "user_id": current_user["id"]},
+        {"$set": {
+            "nombre": empleado.get("nombre"),
+            "email": empleado.get("email"),
+            "telefono": empleado.get("telefono"),
+            "especialidad": empleado.get("especialidad"),
+            "comision_porcentaje": empleado.get("comision_porcentaje"),
+            "activo": empleado.get("activo", True),
+        }}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Empleado no encontrado")
+    return {"message": "Empleado actualizado"}
+
+@api_router.delete("/empleados/{empleado_id}")
+async def delete_empleado(empleado_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete an employee"""
+    result = await db.empleados.delete_one({
+        "id": empleado_id, 
+        "user_id": current_user["id"]
+    })
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Empleado no encontrado")
+    return {"message": "Empleado eliminado"}
+
+# ======================
+# ENDPOINTS - Inventory Alerts
+# ======================
+@api_router.get("/alertas-inventario")
+async def get_alertas_inventario(current_user: dict = Depends(get_current_user)):
+    """Get inventory alerts (low stock)"""
+    productos = await db.productos.find(
+        {"user_id": current_user["id"]}, 
+        {"_id": 0}
+    ).to_list(1000)
+    
+    alertas = []
+    for p in productos:
+        # Check if producto has stock tracking
+        stock_actual = p.get("stock_actual", p.get("cantidad_comprada", 0))
+        stock_minimo = p.get("stock_minimo", 5)
+        
+        if stock_actual <= 0:
+            alertas.append({
+                "producto_id": p["id"],
+                "producto_nombre": p["nombre"],
+                "cantidad_actual": stock_actual,
+                "cantidad_minima": stock_minimo,
+                "tipo": "agotado"
+            })
+        elif stock_actual <= stock_minimo:
+            alertas.append({
+                "producto_id": p["id"],
+                "producto_nombre": p["nombre"],
+                "cantidad_actual": stock_actual,
+                "cantidad_minima": stock_minimo,
+                "tipo": "bajo"
+            })
+    
+    return alertas
+
+# ======================
+# ENDPOINTS - Quick Stats (for dashboard)
+# ======================
+@api_router.get("/quick-stats")
+async def get_quick_stats(current_user: dict = Depends(get_current_user)):
+    """Get quick stats for dashboard based on user type"""
+    user_id = current_user["id"]
+    user_type = current_user.get("user_type", "personal")
+    
+    # Common stats
+    stats = {
+        "productos": await db.productos.count_documents({"user_id": user_id}),
+        "estilos": await db.estilos.count_documents({"user_id": user_id}),
+        "disenos": await db.disenos.count_documents({"user_id": user_id}),
+        "clientes": await db.clientes.count_documents({"user_id": user_id}),
+        "citas_pendientes": await db.citas.count_documents({
+            "user_id": user_id, 
+            "estado": {"$in": ["pendiente", "confirmada"]}
+        }),
+        "calculos_hoy": await db.historial_calculos.count_documents({
+            "user_id": user_id,
+            "created_at": {"$gte": datetime.now(timezone.utc).strftime("%Y-%m-%d")}
+        }),
+    }
+    
+    # Business-specific stats
+    if user_type == "business":
+        stats["empleados"] = await db.empleados.count_documents({
+            "user_id": user_id, 
+            "activo": True
+        })
+        stats["servicios_mes"] = await db.servicios_realizados.count_documents({
+            "user_id": user_id,
+            "fecha": {"$gte": datetime.now(timezone.utc).strftime("%Y-%m")}
+        })
+    
+    return stats
+
+# ======================
+# ENDPOINTS - Profitability Tips (AI-like suggestions)
+# ======================
+@api_router.get("/tips-rentabilidad")
+async def get_tips_rentabilidad(current_user: dict = Depends(get_current_user)):
+    """Get profitability tips based on user data"""
+    user_id = current_user["id"]
+    tips = []
+    
+    # Get user data
+    estilos = await db.estilos.find({"user_id": user_id}, {"_id": 0}).to_list(100)
+    gastos = await db.gastos_operativos.find_one({"user_id": user_id}, {"_id": 0})
+    config = await db.config_ganancias.find_one({"user_id": user_id}, {"_id": 0})
+    historial = await db.historial_calculos.find({"user_id": user_id}, {"_id": 0}).to_list(100)
+    
+    # Generate tips
+    if len(estilos) < 3:
+        tips.append({
+            "tipo": "crecimiento",
+            "icono": "palette",
+            "titulo": "Amplía tu catálogo",
+            "mensaje": "Agrega más estilos de uñas para ofrecer más opciones a tus clientes.",
+            "accion": "/estilos"
+        })
+    
+    if not gastos or gastos.get("renta", 0) == 0:
+        tips.append({
+            "tipo": "configuracion",
+            "icono": "settings",
+            "titulo": "Configura tus gastos",
+            "mensaje": "Registra tus gastos operativos para calcular precios más precisos.",
+            "accion": "/gastos"
+        })
+    
+    if config and config.get("porcentaje_ganancia", 0) < 30:
+        tips.append({
+            "tipo": "rentabilidad",
+            "icono": "trending-up",
+            "titulo": "Aumenta tu margen",
+            "mensaje": f"Tu margen actual es {config.get('porcentaje_ganancia', 0)}%. Considera aumentarlo al 30-40% para mejor rentabilidad.",
+            "accion": "/ganancias"
+        })
+    
+    if len(historial) > 10:
+        # Find most calculated style
+        style_counts = {}
+        for h in historial:
+            style_name = h.get("estilo_nombre", "")
+            style_counts[style_name] = style_counts.get(style_name, 0) + 1
+        
+        if style_counts:
+            top_style = max(style_counts, key=style_counts.get)
+            tips.append({
+                "tipo": "insight",
+                "icono": "star",
+                "titulo": "Tu servicio estrella",
+                "mensaje": f'"{top_style}" es tu servicio más calculado. Considera promocionarlo más.',
+                "accion": "/calculadora"
+            })
+    
+    # Low profit services warning
+    for estilo in estilos:
+        if estilo.get("precio_sugerido", 0) > 0 and estilo.get("costo_total", 0) > 0:
+            margen = ((estilo["precio_sugerido"] - estilo["costo_total"]) / estilo["precio_sugerido"]) * 100
+            if margen < 20:
+                tips.append({
+                    "tipo": "alerta",
+                    "icono": "alert-triangle",
+                    "titulo": f"Revisa: {estilo['nombre']}",
+                    "mensaje": f"Este servicio tiene un margen bajo ({margen:.0f}%). Considera ajustar el precio.",
+                    "accion": "/estilos"
+                })
+                break  # Only show one
+    
+    return tips[:5]  # Return max 5 tips
 
 # ======================
 # ENDPOINTS - Productos (Protected)
