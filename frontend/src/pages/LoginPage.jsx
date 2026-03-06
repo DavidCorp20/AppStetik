@@ -39,52 +39,52 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-stone-50 to-stone-100 flex items-center justify-center p-4" data-testid="login-page">
+    <div className="min-h-screen bg-gradient-to-br from-[#FAF7F5] to-[#F5F1EE] flex items-center justify-center p-4" data-testid="login-page">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-2">
-            <Sparkles className="w-8 h-8 text-stone-700" />
-            <span className="text-3xl font-bold text-stone-800" style={{ fontFamily: 'Playfair Display, serif' }}>
+            <Sparkles className="w-8 h-8 text-[#A17A8E]" />
+            <span className="text-3xl font-bold text-[#3D3231]" style={{ fontFamily: 'Playfair Display, serif' }}>
               NailCost PRO
             </span>
           </div>
-          <p className="text-stone-500">Tu calculadora inteligente de costos</p>
+          <p className="text-[#6B5E5C]">Tu calculadora inteligente de costos</p>
         </div>
 
-        <Card className="bg-white border-stone-200 shadow-xl">
+        <Card className="bg-white border-[#E8E2DF] shadow-xl">
           <CardHeader className="text-center pb-2">
-            <CardTitle className="text-2xl" style={{ fontFamily: 'Playfair Display, serif' }}>
+            <CardTitle className="text-2xl text-[#3D3231]" style={{ fontFamily: 'Playfair Display, serif' }}>
               Iniciar Sesión
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-[#6B5E5C]">
               Ingresa a tu cuenta para continuar
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Correo Electrónico</Label>
+                <Label htmlFor="email" className="text-[#3D3231]">Correo Electrónico</Label>
                 <Input
                   id="email"
                   type="email"
                   placeholder="tu@email.com"
                   value={formData.email}
                   onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                  className="rounded-xl"
+                  className="rounded-xl border-[#E8E2DF] focus:border-[#A17A8E] focus:ring-[#A17A8E]"
                   data-testid="login-email-input"
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="password">Contraseña</Label>
+                <Label htmlFor="password" className="text-[#3D3231]">Contraseña</Label>
                 <Input
                   id="password"
                   type="password"
                   placeholder="Tu contraseña"
                   value={formData.password}
                   onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                  className="rounded-xl"
+                  className="rounded-xl border-[#E8E2DF] focus:border-[#A17A8E] focus:ring-[#A17A8E]"
                   data-testid="login-password-input"
                 />
               </div>
@@ -92,7 +92,7 @@ export default function LoginPage() {
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-stone-800 hover:bg-stone-900 text-white rounded-full h-12"
+                className="w-full bg-[#A17A8E] hover:bg-[#8B6578] text-white rounded-full h-12"
                 data-testid="login-submit-btn"
               >
                 {loading ? (
@@ -105,9 +105,9 @@ export default function LoginPage() {
             </form>
 
             <div className="mt-6 text-center">
-              <p className="text-stone-500 text-sm">
+              <p className="text-[#6B5E5C] text-sm">
                 ¿No tienes cuenta?{" "}
-                <Link to="/registro" className="text-stone-800 font-medium hover:underline" data-testid="goto-register-link">
+                <Link to="/registro" className="text-[#A17A8E] font-medium hover:underline" data-testid="goto-register-link">
                   Regístrate gratis
                 </Link>
               </p>
@@ -115,7 +115,7 @@ export default function LoginPage() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-stone-400 text-xs mt-6">
+        <p className="text-center text-[#9C8B7E] text-xs mt-6">
           Calculadora profesional para nail artists
         </p>
       </div>

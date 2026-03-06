@@ -80,8 +80,8 @@ const NavDropdown = ({ group, isActive }) => {
         className={cn(
           "flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-colors duration-200",
           isActive
-            ? "bg-stone-800 text-white"
-            : "text-stone-600 hover:text-stone-800 hover:bg-stone-100"
+            ? "bg-[#A17A8E] text-white"
+            : "text-[#6B5E5C] hover:text-[#A17A8E] hover:bg-[#F5F1EE]"
         )}
       >
         <group.icon className="w-4 h-4" />
@@ -90,7 +90,7 @@ const NavDropdown = ({ group, isActive }) => {
       </button>
       
       {open && (
-        <div className="absolute top-full left-0 mt-1 w-44 bg-white rounded-xl shadow-lg border border-stone-200 py-1 z-50 animate-fade-in">
+        <div className="absolute top-full left-0 mt-1 w-44 bg-white rounded-xl shadow-lg border border-[#E8E2DF] py-1 z-50 animate-fade-in">
           {group.items.map((item) => (
             <NavLink
               key={item.to}
@@ -100,8 +100,8 @@ const NavDropdown = ({ group, isActive }) => {
                 cn(
                   "flex items-center gap-2 px-4 py-2.5 text-sm transition-colors",
                   isActive
-                    ? "bg-stone-100 text-stone-800 font-medium"
-                    : "text-stone-600 hover:bg-stone-50"
+                    ? "bg-[#F5F1EE] text-[#A17A8E] font-medium"
+                    : "text-[#6B5E5C] hover:bg-[#FAF7F5]"
                 )
               }
             >
@@ -141,33 +141,33 @@ const UserMenu = () => {
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-stone-100 hover:bg-stone-200 transition-colors"
+        className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#F5F1EE] hover:bg-[#E8E2DF] transition-colors"
         data-testid="user-menu-btn"
       >
-        <div className="w-6 h-6 rounded-full bg-stone-800 flex items-center justify-center">
+        <div className="w-6 h-6 rounded-full bg-[#A17A8E] flex items-center justify-center">
           <User className="w-3.5 h-3.5 text-white" />
         </div>
-        <span className="text-sm font-medium text-stone-700 hidden sm:inline max-w-[100px] truncate">
+        <span className="text-sm font-medium text-[#3D3231] hidden sm:inline max-w-[100px] truncate">
           {user?.nombre || "Usuario"}
         </span>
         {isPremium && <Crown className="w-3.5 h-3.5 text-amber-500" />}
-        <ChevronDown className={cn("w-3 h-3 text-stone-500 transition-transform", open && "rotate-180")} />
+        <ChevronDown className={cn("w-3 h-3 text-[#9C8B7E] transition-transform", open && "rotate-180")} />
       </button>
 
       {open && (
-        <div className="absolute top-full right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-stone-200 py-2 z-50 animate-fade-in">
-          <div className="px-4 py-2 border-b border-stone-100">
-            <p className="font-medium text-stone-800 truncate">{user?.nombre}</p>
-            <p className="text-xs text-stone-500 truncate">{user?.email}</p>
+        <div className="absolute top-full right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-[#E8E2DF] py-2 z-50 animate-fade-in">
+          <div className="px-4 py-2 border-b border-[#F5F1EE]">
+            <p className="font-medium text-[#3D3231] truncate">{user?.nombre}</p>
+            <p className="text-xs text-[#6B5E5C] truncate">{user?.email}</p>
             {user?.nombre_negocio && (
-              <p className="text-xs text-stone-400 truncate mt-0.5">{user?.nombre_negocio}</p>
+              <p className="text-xs text-[#9C8B7E] truncate mt-0.5">{user?.nombre_negocio}</p>
             )}
           </div>
-          <div className="px-4 py-2 border-b border-stone-100">
+          <div className="px-4 py-2 border-b border-[#F5F1EE]">
             <div className="flex items-center gap-2">
               <span className={cn(
                 "text-xs px-2 py-0.5 rounded-full",
-                isPremium ? "bg-amber-100 text-amber-700" : "bg-stone-100 text-stone-600"
+                isPremium ? "bg-amber-100 text-amber-700" : "bg-[#F5F1EE] text-[#6B5E5C]"
               )}>
                 Plan {isPremium ? "Premium" : "Básico"}
               </span>
@@ -177,7 +177,7 @@ const UserMenu = () => {
             <NavLink
               to="/admin"
               onClick={() => setOpen(false)}
-              className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-violet-600 hover:bg-violet-50 transition-colors"
+              className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-[#A17A8E] hover:bg-[#F5F1EE] transition-colors"
               data-testid="admin-link"
             >
               <Shield className="w-4 h-4" />
@@ -186,7 +186,7 @@ const UserMenu = () => {
           )}
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+            className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-[#C45C5C] hover:bg-red-50 transition-colors"
             data-testid="logout-btn"
           >
             <LogOut className="w-4 h-4" />
@@ -215,21 +215,21 @@ export const Layout = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-stone-50" data-testid="app-layout">
+    <div className="min-h-screen bg-[#FAF7F5]" data-testid="app-layout">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-stone-100">
+      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-[#E8E2DF]">
         <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14">
             {/* Logo */}
             <NavLink to="/" className="flex items-center gap-2.5" data-testid="logo-link">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-stone-700 to-stone-900 flex items-center justify-center shadow-sm">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#A17A8E] to-[#8B6578] flex items-center justify-center shadow-sm">
                 <Sparkles className="w-4 h-4 text-white" />
               </div>
               <div className="hidden sm:flex items-baseline gap-1">
-                <span className="text-lg font-semibold text-stone-800" style={{ fontFamily: 'Playfair Display, serif' }}>
+                <span className="text-lg font-semibold text-[#3D3231]" style={{ fontFamily: 'Playfair Display, serif' }}>
                   NailCost
                 </span>
-                <span className="text-xs font-medium text-stone-400 uppercase tracking-wider">Pro</span>
+                <span className="text-xs font-medium text-[#9C8B7E] uppercase tracking-wider">Pro</span>
               </div>
             </NavLink>
 
@@ -245,8 +245,8 @@ export const Layout = () => {
                     cn(
                       "flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-colors duration-200",
                       isActive
-                        ? "bg-stone-800 text-white"
-                        : "text-stone-600 hover:text-stone-800 hover:bg-stone-100"
+                        ? "bg-[#A17A8E] text-white"
+                        : "text-[#6B5E5C] hover:text-[#A17A8E] hover:bg-[#F5F1EE]"
                     )
                   }
                   data-testid={`nav-${item.label.toLowerCase()}`}
@@ -277,8 +277,8 @@ export const Layout = () => {
                     cn(
                       "flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-colors duration-200",
                       isActive
-                        ? "bg-stone-800 text-white"
-                        : "text-stone-600 hover:text-stone-800 hover:bg-stone-100"
+                        ? "bg-[#A17A8E] text-white"
+                        : "text-[#6B5E5C] hover:text-[#A17A8E] hover:bg-[#F5F1EE]"
                     )
                   }
                   data-testid={`nav-${item.label.toLowerCase()}`}
@@ -299,10 +299,10 @@ export const Layout = () => {
               <UserMenu />
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="p-2 rounded-lg hover:bg-stone-100 transition-colors"
+                className="p-2 rounded-lg hover:bg-[#F5F1EE] transition-colors"
                 data-testid="mobile-menu-toggle"
               >
-                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                {mobileMenuOpen ? <X className="w-5 h-5 text-[#A17A8E]" /> : <Menu className="w-5 h-5 text-[#6B5E5C]" />}
               </button>
             </div>
           </div>
@@ -313,13 +313,13 @@ export const Layout = () => {
       {mobileMenuOpen && (
         <div className="lg:hidden fixed inset-0 z-30 bg-black/20 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)}>
           <nav 
-            className="absolute top-14 left-0 right-0 bg-white border-b border-stone-200 shadow-lg p-4 animate-fade-in max-h-[80vh] overflow-y-auto"
+            className="absolute top-14 left-0 right-0 bg-white border-b border-[#E8E2DF] shadow-lg p-4 animate-fade-in max-h-[80vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
             data-testid="mobile-nav"
           >
             {/* Main Section */}
             <div className="mb-4">
-              <p className="text-xs text-stone-400 uppercase tracking-wider mb-2 px-2">Principal</p>
+              <p className="text-xs text-[#9C8B7E] uppercase tracking-wider mb-2 px-2">Principal</p>
               <div className="grid grid-cols-3 gap-2">
                 {mainNavItems.map((item) => (
                   <NavLink
@@ -331,8 +331,8 @@ export const Layout = () => {
                       cn(
                         "flex flex-col items-center gap-1 px-3 py-3 rounded-xl text-xs font-medium transition-colors duration-200",
                         isActive
-                          ? "bg-stone-800 text-white"
-                          : "text-stone-600 hover:bg-stone-100"
+                          ? "bg-[#A17A8E] text-white"
+                          : "text-[#6B5E5C] hover:bg-[#F5F1EE]"
                       )
                     }
                   >
@@ -345,7 +345,7 @@ export const Layout = () => {
 
             {/* Servicios Section */}
             <div className="mb-4">
-              <p className="text-xs text-stone-400 uppercase tracking-wider mb-2 px-2">Servicios</p>
+              <p className="text-xs text-[#9C8B7E] uppercase tracking-wider mb-2 px-2">Servicios</p>
               <div className="grid grid-cols-3 gap-2">
                 {serviciosGroup.items.map((item) => (
                   <NavLink
@@ -356,8 +356,8 @@ export const Layout = () => {
                       cn(
                         "flex flex-col items-center gap-1 px-3 py-3 rounded-xl text-xs font-medium transition-colors duration-200",
                         isActive
-                          ? "bg-stone-800 text-white"
-                          : "text-stone-600 hover:bg-stone-100"
+                          ? "bg-[#A17A8E] text-white"
+                          : "text-[#6B5E5C] hover:bg-[#F5F1EE]"
                       )
                     }
                   >
@@ -370,7 +370,7 @@ export const Layout = () => {
 
             {/* Finanzas Section */}
             <div className="mb-4">
-              <p className="text-xs text-stone-400 uppercase tracking-wider mb-2 px-2">Finanzas</p>
+              <p className="text-xs text-[#9C8B7E] uppercase tracking-wider mb-2 px-2">Finanzas</p>
               <div className="grid grid-cols-2 gap-2">
                 {finanzasGroup.items.map((item) => (
                   <NavLink
@@ -381,8 +381,8 @@ export const Layout = () => {
                       cn(
                         "flex flex-col items-center gap-1 px-3 py-3 rounded-xl text-xs font-medium transition-colors duration-200",
                         isActive
-                          ? "bg-stone-800 text-white"
-                          : "text-stone-600 hover:bg-stone-100"
+                          ? "bg-[#A17A8E] text-white"
+                          : "text-[#6B5E5C] hover:bg-[#F5F1EE]"
                       )
                     }
                   >
@@ -395,7 +395,7 @@ export const Layout = () => {
 
             {/* Herramientas Section */}
             <div>
-              <p className="text-xs text-stone-400 uppercase tracking-wider mb-2 px-2">Herramientas</p>
+              <p className="text-xs text-[#9C8B7E] uppercase tracking-wider mb-2 px-2">Herramientas</p>
               <div className="grid grid-cols-3 gap-2">
                 {toolsNavItems.map((item) => (
                   <NavLink
@@ -406,8 +406,8 @@ export const Layout = () => {
                       cn(
                         "flex flex-col items-center gap-1 px-3 py-3 rounded-xl text-xs font-medium transition-colors duration-200",
                         isActive
-                          ? "bg-stone-800 text-white"
-                          : "text-stone-600 hover:bg-stone-100"
+                          ? "bg-[#A17A8E] text-white"
+                          : "text-[#6B5E5C] hover:bg-[#F5F1EE]"
                       )
                     }
                   >
@@ -427,9 +427,9 @@ export const Layout = () => {
       </main>
 
       {/* Footer - Simplified */}
-      <footer className="border-t border-stone-100 bg-white/50 mt-auto">
+      <footer className="border-t border-[#E8E2DF] bg-white/50 mt-auto">
         <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between text-xs text-stone-400">
+          <div className="flex items-center justify-between text-xs text-[#9C8B7E]">
             <span>NailCost Pro</span>
             <span>USD</span>
           </div>
