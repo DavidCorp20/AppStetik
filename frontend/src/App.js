@@ -4,7 +4,12 @@ import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { AppProvider } from "@/context/AppContext";
 import { Toaster } from "@/components/ui/sonner";
 import { Layout } from "@/components/Layout";
-import { Dashboard } from "@/pages/Dashboard";
+
+// Dashboards
+import { PersonaDashboard } from "@/pages/PersonaDashboard";
+import { ComercioDashboard } from "@/pages/ComercioDashboard";
+
+// Pages
 import { ProductosPage } from "@/pages/ProductosPage";
 import { EstilosPage } from "@/pages/EstilosPage";
 import { DisenosPage } from "@/pages/DisenosPage";
@@ -19,7 +24,20 @@ import { SimulacionPage } from "@/pages/SimulacionPage";
 import { LoginPage } from "@/pages/LoginPage";
 import { RegisterPage } from "@/pages/RegisterPage";
 import { AdminPage } from "@/pages/AdminPage";
+import { HistorialPage } from "@/pages/HistorialPage";
+import { EmpleadosPage } from "@/pages/EmpleadosPage";
 import { Loader2 } from "lucide-react";
+
+// Dashboard Router - selects based on user type
+function DashboardRouter() {
+  const { isBusinessUser } = useAuth();
+  
+  if (isBusinessUser) {
+    return <ComercioDashboard />;
+  }
+  
+  return <PersonaDashboard />;
+}
 
 // Protected Route wrapper
 function ProtectedRoute() {
@@ -27,10 +45,10 @@ function ProtectedRoute() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-stone-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-white to-[#FDF2F7]">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-stone-400 mx-auto mb-4" />
-          <p className="text-stone-500">Cargando...</p>
+          <Loader2 className="w-8 h-8 animate-spin text-[#E84A8A] mx-auto mb-4" />
+          <p className="text-[#64748B]">Cargando...</p>
         </div>
       </div>
     );
@@ -49,8 +67,8 @@ function PublicRoute() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-stone-50">
-        <Loader2 className="w-8 h-8 animate-spin text-stone-400" />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-white to-[#FDF2F7]">
+        <Loader2 className="w-8 h-8 animate-spin text-[#E84A8A]" />
       </div>
     );
   }
@@ -74,7 +92,10 @@ function AppRoutes() {
       {/* Protected routes */}
       <Route element={<ProtectedRoute />}>
         <Route path="/" element={<Layout />}>
-          <Route index element={<Dashboard />} />
+          {/* Dashboard based on user type */}
+          <Route index element={<DashboardRouter />} />
+          
+          {/* Common pages */}
           <Route path="productos" element={<ProductosPage />} />
           <Route path="estilos" element={<EstilosPage />} />
           <Route path="disenos" element={<DisenosPage />} />
@@ -87,6 +108,12 @@ function AppRoutes() {
           <Route path="reportes-mensuales" element={<ReportesMensualesPage />} />
           <Route path="simulacion" element={<SimulacionPage />} />
           <Route path="admin" element={<AdminPage />} />
+          
+          {/* Persona-specific pages */}
+          <Route path="historial" element={<HistorialPage />} />
+          
+          {/* Comercio-specific pages */}
+          <Route path="empleados" element={<EmpleadosPage />} />
         </Route>
       </Route>
 

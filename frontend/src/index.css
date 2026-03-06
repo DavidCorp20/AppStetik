@@ -98,3 +98,33 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 input[type="number"] { -moz-appearance: textfield; }
 
 .safe-bottom { padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
+
+/* Safe area for bottom navigation */
+.safe-area-bottom { 
+  padding-bottom: env(safe-area-inset-bottom); 
+}
+
+/* Purple theme variations for Comercio */
+.bg-gradient-purple { background: linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%); }
+.bg-gradient-purple-light { background: linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%); }
+
+.btn-purple { 
+  background: linear-gradient(135deg, #8B5CF6, #A78BFA); 
+  color: white; 
+  box-shadow: 0 4px 15px rgba(139,92,246,0.4); 
+  transition: all 0.3s; 
+}
+.btn-purple:hover { 
+  transform: translateY(-2px); 
+  box-shadow: 0 6px 25px rgba(139,92,246,0.5); 
+}
+
+/* Active state for bottom nav */
+.nav-active {
+  color: var(--primary);
+}
+
+/* Smooth transitions for layout switch */
+.layout-transition {
+  transition: all 0.3s ease-in-out;
+}
