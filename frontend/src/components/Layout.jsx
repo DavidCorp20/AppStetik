@@ -78,10 +78,10 @@ const NavDropdown = ({ group, isActive }) => {
       <button
         onClick={() => setOpen(!open)}
         className={cn(
-          "flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-colors duration-200",
+          "flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300",
           isActive
-            ? "bg-[#A17A8E] text-white"
-            : "text-[#6B5E5C] hover:text-[#A17A8E] hover:bg-[#F5F1EE]"
+            ? "bg-gradient-to-r from-[#E84A8A] to-[#FF6B9D] text-white shadow-lg shadow-[#E84A8A]/25"
+            : "text-[#64748B] hover:text-[#E84A8A] hover:bg-[#FDF2F7]"
         )}
       >
         <group.icon className="w-4 h-4" />
@@ -90,7 +90,7 @@ const NavDropdown = ({ group, isActive }) => {
       </button>
       
       {open && (
-        <div className="absolute top-full left-0 mt-1 w-44 bg-white rounded-xl shadow-lg border border-[#E8E2DF] py-1 z-50 animate-fade-in">
+        <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-[#FCE7F0] py-2 z-50 animate-fade-in">
           {group.items.map((item) => (
             <NavLink
               key={item.to}
@@ -98,10 +98,10 @@ const NavDropdown = ({ group, isActive }) => {
               onClick={() => setOpen(false)}
               className={({ isActive }) =>
                 cn(
-                  "flex items-center gap-2 px-4 py-2.5 text-sm transition-colors",
+                  "flex items-center gap-3 px-4 py-3 text-sm transition-colors",
                   isActive
-                    ? "bg-[#F5F1EE] text-[#A17A8E] font-medium"
-                    : "text-[#6B5E5C] hover:bg-[#FAF7F5]"
+                    ? "bg-[#FDF2F7] text-[#E84A8A] font-medium"
+                    : "text-[#64748B] hover:bg-[#FDF2F7] hover:text-[#E84A8A]"
                 )
               }
             >
@@ -141,43 +141,43 @@ const UserMenu = () => {
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#F5F1EE] hover:bg-[#E8E2DF] transition-colors"
+        className="flex items-center gap-2 px-3 py-2 rounded-full bg-[#FDF2F7] hover:bg-[#FCE7F0] transition-colors border border-[#FCE7F0]"
         data-testid="user-menu-btn"
       >
-        <div className="w-6 h-6 rounded-full bg-[#A17A8E] flex items-center justify-center">
-          <User className="w-3.5 h-3.5 text-white" />
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#E84A8A] to-[#FF6B9D] flex items-center justify-center shadow-sm">
+          <User className="w-4 h-4 text-white" />
         </div>
-        <span className="text-sm font-medium text-[#3D3231] hidden sm:inline max-w-[100px] truncate">
+        <span className="text-sm font-medium text-[#1A1A2E] hidden sm:inline max-w-[100px] truncate">
           {user?.nombre || "Usuario"}
         </span>
-        {isPremium && <Crown className="w-3.5 h-3.5 text-amber-500" />}
-        <ChevronDown className={cn("w-3 h-3 text-[#9C8B7E] transition-transform", open && "rotate-180")} />
+        {isPremium && <Crown className="w-4 h-4 text-amber-500" />}
+        <ChevronDown className={cn("w-3 h-3 text-[#64748B] transition-transform", open && "rotate-180")} />
       </button>
 
       {open && (
-        <div className="absolute top-full right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-[#E8E2DF] py-2 z-50 animate-fade-in">
-          <div className="px-4 py-2 border-b border-[#F5F1EE]">
-            <p className="font-medium text-[#3D3231] truncate">{user?.nombre}</p>
-            <p className="text-xs text-[#6B5E5C] truncate">{user?.email}</p>
+        <div className="absolute top-full right-0 mt-2 w-60 bg-white rounded-2xl shadow-xl border border-[#FCE7F0] py-2 z-50 animate-fade-in">
+          <div className="px-4 py-3 border-b border-[#FCE7F0]">
+            <p className="font-semibold text-[#1A1A2E] truncate">{user?.nombre}</p>
+            <p className="text-xs text-[#64748B] truncate">{user?.email}</p>
             {user?.nombre_negocio && (
-              <p className="text-xs text-[#9C8B7E] truncate mt-0.5">{user?.nombre_negocio}</p>
+              <p className="text-xs text-[#E84A8A] truncate mt-0.5">{user?.nombre_negocio}</p>
             )}
           </div>
-          <div className="px-4 py-2 border-b border-[#F5F1EE]">
-            <div className="flex items-center gap-2">
-              <span className={cn(
-                "text-xs px-2 py-0.5 rounded-full",
-                isPremium ? "bg-amber-100 text-amber-700" : "bg-[#F5F1EE] text-[#6B5E5C]"
-              )}>
-                Plan {isPremium ? "Premium" : "Básico"}
-              </span>
-            </div>
+          <div className="px-4 py-2 border-b border-[#FCE7F0]">
+            <span className={cn(
+              "text-xs px-3 py-1 rounded-full font-medium",
+              isPremium 
+                ? "bg-gradient-to-r from-amber-100 to-orange-100 text-amber-700" 
+                : "bg-[#FDF2F7] text-[#E84A8A]"
+            )}>
+              {isPremium ? "✨ Premium" : "Plan Básico"}
+            </span>
           </div>
           {user?.role === "admin" && (
             <NavLink
               to="/admin"
               onClick={() => setOpen(false)}
-              className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-[#A17A8E] hover:bg-[#F5F1EE] transition-colors"
+              className="flex items-center gap-2 px-4 py-3 text-sm text-purple-600 hover:bg-purple-50 transition-colors"
               data-testid="admin-link"
             >
               <Shield className="w-4 h-4" />
@@ -186,7 +186,7 @@ const UserMenu = () => {
           )}
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-[#C45C5C] hover:bg-red-50 transition-colors"
+            className="w-full flex items-center gap-2 px-4 py-3 text-sm text-red-500 hover:bg-red-50 transition-colors"
             data-testid="logout-btn"
           >
             <LogOut className="w-4 h-4" />
@@ -215,27 +215,26 @@ export const Layout = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#FAF7F5]" data-testid="app-layout">
+    <div className="min-h-screen bg-gradient-to-b from-white to-[#FDF2F7]" data-testid="app-layout">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-[#E8E2DF]">
+      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-lg border-b border-[#FCE7F0] shadow-sm">
         <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-14">
+          <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <NavLink to="/" className="flex items-center gap-2.5" data-testid="logo-link">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#A17A8E] to-[#8B6578] flex items-center justify-center shadow-sm">
-                <Sparkles className="w-4 h-4 text-white" />
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#E84A8A] to-[#FF6B9D] flex items-center justify-center shadow-lg shadow-[#E84A8A]/30">
+                <Sparkles className="w-5 h-5 text-white" />
               </div>
               <div className="hidden sm:flex items-baseline gap-1">
-                <span className="text-lg font-semibold text-[#3D3231]" style={{ fontFamily: 'Playfair Display, serif' }}>
+                <span className="text-xl font-bold text-[#1A1A2E]" style={{ fontFamily: 'Playfair Display, serif' }}>
                   NailCost
                 </span>
-                <span className="text-xs font-medium text-[#9C8B7E] uppercase tracking-wider">Pro</span>
+                <span className="text-xs font-semibold text-[#E84A8A] uppercase tracking-wider">Pro</span>
               </div>
             </NavLink>
 
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center gap-1" data-testid="desktop-nav">
-              {/* Main Items */}
               {mainNavItems.map((item) => (
                 <NavLink
                   key={item.to}
@@ -243,10 +242,10 @@ export const Layout = () => {
                   end={item.to === "/"}
                   className={({ isActive }) =>
                     cn(
-                      "flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-colors duration-200",
+                      "flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300",
                       isActive
-                        ? "bg-[#A17A8E] text-white"
-                        : "text-[#6B5E5C] hover:text-[#A17A8E] hover:bg-[#F5F1EE]"
+                        ? "bg-gradient-to-r from-[#E84A8A] to-[#FF6B9D] text-white shadow-lg shadow-[#E84A8A]/25"
+                        : "text-[#64748B] hover:text-[#E84A8A] hover:bg-[#FDF2F7]"
                     )
                   }
                   data-testid={`nav-${item.label.toLowerCase()}`}
@@ -277,8 +276,8 @@ export const Layout = () => {
                     cn(
                       "flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-colors duration-200",
                       isActive
-                        ? "bg-[#A17A8E] text-white"
-                        : "text-[#6B5E5C] hover:text-[#A17A8E] hover:bg-[#F5F1EE]"
+                        ? "bg-gradient-to-r from-[#E84A8A] to-[#FF6B9D] text-white shadow-lg shadow-[#E84A8A]/25"
+                        : "text-[#64748B] hover:text-[#E84A8A] hover:bg-[#FDF2F7]"
                     )
                   }
                   data-testid={`nav-${item.label.toLowerCase()}`}
@@ -299,10 +298,10 @@ export const Layout = () => {
               <UserMenu />
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="p-2 rounded-lg hover:bg-[#F5F1EE] transition-colors"
+                className="p-2.5 rounded-xl bg-[#FDF2F7] hover:bg-[#FCE7F0] transition-colors"
                 data-testid="mobile-menu-toggle"
               >
-                {mobileMenuOpen ? <X className="w-5 h-5 text-[#A17A8E]" /> : <Menu className="w-5 h-5 text-[#6B5E5C]" />}
+                {mobileMenuOpen ? <X className="w-5 h-5 text-[#E84A8A]" /> : <Menu className="w-5 h-5 text-[#E84A8A]" />}
               </button>
             </div>
           </div>
@@ -313,13 +312,13 @@ export const Layout = () => {
       {mobileMenuOpen && (
         <div className="lg:hidden fixed inset-0 z-30 bg-black/20 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)}>
           <nav 
-            className="absolute top-14 left-0 right-0 bg-white border-b border-[#E8E2DF] shadow-lg p-4 animate-fade-in max-h-[80vh] overflow-y-auto"
+            className="absolute top-16 left-0 right-0 bg-white border-b border-[#FCE7F0] shadow-xl p-4 animate-fade-in max-h-[80vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
             data-testid="mobile-nav"
           >
             {/* Main Section */}
             <div className="mb-4">
-              <p className="text-xs text-[#9C8B7E] uppercase tracking-wider mb-2 px-2">Principal</p>
+              <p className="text-xs font-semibold text-[#E84A8A] uppercase tracking-wider mb-3 px-2">Principal</p>
               <div className="grid grid-cols-3 gap-2">
                 {mainNavItems.map((item) => (
                   <NavLink
@@ -329,14 +328,14 @@ export const Layout = () => {
                     onClick={() => setMobileMenuOpen(false)}
                     className={({ isActive }) =>
                       cn(
-                        "flex flex-col items-center gap-1 px-3 py-3 rounded-xl text-xs font-medium transition-colors duration-200",
+                        "flex flex-col items-center gap-2 px-3 py-4 rounded-2xl text-xs font-medium transition-all",
                         isActive
-                          ? "bg-[#A17A8E] text-white"
-                          : "text-[#6B5E5C] hover:bg-[#F5F1EE]"
+                          ? "bg-gradient-to-br from-[#E84A8A] to-[#FF6B9D] text-white shadow-lg"
+                          : "bg-[#FDF2F7] text-[#64748B] hover:bg-[#FCE7F0]"
                       )
                     }
                   >
-                    <item.icon className="w-5 h-5" />
+                    <item.icon className="w-6 h-6" />
                     <span>{item.label}</span>
                   </NavLink>
                 ))}
@@ -345,7 +344,7 @@ export const Layout = () => {
 
             {/* Servicios Section */}
             <div className="mb-4">
-              <p className="text-xs text-[#9C8B7E] uppercase tracking-wider mb-2 px-2">Servicios</p>
+              <p className="text-xs font-semibold text-[#E84A8A] uppercase tracking-wider mb-3 px-2">Servicios</p>
               <div className="grid grid-cols-3 gap-2">
                 {serviciosGroup.items.map((item) => (
                   <NavLink
@@ -354,14 +353,14 @@ export const Layout = () => {
                     onClick={() => setMobileMenuOpen(false)}
                     className={({ isActive }) =>
                       cn(
-                        "flex flex-col items-center gap-1 px-3 py-3 rounded-xl text-xs font-medium transition-colors duration-200",
+                        "flex flex-col items-center gap-2 px-3 py-4 rounded-2xl text-xs font-medium transition-all",
                         isActive
-                          ? "bg-[#A17A8E] text-white"
-                          : "text-[#6B5E5C] hover:bg-[#F5F1EE]"
+                          ? "bg-gradient-to-br from-[#E84A8A] to-[#FF6B9D] text-white shadow-lg"
+                          : "bg-[#FDF2F7] text-[#64748B] hover:bg-[#FCE7F0]"
                       )
                     }
                   >
-                    <item.icon className="w-5 h-5" />
+                    <item.icon className="w-6 h-6" />
                     <span>{item.label}</span>
                   </NavLink>
                 ))}
@@ -370,7 +369,7 @@ export const Layout = () => {
 
             {/* Finanzas Section */}
             <div className="mb-4">
-              <p className="text-xs text-[#9C8B7E] uppercase tracking-wider mb-2 px-2">Finanzas</p>
+              <p className="text-xs font-semibold text-[#E84A8A] uppercase tracking-wider mb-3 px-2">Finanzas</p>
               <div className="grid grid-cols-2 gap-2">
                 {finanzasGroup.items.map((item) => (
                   <NavLink
@@ -379,14 +378,14 @@ export const Layout = () => {
                     onClick={() => setMobileMenuOpen(false)}
                     className={({ isActive }) =>
                       cn(
-                        "flex flex-col items-center gap-1 px-3 py-3 rounded-xl text-xs font-medium transition-colors duration-200",
+                        "flex flex-col items-center gap-2 px-3 py-4 rounded-2xl text-xs font-medium transition-all",
                         isActive
-                          ? "bg-[#A17A8E] text-white"
-                          : "text-[#6B5E5C] hover:bg-[#F5F1EE]"
+                          ? "bg-gradient-to-br from-[#E84A8A] to-[#FF6B9D] text-white shadow-lg"
+                          : "bg-[#FDF2F7] text-[#64748B] hover:bg-[#FCE7F0]"
                       )
                     }
                   >
-                    <item.icon className="w-5 h-5" />
+                    <item.icon className="w-6 h-6" />
                     <span>{item.label}</span>
                   </NavLink>
                 ))}
@@ -395,7 +394,7 @@ export const Layout = () => {
 
             {/* Herramientas Section */}
             <div>
-              <p className="text-xs text-[#9C8B7E] uppercase tracking-wider mb-2 px-2">Herramientas</p>
+              <p className="text-xs font-semibold text-[#E84A8A] uppercase tracking-wider mb-3 px-2">Herramientas</p>
               <div className="grid grid-cols-3 gap-2">
                 {toolsNavItems.map((item) => (
                   <NavLink
@@ -404,14 +403,14 @@ export const Layout = () => {
                     onClick={() => setMobileMenuOpen(false)}
                     className={({ isActive }) =>
                       cn(
-                        "flex flex-col items-center gap-1 px-3 py-3 rounded-xl text-xs font-medium transition-colors duration-200",
+                        "flex flex-col items-center gap-2 px-3 py-4 rounded-2xl text-xs font-medium transition-all",
                         isActive
-                          ? "bg-[#A17A8E] text-white"
-                          : "text-[#6B5E5C] hover:bg-[#F5F1EE]"
+                          ? "bg-gradient-to-br from-[#E84A8A] to-[#FF6B9D] text-white shadow-lg"
+                          : "bg-[#FDF2F7] text-[#64748B] hover:bg-[#FCE7F0]"
                       )
                     }
                   >
-                    <item.icon className="w-5 h-5" />
+                    <item.icon className="w-6 h-6" />
                     <span>{item.label}</span>
                   </NavLink>
                 ))}
@@ -426,11 +425,14 @@ export const Layout = () => {
         <Outlet />
       </main>
 
-      {/* Footer - Simplified */}
-      <footer className="border-t border-[#E8E2DF] bg-white/50 mt-auto">
+      {/* Footer */}
+      <footer className="border-t border-[#FCE7F0] bg-white/50 mt-auto">
         <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between text-xs text-[#9C8B7E]">
-            <span>NailCost Pro</span>
+          <div className="flex items-center justify-between text-xs text-[#64748B]">
+            <span className="flex items-center gap-1">
+              <Sparkles className="w-3 h-3 text-[#E84A8A]" />
+              NailCost Pro
+            </span>
             <span>USD</span>
           </div>
         </div>

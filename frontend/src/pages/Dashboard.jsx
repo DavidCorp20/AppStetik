@@ -2,28 +2,10 @@ import { useEffect, useState } from "react";
 import { useApp } from "@/context/AppContext";
 import { useAuth } from "@/context/AuthContext";
 import { Link } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { 
-  PieChart, 
-  Pie, 
-  Cell, 
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  Tooltip,
-  BarChart,
-  Bar
-} from "recharts";
 import { 
   Package, 
   Palette, 
@@ -33,207 +15,175 @@ import {
   AlertTriangle,
   ArrowRight,
   DollarSign,
-  Clock,
   Loader2,
   Database,
   Bell,
-  ChevronDown,
   Users,
   Calendar,
   Target,
   Zap,
-  TrendingDown,
-  BarChart3,
-  PlusCircle,
-  ArrowUpRight,
+  Award,
+  ChevronRight,
+  Play,
   Star,
-  Award
+  Crown,
+  BarChart3,
+  Clock,
+  Heart
 } from "lucide-react";
 import { toast } from "sonner";
 
-const COLORS = ['#A17A8E', '#9C8B7E', '#D4A5A5', '#7A9E7A', '#D4A373'];
+// Animated Counter Component
+const AnimatedCounter = ({ value, prefix = "", suffix = "" }) => {
+  const [count, setCount] = useState(0);
+  
+  useEffect(() => {
+    const duration = 1000;
+    const steps = 30;
+    const increment = value / steps;
+    let current = 0;
+    
+    const timer = setInterval(() => {
+      current += increment;
+      if (current >= value) {
+        setCount(value);
+        clearInterval(timer);
+      } else {
+        setCount(Math.floor(current));
+      }
+    }, duration / steps);
+    
+    return () => clearInterval(timer);
+  }, [value]);
+  
+  return <span>{prefix}{typeof value === 'number' && value % 1 !== 0 ? count.toFixed(2) : count}{suffix}</span>;
+};
 
-// Metric Card Component - Interactive
-const MetricCard = ({ title, value, icon: Icon, color, subtitle, trend, to }) => {
-  const colorStyles = {
-    mauve: { bg: 'bg-[#A17A8E]/10', icon: 'text-[#A17A8E]', border: 'hover:border-[#A17A8E]/30' },
-    taupe: { bg: 'bg-[#9C8B7E]/10', icon: 'text-[#9C8B7E]', border: 'hover:border-[#9C8B7E]/30' },
-    rose: { bg: 'bg-[#D4A5A5]/20', icon: 'text-[#D4A5A5]', border: 'hover:border-[#D4A5A5]/30' },
-    green: { bg: 'bg-[#7A9E7A]/10', icon: 'text-[#7A9E7A]', border: 'hover:border-[#7A9E7A]/30' },
-    amber: { bg: 'bg-amber-50', icon: 'text-amber-600', border: 'hover:border-amber-200' },
+// Interactive Stat Card
+const StatCard = ({ icon: Icon, label, value, sublabel, color, to, delay = 0 }) => {
+  const colors = {
+    rose: { bg: 'bg-gradient-to-br from-[#E84A8A] to-[#FF6B9D]', light: 'bg-[#FDF2F7]', text: 'text-[#E84A8A]' },
+    purple: { bg: 'bg-gradient-to-br from-[#8B5CF6] to-[#A78BFA]', light: 'bg-purple-50', text: 'text-purple-600' },
+    amber: { bg: 'bg-gradient-to-br from-[#F59E0B] to-[#FBBF24]', light: 'bg-amber-50', text: 'text-amber-600' },
+    emerald: { bg: 'bg-gradient-to-br from-[#10B981] to-[#34D399]', light: 'bg-emerald-50', text: 'text-emerald-600' },
+    blue: { bg: 'bg-gradient-to-br from-[#3B82F6] to-[#60A5FA]', light: 'bg-blue-50', text: 'text-blue-600' },
   };
-  
-  const styles = colorStyles[color] || colorStyles.mauve;
-  
+  const c = colors[color] || colors.rose;
+
   const content = (
-    <Card className={`bg-white border-[#E8E2DF] ${styles.border} hover:shadow-lg transition-all duration-300 cursor-pointer group`}>
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <p className="text-xs font-medium text-[#9C8B7E] uppercase tracking-wider">{title}</p>
-            <div className="flex items-baseline gap-2 mt-1">
-              <p className="text-3xl font-bold text-[#3D3231]">{value}</p>
-              {trend && (
-                <span className={`text-xs font-medium flex items-center gap-0.5 ${trend > 0 ? 'text-[#7A9E7A]' : 'text-[#C45C5C]'}`}>
-                  {trend > 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                  {Math.abs(trend)}%
-                </span>
-              )}
-            </div>
-            {subtitle && <p className="text-xs text-[#9C8B7E] mt-1">{subtitle}</p>}
-          </div>
-          <div className={`w-12 h-12 rounded-2xl ${styles.bg} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-            <Icon className={`w-6 h-6 ${styles.icon}`} />
-          </div>
+    <div 
+      className="group relative bg-white rounded-3xl p-5 border border-[#FCE7F0] card-hover cursor-pointer overflow-hidden animate-slide-up"
+      style={{ animationDelay: `${delay}s` }}
+    >
+      {/* Decorative blob */}
+      <div className={`absolute -top-10 -right-10 w-32 h-32 ${c.light} rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500`} />
+      
+      <div className="relative z-10 flex items-start justify-between">
+        <div>
+          <p className="text-xs font-semibold text-[#64748B] uppercase tracking-wider mb-1">{label}</p>
+          <p className="text-3xl font-bold text-[#1A1A2E]">
+            <AnimatedCounter value={parseFloat(value) || 0} prefix={typeof value === 'string' && value.startsWith('$') ? '$' : ''} />
+          </p>
+          {sublabel && <p className="text-xs text-[#94A3B8] mt-1">{sublabel}</p>}
         </div>
-      </CardContent>
-    </Card>
+        <div className={`w-14 h-14 ${c.bg} rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all duration-300`}>
+          <Icon className="w-7 h-7 text-white" />
+        </div>
+      </div>
+      
+      {/* Hover indicator */}
+      <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+        <ChevronRight className={`w-5 h-5 ${c.text}`} />
+      </div>
+    </div>
   );
 
   return to ? <Link to={to} className="block">{content}</Link> : content;
 };
 
-// Quick Action Button
-const QuickActionButton = ({ icon: Icon, label, to, primary, onClick }) => {
+// Big Action Button
+const BigActionButton = ({ icon: Icon, label, description, to, primary, onClick }) => {
   const content = (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-3 p-4 rounded-2xl transition-all duration-300 ${
+      className={`group relative w-full p-5 rounded-3xl text-left transition-all duration-300 overflow-hidden ${
         primary 
-          ? 'bg-gradient-to-r from-[#A17A8E] to-[#8B6578] text-white shadow-lg shadow-[#A17A8E]/25 hover:shadow-xl hover:shadow-[#A17A8E]/30 hover:-translate-y-0.5'
-          : 'bg-white border border-[#E8E2DF] text-[#3D3231] hover:border-[#A17A8E]/30 hover:bg-[#FAF7F5]'
+          ? 'bg-gradient-to-r from-[#E84A8A] to-[#FF6B9D] text-white shadow-xl shadow-[#E84A8A]/30 hover:shadow-2xl hover:shadow-[#E84A8A]/40 hover:-translate-y-1'
+          : 'bg-white border-2 border-[#FCE7F0] hover:border-[#E84A8A]/30 hover:shadow-lg'
       }`}
     >
-      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-        primary ? 'bg-white/20' : 'bg-[#A17A8E]/10'
-      }`}>
-        <Icon className={`w-5 h-5 ${primary ? 'text-white' : 'text-[#A17A8E]'}`} />
+      {primary && (
+        <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+      )}
+      
+      <div className="relative z-10 flex items-center gap-4">
+        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
+          primary ? 'bg-white/20' : 'bg-gradient-to-br from-[#E84A8A] to-[#FF6B9D]'
+        } group-hover:scale-110 transition-transform duration-300`}>
+          <Icon className={`w-7 h-7 ${primary ? 'text-white' : 'text-white'}`} />
+        </div>
+        <div className="flex-1">
+          <p className={`font-semibold text-lg ${primary ? 'text-white' : 'text-[#1A1A2E]'}`}>{label}</p>
+          {description && (
+            <p className={`text-sm ${primary ? 'text-white/80' : 'text-[#64748B]'}`}>{description}</p>
+          )}
+        </div>
+        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+          primary ? 'bg-white/20' : 'bg-[#FDF2F7]'
+        } group-hover:translate-x-1 transition-transform`}>
+          <Play className={`w-4 h-4 ${primary ? 'text-white' : 'text-[#E84A8A]'}`} fill="currentColor" />
+        </div>
       </div>
-      <span className="font-medium">{label}</span>
-      <ArrowRight className={`w-4 h-4 ml-auto ${primary ? 'text-white/70' : 'text-[#9C8B7E]'}`} />
     </button>
   );
 
   return to ? <Link to={to} className="block">{content}</Link> : content;
 };
 
-// Mini Chart for Services
-const MiniServiceChart = ({ data }) => {
-  if (!data || data.length === 0) return null;
+// Service Ranking Item
+const RankingItem = ({ rank, name, time, value, delay }) => {
+  const badges = {
+    1: { bg: 'bg-gradient-to-r from-amber-400 to-yellow-400', icon: Crown },
+    2: { bg: 'bg-gradient-to-r from-gray-300 to-gray-400', icon: Award },
+    3: { bg: 'bg-gradient-to-r from-orange-400 to-amber-500', icon: Star },
+  };
+  const badge = badges[rank];
+
+  return (
+    <div 
+      className="group flex items-center gap-4 p-4 bg-white rounded-2xl border border-[#FCE7F0] hover:border-[#E84A8A]/30 hover:shadow-lg transition-all duration-300 cursor-pointer animate-slide-up"
+      style={{ animationDelay: `${delay}s` }}
+    >
+      <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold ${
+        badge ? badge.bg : 'bg-[#E84A8A]/10 text-[#E84A8A]'
+      }`}>
+        {badge ? <badge.icon className="w-5 h-5" /> : rank}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="font-semibold text-[#1A1A2E] truncate">{name}</p>
+        <p className="text-xs text-[#64748B] flex items-center gap-1">
+          <Clock className="w-3 h-3" /> {time} min
+        </p>
+      </div>
+      <div className="text-right">
+        <p className="font-bold text-[#E84A8A] text-lg">${value}</p>
+        <p className="text-xs text-[#64748B]">por hora</p>
+      </div>
+    </div>
+  );
+};
+
+// Alert Item
+const AlertItem = ({ message, type }) => {
+  const styles = {
+    warning: 'bg-amber-50 border-amber-200 text-amber-700',
+    error: 'bg-rose-50 border-rose-200 text-rose-700',
+    info: 'bg-blue-50 border-blue-200 text-blue-700',
+  };
   
   return (
-    <ResponsiveContainer width="100%" height={60}>
-      <BarChart data={data.slice(0, 5)} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-        <Bar dataKey="rentabilidad_hora" fill="#A17A8E" radius={[4, 4, 0, 0]} />
-      </BarChart>
-    </ResponsiveContainer>
-  );
-};
-
-// Alerts Card Component
-const AlertsCard = ({ alertas, isEmpty, gastos, calcGastoTotal }) => {
-  const [showAll, setShowAll] = useState(false);
-  const visibleAlertas = showAll ? alertas : alertas.slice(0, 3);
-  const hasMore = alertas.length > 3;
-
-  const getAlertStyle = (tipo) => {
-    switch (tipo) {
-      case 'warning':
-        return 'bg-amber-50 border-amber-200 text-amber-800';
-      case 'error':
-        return 'bg-rose-50 border-rose-200 text-rose-800';
-      default:
-        return 'bg-blue-50 border-blue-200 text-blue-800';
-    }
-  };
-
-  return (
-    <Card className="bg-white border-[#E8E2DF]" data-testid="alerts-card">
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-lg text-[#3D3231]" style={{ fontFamily: 'Playfair Display, serif' }}>
-            <AlertTriangle className="w-5 h-5 text-amber-500" />
-            Alertas
-          </CardTitle>
-          {alertas.length > 0 && (
-            <Badge className="bg-amber-100 text-amber-700 border-0">
-              {alertas.length}
-            </Badge>
-          )}
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        {alertas.length > 0 ? (
-          <>
-            {visibleAlertas.map((alerta, idx) => (
-              <div 
-                key={idx} 
-                className={`p-3 rounded-xl border text-sm animate-fade-in ${getAlertStyle(alerta.tipo)}`}
-                style={{ animationDelay: `${idx * 0.1}s` }}
-              >
-                {alerta.mensaje}
-              </div>
-            ))}
-            {hasMore && (
-              <Button 
-                variant="ghost" 
-                className="w-full justify-center text-[#9C8B7E] hover:text-[#A17A8E] h-8"
-                onClick={() => setShowAll(!showAll)}
-              >
-                <span className="text-sm">{showAll ? 'Ver menos' : `Ver más (${alertas.length - 3})`}</span>
-                <ChevronDown className={`w-4 h-4 ml-1 transition-transform ${showAll ? 'rotate-180' : ''}`} />
-              </Button>
-            )}
-          </>
-        ) : isEmpty ? (
-          <div className="p-4 bg-[#A17A8E]/5 rounded-xl border border-[#A17A8E]/20">
-            <p className="text-sm text-[#6B5E5C]">
-              Comienza agregando productos y estilos para calcular tus costos.
-            </p>
-          </div>
-        ) : (
-          <div className="p-4 bg-[#7A9E7A]/10 rounded-xl border border-[#7A9E7A]/20">
-            <p className="text-sm text-[#7A9E7A] flex items-center gap-2">
-              <Star className="w-4 h-4" />
-              Todo configurado correctamente
-            </p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-};
-
-// Service Ranking Card
-const ServiceRankingCard = ({ ranking }) => {
-  if (!ranking || ranking.length === 0) return null;
-
-  return (
-    <div className="space-y-3">
-      {ranking.slice(0, 5).map((servicio, idx) => (
-        <div 
-          key={idx}
-          className="flex items-center gap-3 p-3 bg-white rounded-xl border border-[#E8E2DF] hover:border-[#A17A8E]/30 hover:shadow-md transition-all duration-300 cursor-pointer group"
-        >
-          <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm ${
-            idx === 0 ? 'bg-gradient-to-br from-amber-400 to-amber-500 text-white' :
-            idx === 1 ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-white' :
-            idx === 2 ? 'bg-gradient-to-br from-orange-400 to-orange-500 text-white' :
-            'bg-[#F5F1EE] text-[#6B5E5C]'
-          }`}>
-            {idx + 1}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-medium text-[#3D3231] truncate">{servicio.nombre}</p>
-            <p className="text-xs text-[#9C8B7E]">{servicio.tiempo_minutos} min</p>
-          </div>
-          <div className="text-right">
-            <p className="font-bold text-[#A17A8E]">${servicio.rentabilidad_hora.toFixed(2)}</p>
-            <p className="text-xs text-[#9C8B7E]">por hora</p>
-          </div>
-          <ArrowUpRight className="w-4 h-4 text-[#9C8B7E] group-hover:text-[#A17A8E] transition-colors" />
-        </div>
-      ))}
+    <div className={`p-3 rounded-xl border text-sm ${styles[type] || styles.info}`}>
+      {message}
     </div>
   );
 };
@@ -241,23 +191,14 @@ const ServiceRankingCard = ({ ranking }) => {
 export default function Dashboard() {
   const { user, isPremium } = useAuth();
   const { 
-    productos, 
-    estilos, 
-    disenos, 
-    gastos, 
-    configGanancias,
-    alertas,
-    clientes,
-    citas,
-    getCitasProximas,
-    loading, 
-    seedData,
-    getReporte 
+    productos, estilos, disenos, gastos, configGanancias, alertas, clientes,
+    getCitasProximas, loading, seedData, getReporte 
   } = useApp();
   
   const [reporte, setReporte] = useState(null);
   const [seeding, setSeeding] = useState(false);
   const [citasProximas, setCitasProximas] = useState([]);
+  const [showAllAlerts, setShowAllAlerts] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -265,16 +206,12 @@ export default function Dashboard() {
         try {
           const data = await getReporte();
           setReporte(data);
-        } catch (err) {
-          console.error('Error fetching reporte:', err);
-        }
+        } catch (err) { console.error(err); }
       }
       try {
-        const citasData = await getCitasProximas();
-        setCitasProximas(citasData);
-      } catch (err) {
-        console.error('Error fetching citas:', err);
-      }
+        const citas = await getCitasProximas();
+        setCitasProximas(citas);
+      } catch (err) { console.error(err); }
     };
     fetchData();
   }, [estilos, getReporte, getCitasProximas]);
@@ -291,15 +228,10 @@ export default function Dashboard() {
     }
   };
 
-  const calcGastoTotal = () => {
-    if (!gastos) return 0;
-    return Object.values(gastos).reduce((sum, val) => sum + (typeof val === 'number' ? val : 0), 0);
-  };
-
   const gastoPorServicio = () => {
-    const total = calcGastoTotal();
-    const servicios = gastos?.servicios_mes || 60;
-    return servicios > 0 ? total / servicios : 0;
+    if (!gastos) return 0;
+    const total = Object.values(gastos).reduce((sum, val) => sum + (typeof val === 'number' ? val : 0), 0);
+    return (gastos?.servicios_mes || 60) > 0 ? total / (gastos?.servicios_mes || 60) : 0;
   };
 
   const metaProgress = () => {
@@ -309,33 +241,46 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]" data-testid="dashboard-loading">
+      <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <Loader2 className="w-10 h-10 animate-spin text-[#A17A8E] mx-auto mb-3" />
-          <p className="text-[#9C8B7E]">Cargando tu dashboard...</p>
+          <div className="relative">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-r from-[#E84A8A] to-[#FF6B9D] animate-pulse mx-auto" />
+            <Sparkles className="w-8 h-8 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+          </div>
+          <p className="text-[#64748B] mt-4">Cargando tu espacio...</p>
         </div>
       </div>
     );
   }
 
-  const isEmpty = productos.length === 0 && estilos.length === 0 && disenos.length === 0;
+  const isEmpty = productos.length === 0 && estilos.length === 0;
+  const visibleAlerts = showAllAlerts ? alertas : alertas.slice(0, 3);
 
   return (
-    <div className="space-y-6 animate-fade-in pb-6" data-testid="dashboard">
-      {/* Welcome Header */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-[#A17A8E] to-[#8B6578] rounded-3xl p-6 md:p-8 text-white">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
+    <div className="space-y-6 pb-8" data-testid="dashboard">
+      {/* Hero Header */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-[#E84A8A] via-[#FF6B9D] to-[#FF8FAB] rounded-[32px] p-6 md:p-8 text-white">
+        {/* Decorative elements */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full blur-2xl" />
+        <div className="absolute top-10 right-20 w-4 h-4 bg-white/30 rounded-full animate-float" />
+        <div className="absolute bottom-10 right-40 w-3 h-3 bg-white/20 rounded-full animate-float" style={{ animationDelay: '1s' }} />
         
         <div className="relative z-10">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <p className="text-white/70 text-sm font-medium">Bienvenida de vuelta</p>
-              <h1 className="text-2xl md:text-3xl font-bold mt-1" style={{ fontFamily: 'Playfair Display, serif' }}>
+            <div className="animate-fade-in">
+              <div className="flex items-center gap-2 mb-1">
+                <Heart className="w-4 h-4 text-white/80" fill="currentColor" />
+                <span className="text-white/80 text-sm">Bienvenida de vuelta</span>
+              </div>
+              <h1 className="text-3xl md:text-4xl font-bold" style={{ fontFamily: 'Playfair Display, serif' }}>
                 {user?.nombre || 'Profesional'}
               </h1>
               {user?.nombre_negocio && (
-                <p className="text-white/80 mt-1">{user.nombre_negocio}</p>
+                <p className="text-white/90 mt-1 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4" />
+                  {user.nombre_negocio}
+                </p>
               )}
             </div>
             
@@ -343,32 +288,41 @@ export default function Dashboard() {
               <Button 
                 onClick={handleSeedData} 
                 disabled={seeding}
-                className="bg-white text-[#A17A8E] hover:bg-white/90 rounded-full px-6 shadow-lg"
-                data-testid="seed-data-btn"
+                className="bg-white text-[#E84A8A] hover:bg-white/90 rounded-full px-6 h-12 shadow-lg animate-fade-in"
               >
-                {seeding ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Database className="w-4 h-4 mr-2" />}
-                Cargar Datos de Ejemplo
+                {seeding ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <Database className="w-5 h-5 mr-2" />}
+                Cargar Datos Demo
               </Button>
             ) : (
               <Link to="/calculadora">
-                <Button className="bg-white text-[#A17A8E] hover:bg-white/90 rounded-full px-6 shadow-lg">
-                  <Calculator className="w-4 h-4 mr-2" />
-                  Nuevo Cálculo
+                <Button className="bg-white text-[#E84A8A] hover:bg-white/90 rounded-full px-6 h-12 shadow-lg animate-fade-in group">
+                  <Calculator className="w-5 h-5 mr-2 group-hover:rotate-12 transition-transform" />
+                  Calcular Precio
                 </Button>
               </Link>
             )}
           </div>
 
-          {/* Progress to Goal */}
+          {/* Progress Bar */}
           {reporte && configGanancias?.meta_ingreso_mensual > 0 && (
-            <div className="mt-6 bg-white/10 rounded-2xl p-4">
+            <div className="mt-6 bg-white/15 backdrop-blur rounded-2xl p-4 animate-slide-up" style={{ animationDelay: '0.2s' }}>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-white/80 text-sm">Progreso hacia tu meta mensual</span>
-                <span className="font-bold">{metaProgress().toFixed(0)}%</span>
+                <div className="flex items-center gap-2">
+                  <Target className="w-4 h-4" />
+                  <span className="text-sm font-medium">Meta mensual</span>
+                </div>
+                <span className="text-2xl font-bold">{metaProgress().toFixed(0)}%</span>
               </div>
-              <Progress value={metaProgress()} className="h-2 bg-white/20" />
-              <div className="flex justify-between mt-2 text-xs text-white/60">
-                <span>${reporte.rentabilidad_mensual_estimada?.toFixed(2) || '0.00'} estimado</span>
+              <div className="h-3 bg-white/20 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-white rounded-full transition-all duration-1000 ease-out relative"
+                  style={{ width: `${metaProgress()}%` }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent animate-shimmer" />
+                </div>
+              </div>
+              <div className="flex justify-between mt-2 text-xs text-white/70">
+                <span>${reporte.rentabilidad_mensual_estimada?.toFixed(2) || '0'} ganados</span>
                 <span>Meta: ${configGanancias.meta_ingreso_mensual}</span>
               </div>
             </div>
@@ -376,170 +330,147 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Stats Grid - 2x2 on mobile, 4 columns on desktop */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-        <MetricCard 
-          title="Productos" 
-          value={productos.length} 
-          icon={Package} 
-          color="amber"
-          subtitle="en inventario"
-          to="/productos"
-        />
-        <MetricCard 
-          title="Estilos" 
-          value={estilos.length} 
-          icon={Palette} 
-          color="mauve"
-          subtitle="servicios"
-          to="/estilos"
-        />
-        <MetricCard 
-          title="Clientes" 
-          value={clientes.length} 
-          icon={Users} 
-          color="taupe"
-          subtitle="registrados"
-          to="/clientes"
-        />
-        <MetricCard 
-          title="Costo/Servicio" 
-          value={`$${gastoPorServicio().toFixed(2)}`} 
-          icon={DollarSign} 
-          color="green"
-          subtitle="gasto operativo"
-          to="/gastos"
-        />
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard icon={Package} label="Productos" value={productos.length} sublabel="en inventario" color="amber" to="/productos" delay={0} />
+        <StatCard icon={Palette} label="Estilos" value={estilos.length} sublabel="servicios" color="rose" to="/estilos" delay={0.1} />
+        <StatCard icon={Users} label="Clientes" value={clientes.length} sublabel="registrados" color="purple" to="/clientes" delay={0.2} />
+        <StatCard icon={DollarSign} label="Costo/Serv" value={`$${gastoPorServicio().toFixed(2)}`} sublabel="operativo" color="emerald" to="/gastos" delay={0.3} />
       </div>
 
-      {/* Main Content - 2 columns */}
+      {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - Reports */}
         <div className="lg:col-span-2 space-y-6">
           {/* Profitability Card */}
-          <Card className="bg-white border-[#E8E2DF] overflow-hidden">
-            <CardHeader className="pb-2 border-b border-[#F5F1EE]">
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2 text-lg text-[#3D3231]" style={{ fontFamily: 'Playfair Display, serif' }}>
-                  <TrendingUp className="w-5 h-5 text-[#7A9E7A]" />
-                  Rentabilidad
-                </CardTitle>
+          <Card className="bg-white border-[#FCE7F0] rounded-3xl overflow-hidden shadow-sm">
+            <CardContent className="p-0">
+              <div className="p-5 border-b border-[#FCE7F0] flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#10B981] to-[#34D399] flex items-center justify-center">
+                    <TrendingUp className="w-5 h-5 text-white" />
+                  </div>
+                  <h2 className="text-xl font-semibold text-[#1A1A2E]" style={{ fontFamily: 'Playfair Display, serif' }}>
+                    Rentabilidad
+                  </h2>
+                </div>
                 {isPremium && (
                   <Link to="/reportes-mensuales">
-                    <Button variant="ghost" size="sm" className="text-[#A17A8E] hover:bg-[#A17A8E]/10">
-                      Ver reportes <ArrowRight className="w-3 h-3 ml-1" />
+                    <Button variant="ghost" size="sm" className="text-[#E84A8A] hover:bg-[#FDF2F7] rounded-full">
+                      Ver reportes <ArrowRight className="w-4 h-4 ml-1" />
                     </Button>
                   </Link>
                 )}
               </div>
-            </CardHeader>
-            <CardContent className="p-5">
-              {reporte && reporte.servicios_ranking?.length > 0 ? (
-                <div className="space-y-6">
-                  {/* Summary Stats */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-gradient-to-br from-[#A17A8E]/10 to-[#A17A8E]/5 rounded-2xl p-4 border border-[#A17A8E]/10">
-                      <p className="text-xs text-[#6B5E5C] uppercase tracking-wider">Rentabilidad Mensual</p>
-                      <p className="text-2xl md:text-3xl font-bold text-[#A17A8E] mt-1">
-                        ${reporte.rentabilidad_mensual_estimada?.toFixed(2) || '0.00'}
-                      </p>
-                      <p className="text-xs text-[#9C8B7E] mt-1">estimada</p>
+              
+              <div className="p-5">
+                {reporte && reporte.servicios_ranking?.length > 0 ? (
+                  <div className="space-y-5">
+                    {/* Summary Cards */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-gradient-to-br from-[#FDF2F7] to-[#FFE4EE] rounded-2xl p-5 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-20 h-20 bg-[#E84A8A]/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+                        <p className="text-xs font-semibold text-[#E84A8A] uppercase tracking-wider">Rentabilidad Mensual</p>
+                        <p className="text-3xl font-bold text-[#1A1A2E] mt-2">
+                          $<AnimatedCounter value={reporte.rentabilidad_mensual_estimada || 0} />
+                        </p>
+                        <p className="text-xs text-[#64748B] mt-1">estimada</p>
+                      </div>
+                      <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-5 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-200/30 rounded-full -translate-y-1/2 translate-x-1/2" />
+                        <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Promedio/Hora</p>
+                        <p className="text-3xl font-bold text-[#1A1A2E] mt-2">
+                          $<AnimatedCounter value={(reporte.servicios_ranking.reduce((a, b) => a + b.rentabilidad_hora, 0) / reporte.servicios_ranking.length) || 0} />
+                        </p>
+                        <p className="text-xs text-[#64748B] mt-1">todos los servicios</p>
+                      </div>
                     </div>
-                    <div className="bg-gradient-to-br from-[#7A9E7A]/10 to-[#7A9E7A]/5 rounded-2xl p-4 border border-[#7A9E7A]/10">
-                      <p className="text-xs text-[#6B5E5C] uppercase tracking-wider">Promedio/Hora</p>
-                      <p className="text-2xl md:text-3xl font-bold text-[#7A9E7A] mt-1">
-                        ${(reporte.servicios_ranking.reduce((a, b) => a + b.rentabilidad_hora, 0) / reporte.servicios_ranking.length).toFixed(2)}
-                      </p>
-                      <p className="text-xs text-[#9C8B7E] mt-1">todos los servicios</p>
-                    </div>
-                  </div>
 
-                  {/* Service Ranking */}
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-medium text-[#3D3231] flex items-center gap-2">
-                        <Award className="w-4 h-4 text-[#A17A8E]" />
-                        Top Servicios Rentables
-                      </h4>
+                    {/* Service Ranking */}
+                    <div>
+                      <div className="flex items-center gap-2 mb-4">
+                        <Award className="w-5 h-5 text-[#E84A8A]" />
+                        <h3 className="font-semibold text-[#1A1A2E]">Top Servicios Rentables</h3>
+                      </div>
+                      <div className="space-y-3">
+                        {reporte.servicios_ranking.slice(0, 5).map((s, i) => (
+                          <RankingItem 
+                            key={i} 
+                            rank={i + 1} 
+                            name={s.nombre} 
+                            time={s.tiempo_minutos} 
+                            value={s.rentabilidad_hora.toFixed(2)} 
+                            delay={0.1 * i}
+                          />
+                        ))}
+                      </div>
                     </div>
-                    <ServiceRankingCard ranking={reporte.servicios_ranking} />
                   </div>
-                </div>
-              ) : (
-                <div className="text-center py-10">
-                  <div className="w-16 h-16 rounded-full bg-[#F5F1EE] flex items-center justify-center mx-auto mb-4">
-                    <BarChart3 className="w-8 h-8 text-[#9C8B7E]" />
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="w-20 h-20 rounded-full bg-[#FDF2F7] flex items-center justify-center mx-auto mb-4">
+                      <BarChart3 className="w-10 h-10 text-[#E84A8A]/50" />
+                    </div>
+                    <p className="text-[#64748B] mb-4">Agrega estilos para ver tu rentabilidad</p>
+                    <Link to="/estilos">
+                      <Button className="btn-rose rounded-full px-6">
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Agregar Estilos
+                      </Button>
+                    </Link>
                   </div>
-                  <p className="text-[#6B5E5C] mb-4">Agrega estilos para ver tu rentabilidad</p>
-                  <Link to="/estilos">
-                    <Button className="bg-[#A17A8E] hover:bg-[#8B6578] text-white rounded-full">
-                      <PlusCircle className="w-4 h-4 mr-2" />
-                      Agregar Estilos
-                    </Button>
-                  </Link>
-                </div>
-              )}
+                )}
+              </div>
             </CardContent>
           </Card>
 
-          {/* Configuration Summary */}
-          {configGanancias && (
-            <Card className="bg-white border-[#E8E2DF]">
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-lg text-[#3D3231]" style={{ fontFamily: 'Playfair Display, serif' }}>
-                  <Target className="w-5 h-5 text-[#9C8B7E]" />
-                  Tu Configuración
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                  {[
-                    { label: '% Ganancia', value: `${configGanancias.porcentaje_ganancia}%` },
-                    { label: 'Meta Mensual', value: `$${configGanancias.meta_ingreso_mensual}` },
-                    { label: 'Meta Diaria', value: `$${configGanancias.meta_diaria}` },
-                    { label: 'Sueldo Obj.', value: `$${configGanancias.sueldo_objetivo}` },
-                    { label: '$/Hora', value: `$${configGanancias.costo_hora_trabajo}` },
-                  ].map((item, idx) => (
-                    <div key={idx} className="p-3 bg-[#FAF7F5] rounded-xl text-center hover:bg-[#F5F1EE] transition-colors">
-                      <p className="text-xs text-[#9C8B7E]">{item.label}</p>
-                      <p className="text-lg font-bold text-[#3D3231] mt-1">{item.value}</p>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          {/* Quick Actions */}
+          <div className="space-y-3">
+            <h3 className="font-semibold text-[#1A1A2E] flex items-center gap-2 px-1">
+              <Zap className="w-5 h-5 text-[#E84A8A]" />
+              Acciones Rápidas
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <BigActionButton icon={Calculator} label="Nuevo Cálculo" description="Calcula el precio de un servicio" to="/calculadora" primary />
+              <BigActionButton icon={Calendar} label="Nueva Cita" description="Agenda una cita con cliente" to="/agenda" />
+              <BigActionButton icon={Users} label="Nuevo Cliente" description="Registra un cliente nuevo" to="/clientes" />
+              <BigActionButton icon={Package} label="Nuevo Producto" description="Agrega un producto al inventario" to="/productos" />
+            </div>
+          </div>
         </div>
 
-        {/* Right Column - Actions & Alerts */}
+        {/* Right Column */}
         <div className="space-y-6">
           {/* Upcoming Appointments */}
           {citasProximas.length > 0 && (
-            <Card className="bg-gradient-to-br from-blue-50 to-blue-100/50 border-blue-200">
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-lg text-blue-800" style={{ fontFamily: 'Playfair Display, serif' }}>
-                  <Bell className="w-5 h-5" />
-                  Próximas Citas
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {citasProximas.slice(0, 3).map((cita, idx) => (
-                  <div key={idx} className="p-3 bg-white rounded-xl border border-blue-100 hover:shadow-md transition-all">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium text-[#3D3231]">{cita.cliente_nombre}</p>
-                        <p className="text-xs text-[#9C8B7E]">{cita.estilo_nombre}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-bold text-blue-600">{cita.hora}</p>
-                        <p className="text-xs text-[#9C8B7E]">{cita.fecha}</p>
+            <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 rounded-3xl">
+              <CardContent className="p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center">
+                    <Bell className="w-4 h-4 text-white" />
+                  </div>
+                  <h3 className="font-semibold text-blue-800">Próximas Citas</h3>
+                  <Badge className="ml-auto bg-blue-500 text-white">{citasProximas.length}</Badge>
+                </div>
+                <div className="space-y-2">
+                  {citasProximas.slice(0, 3).map((cita, i) => (
+                    <div key={i} className="p-3 bg-white rounded-xl border border-blue-100">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-medium text-[#1A1A2E]">{cita.cliente_nombre}</p>
+                          <p className="text-xs text-[#64748B]">{cita.estilo_nombre}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-blue-600">{cita.hora}</p>
+                          <p className="text-xs text-[#64748B]">{cita.fecha}</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-                <Link to="/agenda" className="block">
-                  <Button variant="ghost" className="w-full text-blue-700 hover:bg-blue-100">
-                    Ver agenda completa <ArrowRight className="w-4 h-4 ml-1" />
+                  ))}
+                </div>
+                <Link to="/agenda">
+                  <Button variant="ghost" className="w-full mt-3 text-blue-600 hover:bg-blue-100 rounded-xl">
+                    Ver agenda <ArrowRight className="w-4 h-4 ml-1" />
                   </Button>
                 </Link>
               </CardContent>
@@ -547,60 +478,63 @@ export default function Dashboard() {
           )}
 
           {/* Alerts */}
-          <AlertsCard 
-            alertas={alertas} 
-            isEmpty={isEmpty} 
-            gastos={gastos} 
-            calcGastoTotal={calcGastoTotal} 
-          />
-
-          {/* Quick Actions */}
-          <Card className="bg-white border-[#E8E2DF]">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-lg text-[#3D3231]" style={{ fontFamily: 'Playfair Display, serif' }}>
-                <Zap className="w-5 h-5 text-[#A17A8E]" />
-                Acciones Rápidas
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <QuickActionButton 
-                icon={Calculator} 
-                label="Nuevo Cálculo" 
-                to="/calculadora" 
-                primary 
-              />
-              <QuickActionButton 
-                icon={Users} 
-                label="Agregar Cliente" 
-                to="/clientes" 
-              />
-              <QuickActionButton 
-                icon={Calendar} 
-                label="Nueva Cita" 
-                to="/agenda" 
-              />
-              <QuickActionButton 
-                icon={Package} 
-                label="Agregar Producto" 
-                to="/productos" 
-              />
+          <Card className="bg-white border-[#FCE7F0] rounded-3xl">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center">
+                    <AlertTriangle className="w-4 h-4 text-white" />
+                  </div>
+                  <h3 className="font-semibold text-[#1A1A2E]">Alertas</h3>
+                </div>
+                {alertas.length > 0 && (
+                  <Badge className="bg-amber-100 text-amber-700">{alertas.length}</Badge>
+                )}
+              </div>
+              
+              {alertas.length > 0 ? (
+                <div className="space-y-2">
+                  {visibleAlerts.map((a, i) => (
+                    <AlertItem key={i} message={a.mensaje} type={a.tipo} />
+                  ))}
+                  {alertas.length > 3 && (
+                    <Button 
+                      variant="ghost" 
+                      className="w-full text-[#64748B] hover:text-[#E84A8A]"
+                      onClick={() => setShowAllAlerts(!showAllAlerts)}
+                    >
+                      {showAllAlerts ? 'Ver menos' : `Ver ${alertas.length - 3} más`}
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                <div className="p-4 bg-emerald-50 rounded-xl text-center">
+                  <p className="text-emerald-600 text-sm flex items-center justify-center gap-2">
+                    <Star className="w-4 h-4" fill="currentColor" />
+                    Todo en orden
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
-          {/* Premium Upsell for Free Users */}
+          {/* Premium Upsell */}
           {!isPremium && (
-            <Card className="bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200">
-              <CardContent className="p-5 text-center">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-400 flex items-center justify-center mx-auto mb-3">
-                  <Star className="w-6 h-6 text-white" />
+            <Card className="bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 border-amber-200 rounded-3xl overflow-hidden">
+              <CardContent className="p-5 text-center relative">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-amber-200/30 rounded-full -translate-y-1/2 translate-x-1/2" />
+                <div className="relative z-10">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-400 flex items-center justify-center mx-auto mb-3 shadow-lg animate-bounce-soft">
+                    <Crown className="w-7 h-7 text-white" />
+                  </div>
+                  <h3 className="font-bold text-amber-800 text-lg">Pasa a Premium</h3>
+                  <p className="text-sm text-amber-700 mt-1 mb-4">
+                    Reportes, simulación y más
+                  </p>
+                  <Button className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-full shadow-lg">
+                    Ver Beneficios
+                  </Button>
                 </div>
-                <h3 className="font-bold text-amber-800 mb-1">Actualiza a Premium</h3>
-                <p className="text-sm text-amber-700 mb-3">
-                  Desbloquea reportes, simulación y más
-                </p>
-                <Button className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-full w-full">
-                  Ver Beneficios
-                </Button>
               </CardContent>
             </Card>
           )}

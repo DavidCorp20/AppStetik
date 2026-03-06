@@ -39,52 +39,54 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#FAF7F5] to-[#F5F1EE] flex items-center justify-center p-4" data-testid="login-page">
+    <div className="min-h-screen bg-gradient-to-br from-white via-[#FDF2F7] to-[#FFE4EE] flex items-center justify-center p-4" data-testid="login-page">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 mb-2">
-            <Sparkles className="w-8 h-8 text-[#A17A8E]" />
-            <span className="text-3xl font-bold text-[#3D3231]" style={{ fontFamily: 'Playfair Display, serif' }}>
+          <div className="inline-flex items-center gap-3 mb-2">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#E84A8A] to-[#FF6B9D] flex items-center justify-center shadow-lg shadow-[#E84A8A]/30">
+              <Sparkles className="w-6 h-6 text-white" />
+            </div>
+            <span className="text-3xl font-bold text-[#1A1A2E]" style={{ fontFamily: 'Playfair Display, serif' }}>
               NailCost PRO
             </span>
           </div>
-          <p className="text-[#6B5E5C]">Tu calculadora inteligente de costos</p>
+          <p className="text-[#64748B]">Tu calculadora inteligente de costos</p>
         </div>
 
-        <Card className="bg-white border-[#E8E2DF] shadow-xl">
+        <Card className="bg-white/80 backdrop-blur border-[#FCE7F0] shadow-2xl shadow-[#E84A8A]/10 rounded-3xl">
           <CardHeader className="text-center pb-2">
-            <CardTitle className="text-2xl text-[#3D3231]" style={{ fontFamily: 'Playfair Display, serif' }}>
+            <CardTitle className="text-2xl text-[#1A1A2E]" style={{ fontFamily: 'Playfair Display, serif' }}>
               Iniciar Sesión
             </CardTitle>
-            <CardDescription className="text-[#6B5E5C]">
+            <CardDescription className="text-[#64748B]">
               Ingresa a tu cuenta para continuar
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-[#3D3231]">Correo Electrónico</Label>
+                <Label htmlFor="email" className="text-[#1A1A2E]">Correo Electrónico</Label>
                 <Input
                   id="email"
                   type="email"
                   placeholder="tu@email.com"
                   value={formData.email}
                   onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                  className="rounded-xl border-[#E8E2DF] focus:border-[#A17A8E] focus:ring-[#A17A8E]"
+                  className="rounded-xl border-[#FCE7F0] focus:border-[#E84A8A] focus:ring-[#E84A8A] h-12"
                   data-testid="login-email-input"
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-[#3D3231]">Contraseña</Label>
+                <Label htmlFor="password" className="text-[#1A1A2E]">Contraseña</Label>
                 <Input
                   id="password"
                   type="password"
                   placeholder="Tu contraseña"
                   value={formData.password}
                   onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                  className="rounded-xl border-[#E8E2DF] focus:border-[#A17A8E] focus:ring-[#A17A8E]"
+                  className="rounded-xl border-[#FCE7F0] focus:border-[#E84A8A] focus:ring-[#E84A8A] h-12"
                   data-testid="login-password-input"
                 />
               </div>
@@ -92,22 +94,22 @@ export default function LoginPage() {
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-[#A17A8E] hover:bg-[#8B6578] text-white rounded-full h-12"
+                className="w-full bg-gradient-to-r from-[#E84A8A] to-[#FF6B9D] hover:from-[#D63A7A] hover:to-[#E84A8A] text-white rounded-full h-12 shadow-lg shadow-[#E84A8A]/30"
                 data-testid="login-submit-btn"
               >
                 {loading ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                 ) : (
-                  <LogIn className="w-4 h-4 mr-2" />
+                  <LogIn className="w-5 h-5 mr-2" />
                 )}
                 Iniciar Sesión
               </Button>
             </form>
 
             <div className="mt-6 text-center">
-              <p className="text-[#6B5E5C] text-sm">
+              <p className="text-[#64748B] text-sm">
                 ¿No tienes cuenta?{" "}
-                <Link to="/registro" className="text-[#A17A8E] font-medium hover:underline" data-testid="goto-register-link">
+                <Link to="/registro" className="text-[#E84A8A] font-semibold hover:underline" data-testid="goto-register-link">
                   Regístrate gratis
                 </Link>
               </p>
@@ -115,7 +117,7 @@ export default function LoginPage() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-[#9C8B7E] text-xs mt-6">
+        <p className="text-center text-[#94A3B8] text-xs mt-6">
           Calculadora profesional para nail artists
         </p>
       </div>
