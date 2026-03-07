@@ -26,6 +26,9 @@ import { RegisterPage } from "@/pages/RegisterPage";
 import { AdminPage } from "@/pages/AdminPage";
 import { HistorialPage } from "@/pages/HistorialPage";
 import { EmpleadosPage } from "@/pages/EmpleadosPage";
+import { ForgotPasswordPage } from "@/pages/ForgotPasswordPage";
+import { TerminosPage } from "@/pages/TerminosPage";
+import { PrivacidadPage } from "@/pages/PrivacidadPage";
 import { Loader2 } from "lucide-react";
 
 // Dashboard Router - selects based on user type
@@ -87,7 +90,12 @@ function AppRoutes() {
       <Route element={<PublicRoute />}>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/registro" element={<RegisterPage />} />
+        <Route path="/recuperar-contrasena" element={<ForgotPasswordPage />} />
       </Route>
+
+      {/* Legal pages - accessible without auth */}
+      <Route path="/terminos" element={<TerminosPage />} />
+      <Route path="/privacidad" element={<PrivacidadPage />} />
 
       {/* Protected routes */}
       <Route element={<ProtectedRoute />}>

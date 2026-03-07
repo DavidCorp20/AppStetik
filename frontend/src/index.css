@@ -1,9 +1,12 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ======================= */
+/* PERSONA THEME - Pink/Rose Interactive */
+/* ======================= */
 :root {
     --primary: #E84A8A;
     --primary-hover: #D63A7A;
@@ -15,15 +18,36 @@
     --text-muted: #64748B;
     --success: #10B981;
     --warning: #F59E0B;
+    
+    /* Comercio Corporate Blue Theme */
+    --corp-primary: #1E3A5F;
+    --corp-primary-light: #2E5077;
+    --corp-secondary: #3B82F6;
+    --corp-accent: #0EA5E9;
+    --corp-bg: #F8FAFC;
+    --corp-bg-alt: #F1F5F9;
+    --corp-border: #E2E8F0;
+    --corp-text: #0F172A;
+    --corp-text-muted: #64748B;
 }
 
 body {
     margin: 0;
     font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
     -webkit-font-smoothing: antialiased;
-    background: linear-gradient(180deg, #FFFFFF 0%, #FDF2F7 100%);
     min-height: 100vh;
     color: var(--text-main);
+}
+
+/* Persona Body */
+body.persona-theme {
+    background: linear-gradient(180deg, #FFFFFF 0%, #FDF2F7 100%);
+}
+
+/* Comercio Body */
+body.comercio-theme {
+    background: linear-gradient(180deg, #F8FAFC 0%, #F1F5F9 100%);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -31,9 +55,20 @@ h1, h2, h3, h4, h5, h6 {
     font-weight: 600;
 }
 
+/* Comercio uses Inter for headers too */
+.comercio-theme h1, .comercio-theme h2, .comercio-theme h3 {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+}
+
 ::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #FDF2F7; border-radius: 10px; }
+::-webkit-scrollbar-track { background: #F1F5F9; border-radius: 10px; }
 ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #E84A8A, #FF6B9D); border-radius: 10px; }
+
+/* Comercio scrollbar */
+.comercio-theme ::-webkit-scrollbar-thumb { 
+    background: linear-gradient(180deg, #1E3A5F, #3B82F6); 
+}
 
 @layer base {
     :root {
@@ -62,69 +97,367 @@ h1, h2, h3, h4, h5, h6 {
     body { @apply text-foreground; }
 }
 
+/* ======================= */
+/* ANIMATIONS - Enhanced for Persona */
+/* ======================= */
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideLeft { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes slideRight { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
 @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 15px rgba(232, 74, 138, 0.3); } 50% { box-shadow: 0 0 30px rgba(232, 74, 138, 0.5); } }
 @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
 @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
 @keyframes bounce-soft { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+@keyframes wiggle { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-3deg); } 75% { transform: rotate(3deg); } }
+@keyframes pop { 0% { transform: scale(0.9); opacity: 0; } 50% { transform: scale(1.05); } 100% { transform: scale(1); opacity: 1; } }
+@keyframes confetti { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(-100vh) rotate(720deg); opacity: 0; } }
+@keyframes ripple { 0% { transform: scale(0); opacity: 0.5; } 100% { transform: scale(4); opacity: 0; } }
+@keyframes success-bounce { 0%, 100% { transform: scale(1); } 30% { transform: scale(1.2); } 50% { transform: scale(0.95); } 70% { transform: scale(1.05); } }
+@keyframes glow-pulse { 0%, 100% { filter: drop-shadow(0 0 5px rgba(232,74,138,0.5)); } 50% { filter: drop-shadow(0 0 20px rgba(232,74,138,0.8)); } }
+
+/* Comercio Blue Glow */
+@keyframes glow-pulse-blue { 0%, 100% { filter: drop-shadow(0 0 5px rgba(30,58,95,0.3)); } 50% { filter: drop-shadow(0 0 15px rgba(59,130,246,0.5)); } }
 
 .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
 .animate-slide-up { animation: slideUp 0.5s ease-out forwards; }
+.animate-slide-down { animation: slideDown 0.5s ease-out forwards; }
+.animate-slide-left { animation: slideLeft 0.4s ease-out forwards; }
+.animate-slide-right { animation: slideRight 0.4s ease-out forwards; }
 .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
 .animate-float { animation: float 3s ease-in-out infinite; }
 .animate-bounce-soft { animation: bounce-soft 2s ease-in-out infinite; }
 .animate-shimmer { background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); background-size: 200% 100%; animation: shimmer 2s infinite; }
+.animate-wiggle { animation: wiggle 0.5s ease-in-out; }
+.animate-pop { animation: pop 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards; }
+.animate-success { animation: success-bounce 0.6s ease-out; }
+.animate-glow { animation: glow-pulse 2s ease-in-out infinite; }
+.animate-glow-blue { animation: glow-pulse-blue 2s ease-in-out infinite; }
 
 .stagger-1 { animation-delay: 0.1s; }
 .stagger-2 { animation-delay: 0.2s; }
 .stagger-3 { animation-delay: 0.3s; }
 .stagger-4 { animation-delay: 0.4s; }
+.stagger-5 { animation-delay: 0.5s; }
 
+/* ======================= */
+/* PERSONA INTERACTIVE STYLES */
+/* ======================= */
 .glass { background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); }
 .glass-rose { background: rgba(253,242,247,0.95); backdrop-filter: blur(20px); border: 1px solid rgba(232,74,138,0.1); }
 
 .bg-gradient-rose { background: linear-gradient(135deg, #E84A8A 0%, #FF6B9D 100%); }
 .bg-gradient-rose-light { background: linear-gradient(135deg, #FDF2F7 0%, #FFE4EE 100%); }
+.bg-gradient-rose-vivid { background: linear-gradient(135deg, #FF1493 0%, #FF69B4 50%, #FFB6C1 100%); }
 
 .card-hover { transition: all 0.3s ease; }
 .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -15px rgba(232,74,138,0.25); }
 
+/* Interactive Button - Persona */
+.btn-interactive {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #E84A8A, #FF6B9D);
+    color: white;
+    box-shadow: 0 4px 15px rgba(232,74,138,0.4);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
+}
+.btn-interactive::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255,255,255,0.3);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+.btn-interactive:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 8px 30px rgba(232,74,138,0.5);
+}
+.btn-interactive:active {
+    transform: translateY(0) scale(0.98);
+}
+.btn-interactive:active::before {
+    width: 300px;
+    height: 300px;
+}
+
 .btn-rose { background: linear-gradient(135deg, #E84A8A, #FF6B9D); color: white; box-shadow: 0 4px 15px rgba(232,74,138,0.4); transition: all 0.3s; }
 .btn-rose:hover { transform: translateY(-2px); box-shadow: 0 6px 25px rgba(232,74,138,0.5); }
 
+/* Tap Effect */
+.tap-effect {
+    transition: transform 0.15s ease;
+}
+.tap-effect:active {
+    transform: scale(0.95);
+}
+
+/* Swipe Card */
+.swipe-card {
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    touch-action: pan-x;
+}
+
+/* ======================= */
+/* COMERCIO PROFESSIONAL STYLES */
+/* ======================= */
+.glass-corp { 
+    background: rgba(248,250,252,0.98); 
+    backdrop-filter: blur(12px); 
+    border: 1px solid var(--corp-border);
+}
+
+.bg-gradient-corp { background: linear-gradient(135deg, #1E3A5F 0%, #2E5077 100%); }
+.bg-gradient-corp-light { background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%); }
+.bg-gradient-corp-accent { background: linear-gradient(135deg, #3B82F6 0%, #0EA5E9 100%); }
+
+/* Professional Card */
+.card-corp {
+    background: white;
+    border: 1px solid var(--corp-border);
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+}
+.card-corp:hover {
+    box-shadow: 0 4px 12px rgba(30,58,95,0.1), 0 2px 4px rgba(0,0,0,0.05);
+    border-color: rgba(59,130,246,0.3);
+}
+
+/* Professional Button */
+.btn-corp {
+    background: linear-gradient(135deg, #1E3A5F, #2E5077);
+    color: white;
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(30,58,95,0.25);
+    transition: all 0.2s ease;
+}
+.btn-corp:hover {
+    background: linear-gradient(135deg, #2E5077, #3B82F6);
+    box-shadow: 0 4px 16px rgba(30,58,95,0.35);
+    transform: translateY(-1px);
+}
+.btn-corp:active {
+    transform: translateY(0);
+}
+
+.btn-corp-outline {
+    background: transparent;
+    border: 2px solid #1E3A5F;
+    color: #1E3A5F;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+.btn-corp-outline:hover {
+    background: #1E3A5F;
+    color: white;
+}
+
+.btn-corp-accent {
+    background: linear-gradient(135deg, #3B82F6, #0EA5E9);
+    color: white;
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(59,130,246,0.3);
+    transition: all 0.2s ease;
+}
+.btn-corp-accent:hover {
+    box-shadow: 0 4px 16px rgba(59,130,246,0.4);
+    transform: translateY(-1px);
+}
+
+/* Data Table Styles */
+.table-corp {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+.table-corp th {
+    background: #F8FAFC;
+    color: #1E3A5F;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    padding: 12px 16px;
+    border-bottom: 2px solid var(--corp-border);
+    text-align: left;
+}
+.table-corp td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--corp-border);
+    color: var(--corp-text);
+}
+.table-corp tr:hover td {
+    background: #F8FAFC;
+}
+.table-corp tr:last-child td {
+    border-bottom: none;
+}
+
+/* KPI Card */
+.kpi-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    border: 1px solid var(--corp-border);
+    position: relative;
+    overflow: hidden;
+}
+.kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(180deg, #1E3A5F, #3B82F6);
+}
+.kpi-card-blue::before { background: linear-gradient(180deg, #3B82F6, #0EA5E9); }
+.kpi-card-green::before { background: linear-gradient(180deg, #10B981, #34D399); }
+.kpi-card-amber::before { background: linear-gradient(180deg, #F59E0B, #FBBF24); }
+.kpi-card-purple::before { background: linear-gradient(180deg, #8B5CF6, #A78BFA); }
+
+/* Professional Sidebar */
+.sidebar-corp {
+    background: linear-gradient(180deg, #1E3A5F 0%, #0F172A 100%);
+    color: white;
+}
+.sidebar-corp-item {
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: rgba(255,255,255,0.7);
+    transition: all 0.2s ease;
+    border-left: 3px solid transparent;
+}
+.sidebar-corp-item:hover {
+    background: rgba(255,255,255,0.1);
+    color: white;
+}
+.sidebar-corp-item.active {
+    background: rgba(59,130,246,0.2);
+    color: white;
+    border-left-color: #3B82F6;
+}
+
+/* Badge Styles */
+.badge-corp {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 6px;
+}
+.badge-corp-primary { background: #EFF6FF; color: #1E3A5F; }
+.badge-corp-success { background: #ECFDF5; color: #065F46; }
+.badge-corp-warning { background: #FFFBEB; color: #92400E; }
+.badge-corp-danger { background: #FEF2F2; color: #991B1B; }
+
+/* Progress Bar - Professional */
+.progress-corp {
+    height: 8px;
+    background: #E2E8F0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+.progress-corp-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #1E3A5F, #3B82F6);
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+
+/* ======================= */
+/* SHARED UTILITIES */
+/* ======================= */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 input[type="number"] { -moz-appearance: textfield; }
 
 .safe-bottom { padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
+.safe-area-bottom { padding-bottom: env(safe-area-inset-bottom); }
 
-/* Safe area for bottom navigation */
-.safe-area-bottom { 
-  padding-bottom: env(safe-area-inset-bottom); 
+.layout-transition { transition: all 0.3s ease-in-out; }
+
+/* Confetti Effect (for success celebrations) */
+.confetti-piece {
+    position: fixed;
+    width: 10px;
+    height: 10px;
+    background: linear-gradient(135deg, #E84A8A, #FF6B9D);
+    animation: confetti 1s ease-out forwards;
+    z-index: 9999;
+    pointer-events: none;
+}
+.confetti-piece:nth-child(2n) { background: #FFD700; border-radius: 50%; }
+.confetti-piece:nth-child(3n) { background: #10B981; }
+.confetti-piece:nth-child(4n) { background: #3B82F6; transform: rotate(45deg); }
+
+/* Celebration Overlay */
+.celebration-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9998;
+    animation: fadeIn 0.3s ease;
+}
+.celebration-card {
+    background: white;
+    border-radius: 24px;
+    padding: 40px;
+    text-align: center;
+    animation: pop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    box-shadow: 0 25px 50px rgba(0,0,0,0.25);
 }
 
-/* Purple theme variations for Comercio */
-.bg-gradient-purple { background: linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%); }
-.bg-gradient-purple-light { background: linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%); }
-
-.btn-purple { 
-  background: linear-gradient(135deg, #8B5CF6, #A78BFA); 
-  color: white; 
-  box-shadow: 0 4px 15px rgba(139,92,246,0.4); 
-  transition: all 0.3s; 
-}
-.btn-purple:hover { 
-  transform: translateY(-2px); 
-  box-shadow: 0 6px 25px rgba(139,92,246,0.5); 
+/* Skeleton Loading */
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 8px;
 }
 
-/* Active state for bottom nav */
-.nav-active {
-  color: var(--primary);
+/* Focus styles */
+.focus-ring:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(232,74,138,0.3);
+}
+.comercio-theme .focus-ring:focus {
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.3);
 }
 
-/* Smooth transitions for layout switch */
-.layout-transition {
-  transition: all 0.3s ease-in-out;
+/* Tooltip */
+.tooltip {
+    position: relative;
+}
+.tooltip::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1A1A2E;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+}
+.tooltip:hover::after {
+    opacity: 1;
+    visibility: visible;
+    bottom: calc(100% + 8px);
 }

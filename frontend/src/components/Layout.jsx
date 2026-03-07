@@ -24,7 +24,10 @@ import {
   History,
   UserCheck,
   Box,
-  Home
+  Home,
+  Settings,
+  HelpCircle,
+  Bell
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -42,7 +45,6 @@ const PersonaLayout = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
 
-  // Bottom nav items for Persona
   const bottomNavItems = [
     { to: "/", icon: Home, label: "Inicio" },
     { to: "/clientes", icon: Users, label: "Clientes" },
@@ -51,7 +53,6 @@ const PersonaLayout = () => {
     { to: "/historial", icon: History, label: "Historial" },
   ];
 
-  // More menu items
   const moreMenuItems = [
     { to: "/productos", icon: Package, label: "Productos" },
     { to: "/estilos", icon: Palette, label: "Estilos" },
@@ -80,8 +81,7 @@ const PersonaLayout = () => {
       {/* Compact Header */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-lg border-b border-[#FCE7F0]">
         <div className="px-4 h-14 flex items-center justify-between">
-          {/* Logo */}
-          <NavLink to="/" className="flex items-center gap-2">
+          <NavLink to="/" className="flex items-center gap-2 tap-effect">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#E84A8A] to-[#FF6B9D] flex items-center justify-center shadow-md">
               <Sparkles className="w-4 h-4 text-white" />
             </div>
@@ -90,11 +90,10 @@ const PersonaLayout = () => {
             </span>
           </NavLink>
 
-          {/* User Menu */}
           <div className="relative" ref={menuRef}>
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="flex items-center gap-2 p-1.5 rounded-full bg-[#FDF2F7] border border-[#FCE7F0]"
+              className="flex items-center gap-2 p-1.5 rounded-full bg-[#FDF2F7] border border-[#FCE7F0] tap-effect"
               data-testid="persona-user-menu"
             >
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#E84A8A] to-[#FF6B9D] flex items-center justify-center">
@@ -104,8 +103,7 @@ const PersonaLayout = () => {
             </button>
 
             {menuOpen && (
-              <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-[#FCE7F0] py-2 z-50 animate-fade-in">
-                {/* User Info */}
+              <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-[#FCE7F0] py-2 z-50 animate-slide-down">
                 <div className="px-4 py-3 border-b border-[#FCE7F0]">
                   <p className="font-semibold text-[#1A1A2E] truncate">{user?.nombre}</p>
                   <p className="text-xs text-[#64748B] truncate">{user?.email}</p>
@@ -117,7 +115,6 @@ const PersonaLayout = () => {
                   </span>
                 </div>
 
-                {/* More Options */}
                 <div className="py-2 border-b border-[#FCE7F0]">
                   <p className="px-4 py-1 text-xs font-semibold text-[#64748B] uppercase">Más opciones</p>
                   {moreMenuItems.map((item) => (
@@ -126,7 +123,7 @@ const PersonaLayout = () => {
                       to={item.to}
                       onClick={() => setMenuOpen(false)}
                       className={({ isActive }) => cn(
-                        "flex items-center gap-3 px-4 py-2.5 text-sm transition-colors",
+                        "flex items-center gap-3 px-4 py-2.5 text-sm transition-colors tap-effect",
                         isActive ? "bg-[#FDF2F7] text-[#E84A8A]" : "text-[#64748B] hover:bg-[#FDF2F7]"
                       )}
                     >
@@ -136,7 +133,6 @@ const PersonaLayout = () => {
                   ))}
                 </div>
 
-                {/* Admin Link */}
                 {user?.role === "admin" && (
                   <NavLink
                     to="/admin"
@@ -148,7 +144,6 @@ const PersonaLayout = () => {
                   </NavLink>
                 )}
 
-                {/* Logout */}
                 <button
                   onClick={handleLogout}
                   className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50"
@@ -162,7 +157,6 @@ const PersonaLayout = () => {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="px-4 py-4 pb-24">
         <Outlet />
       </main>
@@ -176,14 +170,14 @@ const PersonaLayout = () => {
               to={item.to}
               end={item.to === "/"}
               className={({ isActive }) => cn(
-                "flex flex-col items-center justify-center w-16 h-full transition-all",
+                "flex flex-col items-center justify-center w-16 h-full transition-all tap-effect",
                 item.primary ? "relative -top-3" : "",
                 isActive && !item.primary ? "text-[#E84A8A]" : "text-[#94A3B8]"
               )}
               data-testid={`nav-${item.label.toLowerCase()}`}
             >
               {item.primary ? (
-                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#E84A8A] to-[#FF6B9D] flex items-center justify-center shadow-lg shadow-[#E84A8A]/40">
+                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#E84A8A] to-[#FF6B9D] flex items-center justify-center shadow-lg shadow-[#E84A8A]/40 hover:scale-110 active:scale-95 transition-transform">
                   <item.icon className="w-6 h-6 text-white" />
                 </div>
               ) : (
@@ -197,17 +191,15 @@ const PersonaLayout = () => {
         </div>
       </nav>
 
-      {/* Floating Calculator Button (hidden on calculadora page) */}
       {location.pathname !== '/calculadora' && <FloatingCalculator />}
     </div>
   );
 };
 
 // =========================
-// COMERCIO LAYOUT (Professional Desktop)
+// COMERCIO LAYOUT (Professional Corporate)
 // =========================
 
-// Navigation groups for Comercio
 const comercioMainNav = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/clientes", icon: Users, label: "Clientes" },
@@ -235,12 +227,12 @@ const comercioFinanzasGroup = {
 };
 
 const comercioToolsNav = [
-  { to: "/calculadora", icon: Calculator, label: "Calculadora" },
+  { to: "/calculadora", icon: Calculator, label: "Cotizar" },
   { to: "/reportes-mensuales", icon: BarChart3, label: "Reportes" },
   { to: "/simulacion", icon: Target, label: "Simulación" },
 ];
 
-// Dropdown Component for Comercio
+// Dropdown Component
 const NavDropdown = ({ group, isActive }) => {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -260,10 +252,10 @@ const NavDropdown = ({ group, isActive }) => {
       <button
         onClick={() => setOpen(!open)}
         className={cn(
-          "flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300",
+          "flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all",
           isActive
-            ? "bg-gradient-to-r from-[#8B5CF6] to-[#A78BFA] text-white shadow-lg shadow-purple-500/25"
-            : "text-[#64748B] hover:text-[#8B5CF6] hover:bg-purple-50"
+            ? "bg-[#1E3A5F] text-white"
+            : "text-[#64748B] hover:text-[#1E3A5F] hover:bg-[#F1F5F9]"
         )}
       >
         <group.icon className="w-4 h-4" />
@@ -272,7 +264,7 @@ const NavDropdown = ({ group, isActive }) => {
       </button>
       
       {open && (
-        <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-purple-100 py-2 z-50 animate-fade-in">
+        <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-[#E2E8F0] py-2 z-50 animate-slide-down">
           {group.items.map((item) => (
             <NavLink
               key={item.to}
@@ -282,8 +274,8 @@ const NavDropdown = ({ group, isActive }) => {
                 cn(
                   "flex items-center gap-3 px-4 py-3 text-sm transition-colors",
                   isActive
-                    ? "bg-purple-50 text-[#8B5CF6] font-medium"
-                    : "text-[#64748B] hover:bg-purple-50 hover:text-[#8B5CF6]"
+                    ? "bg-[#F1F5F9] text-[#1E3A5F] font-medium"
+                    : "text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#1E3A5F]"
                 )
               }
             >
@@ -297,7 +289,7 @@ const NavDropdown = ({ group, isActive }) => {
   );
 };
 
-// User Menu for Comercio
+// User Menu
 const ComercioUserMenu = () => {
   const { user, logout, isPremium } = useAuth();
   const navigate = useNavigate();
@@ -323,13 +315,13 @@ const ComercioUserMenu = () => {
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 px-3 py-2 rounded-full bg-purple-50 hover:bg-purple-100 transition-colors border border-purple-100"
+        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#F1F5F9] hover:bg-[#E2E8F0] transition-colors border border-[#E2E8F0]"
         data-testid="comercio-user-menu"
       >
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#8B5CF6] to-[#A78BFA] flex items-center justify-center shadow-sm">
+        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#1E3A5F] to-[#3B82F6] flex items-center justify-center shadow-sm">
           <Building2 className="w-4 h-4 text-white" />
         </div>
-        <span className="text-sm font-medium text-[#1A1A2E] hidden sm:inline max-w-[120px] truncate">
+        <span className="text-sm font-medium text-[#0F172A] hidden sm:inline max-w-[120px] truncate">
           {user?.nombre_negocio || user?.nombre}
         </span>
         {isPremium && <Crown className="w-4 h-4 text-amber-500" />}
@@ -337,42 +329,50 @@ const ComercioUserMenu = () => {
       </button>
 
       {open && (
-        <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-purple-100 py-2 z-50 animate-fade-in">
-          <div className="px-4 py-3 border-b border-purple-50">
-            <div className="flex items-center gap-2 mb-1">
-              <p className="font-semibold text-[#1A1A2E] truncate">{user?.nombre}</p>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-100 text-purple-700">
-                Negocio
-              </span>
+        <div className="absolute top-full right-0 mt-2 w-72 bg-white rounded-xl shadow-xl border border-[#E2E8F0] py-2 z-50 animate-slide-down">
+          {/* User Info */}
+          <div className="px-4 py-3 border-b border-[#E2E8F0]">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#1E3A5F] to-[#3B82F6] flex items-center justify-center">
+                <Building2 className="w-6 h-6 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-[#0F172A] truncate">{user?.nombre}</p>
+                <p className="text-xs text-[#64748B] truncate">{user?.email}</p>
+                {user?.nombre_negocio && (
+                  <p className="text-xs text-[#3B82F6] truncate mt-0.5">{user?.nombre_negocio}</p>
+                )}
+              </div>
             </div>
-            <p className="text-xs text-[#64748B] truncate">{user?.email}</p>
-            {user?.nombre_negocio && (
-              <p className="text-xs text-[#8B5CF6] truncate mt-0.5">{user?.nombre_negocio}</p>
-            )}
           </div>
-          <div className="px-4 py-2 border-b border-purple-50">
+          
+          {/* Plan Badge */}
+          <div className="px-4 py-3 border-b border-[#E2E8F0]">
             <span className={cn(
-              "text-xs px-3 py-1 rounded-full font-medium",
+              "text-xs px-3 py-1 rounded-md font-medium",
               isPremium 
                 ? "bg-gradient-to-r from-amber-100 to-orange-100 text-amber-700" 
-                : "bg-purple-50 text-purple-600"
+                : "bg-[#F1F5F9] text-[#1E3A5F]"
             )}>
               {isPremium ? "✨ Premium Business" : "Plan Básico"}
             </span>
           </div>
+
+          {/* Menu Items */}
           {user?.role === "admin" && (
             <NavLink
               to="/admin"
               onClick={() => setOpen(false)}
-              className="flex items-center gap-2 px-4 py-3 text-sm text-purple-600 hover:bg-purple-50 transition-colors"
+              className="flex items-center gap-3 px-4 py-3 text-sm text-[#1E3A5F] hover:bg-[#F1F5F9] transition-colors"
             >
               <Shield className="w-4 h-4" />
-              <span>Panel Admin</span>
+              <span>Panel Administrador</span>
             </NavLink>
           )}
+          
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-2 px-4 py-3 text-sm text-red-500 hover:bg-red-50 transition-colors"
+            className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-500 hover:bg-red-50 transition-colors"
             data-testid="comercio-logout-btn"
           >
             <LogOut className="w-4 h-4" />
@@ -391,29 +391,24 @@ const ComercioLayout = () => {
   const isInServiciosGroup = comercioServiciosGroup.items.some(item => location.pathname === item.to);
   const isInFinanzasGroup = comercioFinanzasGroup.items.some(item => location.pathname === item.to);
 
-  const allMobileItems = [
-    ...comercioMainNav,
-    ...comercioServiciosGroup.items,
-    ...comercioFinanzasGroup.items,
-    ...comercioToolsNav,
-  ];
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-purple-50/30" data-testid="comercio-layout">
+    <div className="min-h-screen bg-[#F8FAFC]" data-testid="comercio-layout">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-lg border-b border-purple-100 shadow-sm">
+      <header className="sticky top-0 z-40 bg-white border-b border-[#E2E8F0] shadow-sm">
         <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <NavLink to="/" className="flex items-center gap-2.5" data-testid="comercio-logo">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#8B5CF6] to-[#A78BFA] flex items-center justify-center shadow-lg shadow-purple-500/30">
+            <NavLink to="/" className="flex items-center gap-3" data-testid="comercio-logo">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1E3A5F] to-[#3B82F6] flex items-center justify-center shadow-lg">
                 <Building2 className="w-5 h-5 text-white" />
               </div>
-              <div className="hidden sm:flex items-baseline gap-1">
-                <span className="text-xl font-bold text-[#1A1A2E]" style={{ fontFamily: 'Playfair Display, serif' }}>
+              <div className="hidden sm:flex items-baseline gap-2">
+                <span className="text-xl font-bold text-[#0F172A]">
                   NailCost
                 </span>
-                <span className="text-xs font-semibold text-[#8B5CF6] uppercase tracking-wider">Business</span>
+                <span className="text-xs font-semibold text-[#3B82F6] uppercase tracking-wider bg-[#EFF6FF] px-2 py-0.5 rounded">
+                  Business
+                </span>
               </div>
             </NavLink>
 
@@ -426,10 +421,10 @@ const ComercioLayout = () => {
                   end={item.to === "/"}
                   className={({ isActive }) =>
                     cn(
-                      "flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300",
+                      "flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all",
                       isActive
-                        ? "bg-gradient-to-r from-[#8B5CF6] to-[#A78BFA] text-white shadow-lg shadow-purple-500/25"
-                        : "text-[#64748B] hover:text-[#8B5CF6] hover:bg-purple-50"
+                        ? "bg-[#1E3A5F] text-white"
+                        : "text-[#64748B] hover:text-[#1E3A5F] hover:bg-[#F1F5F9]"
                     )
                   }
                 >
@@ -438,12 +433,12 @@ const ComercioLayout = () => {
                 </NavLink>
               ))}
 
-              <div className="w-px h-6 bg-purple-200 mx-1" />
+              <div className="w-px h-6 bg-[#E2E8F0] mx-2" />
 
               <NavDropdown group={comercioServiciosGroup} isActive={isInServiciosGroup} />
               <NavDropdown group={comercioFinanzasGroup} isActive={isInFinanzasGroup} />
 
-              <div className="w-px h-6 bg-purple-200 mx-1" />
+              <div className="w-px h-6 bg-[#E2E8F0] mx-2" />
 
               {comercioToolsNav.map((item) => (
                 <NavLink
@@ -451,10 +446,10 @@ const ComercioLayout = () => {
                   to={item.to}
                   className={({ isActive }) =>
                     cn(
-                      "flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-all",
+                      "flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all",
                       isActive
-                        ? "bg-gradient-to-r from-[#8B5CF6] to-[#A78BFA] text-white shadow-lg shadow-purple-500/25"
-                        : "text-[#64748B] hover:text-[#8B5CF6] hover:bg-purple-50"
+                        ? "bg-[#1E3A5F] text-white"
+                        : "text-[#64748B] hover:text-[#1E3A5F] hover:bg-[#F1F5F9]"
                     )
                   }
                 >
@@ -464,19 +459,14 @@ const ComercioLayout = () => {
               ))}
             </nav>
 
-            {/* User Menu - Desktop */}
-            <div className="hidden lg:block">
-              <ComercioUserMenu />
-            </div>
-
-            {/* Mobile menu button */}
-            <div className="flex items-center gap-2 lg:hidden">
+            {/* User Menu & Mobile Toggle */}
+            <div className="flex items-center gap-3">
               <ComercioUserMenu />
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="p-2.5 rounded-xl bg-purple-50 hover:bg-purple-100 transition-colors"
+                className="p-2.5 rounded-lg bg-[#F1F5F9] hover:bg-[#E2E8F0] transition-colors lg:hidden"
               >
-                {mobileMenuOpen ? <X className="w-5 h-5 text-[#8B5CF6]" /> : <Menu className="w-5 h-5 text-[#8B5CF6]" />}
+                {mobileMenuOpen ? <X className="w-5 h-5 text-[#1E3A5F]" /> : <Menu className="w-5 h-5 text-[#1E3A5F]" />}
               </button>
             </div>
           </div>
@@ -487,12 +477,12 @@ const ComercioLayout = () => {
       {mobileMenuOpen && (
         <div className="lg:hidden fixed inset-0 z-30 bg-black/20 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)}>
           <nav 
-            className="absolute top-16 left-0 right-0 bg-white border-b border-purple-100 shadow-xl p-4 max-h-[80vh] overflow-y-auto"
+            className="absolute top-16 left-0 right-0 bg-white border-b border-[#E2E8F0] shadow-xl p-4 max-h-[80vh] overflow-y-auto animate-slide-down"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Main Section */}
+            {/* Main */}
             <div className="mb-4">
-              <p className="text-xs font-semibold text-[#8B5CF6] uppercase tracking-wider mb-3 px-2">Principal</p>
+              <p className="text-xs font-semibold text-[#1E3A5F] uppercase tracking-wider mb-3 px-2">Principal</p>
               <div className="grid grid-cols-4 gap-2">
                 {comercioMainNav.map((item) => (
                   <NavLink
@@ -502,10 +492,10 @@ const ComercioLayout = () => {
                     onClick={() => setMobileMenuOpen(false)}
                     className={({ isActive }) =>
                       cn(
-                        "flex flex-col items-center gap-2 px-3 py-4 rounded-2xl text-xs font-medium transition-all",
+                        "flex flex-col items-center gap-2 px-3 py-4 rounded-xl text-xs font-medium transition-all",
                         isActive
-                          ? "bg-gradient-to-br from-[#8B5CF6] to-[#A78BFA] text-white shadow-lg"
-                          : "bg-purple-50 text-[#64748B] hover:bg-purple-100"
+                          ? "bg-gradient-to-br from-[#1E3A5F] to-[#3B82F6] text-white shadow-lg"
+                          : "bg-[#F1F5F9] text-[#64748B] hover:bg-[#E2E8F0]"
                       )
                     }
                   >
@@ -516,9 +506,9 @@ const ComercioLayout = () => {
               </div>
             </div>
 
-            {/* Servicios Section */}
+            {/* Servicios */}
             <div className="mb-4">
-              <p className="text-xs font-semibold text-[#8B5CF6] uppercase tracking-wider mb-3 px-2">Servicios</p>
+              <p className="text-xs font-semibold text-[#1E3A5F] uppercase tracking-wider mb-3 px-2">Servicios</p>
               <div className="grid grid-cols-3 gap-2">
                 {comercioServiciosGroup.items.map((item) => (
                   <NavLink
@@ -527,10 +517,10 @@ const ComercioLayout = () => {
                     onClick={() => setMobileMenuOpen(false)}
                     className={({ isActive }) =>
                       cn(
-                        "flex flex-col items-center gap-2 px-3 py-4 rounded-2xl text-xs font-medium transition-all",
+                        "flex flex-col items-center gap-2 px-3 py-4 rounded-xl text-xs font-medium transition-all",
                         isActive
-                          ? "bg-gradient-to-br from-[#8B5CF6] to-[#A78BFA] text-white shadow-lg"
-                          : "bg-purple-50 text-[#64748B] hover:bg-purple-100"
+                          ? "bg-gradient-to-br from-[#1E3A5F] to-[#3B82F6] text-white shadow-lg"
+                          : "bg-[#F1F5F9] text-[#64748B] hover:bg-[#E2E8F0]"
                       )
                     }
                   >
@@ -541,9 +531,9 @@ const ComercioLayout = () => {
               </div>
             </div>
 
-            {/* Finanzas Section */}
+            {/* Finanzas */}
             <div className="mb-4">
-              <p className="text-xs font-semibold text-[#8B5CF6] uppercase tracking-wider mb-3 px-2">Finanzas</p>
+              <p className="text-xs font-semibold text-[#1E3A5F] uppercase tracking-wider mb-3 px-2">Finanzas</p>
               <div className="grid grid-cols-2 gap-2">
                 {comercioFinanzasGroup.items.map((item) => (
                   <NavLink
@@ -552,10 +542,10 @@ const ComercioLayout = () => {
                     onClick={() => setMobileMenuOpen(false)}
                     className={({ isActive }) =>
                       cn(
-                        "flex flex-col items-center gap-2 px-3 py-4 rounded-2xl text-xs font-medium transition-all",
+                        "flex flex-col items-center gap-2 px-3 py-4 rounded-xl text-xs font-medium transition-all",
                         isActive
-                          ? "bg-gradient-to-br from-[#8B5CF6] to-[#A78BFA] text-white shadow-lg"
-                          : "bg-purple-50 text-[#64748B] hover:bg-purple-100"
+                          ? "bg-gradient-to-br from-[#1E3A5F] to-[#3B82F6] text-white shadow-lg"
+                          : "bg-[#F1F5F9] text-[#64748B] hover:bg-[#E2E8F0]"
                       )
                     }
                   >
@@ -566,9 +556,9 @@ const ComercioLayout = () => {
               </div>
             </div>
 
-            {/* Herramientas Section */}
+            {/* Herramientas */}
             <div>
-              <p className="text-xs font-semibold text-[#8B5CF6] uppercase tracking-wider mb-3 px-2">Herramientas</p>
+              <p className="text-xs font-semibold text-[#1E3A5F] uppercase tracking-wider mb-3 px-2">Herramientas</p>
               <div className="grid grid-cols-3 gap-2">
                 {comercioToolsNav.map((item) => (
                   <NavLink
@@ -577,10 +567,10 @@ const ComercioLayout = () => {
                     onClick={() => setMobileMenuOpen(false)}
                     className={({ isActive }) =>
                       cn(
-                        "flex flex-col items-center gap-2 px-3 py-4 rounded-2xl text-xs font-medium transition-all",
+                        "flex flex-col items-center gap-2 px-3 py-4 rounded-xl text-xs font-medium transition-all",
                         isActive
-                          ? "bg-gradient-to-br from-[#8B5CF6] to-[#A78BFA] text-white shadow-lg"
-                          : "bg-purple-50 text-[#64748B] hover:bg-purple-100"
+                          ? "bg-gradient-to-br from-[#1E3A5F] to-[#3B82F6] text-white shadow-lg"
+                          : "bg-[#F1F5F9] text-[#64748B] hover:bg-[#E2E8F0]"
                       )
                     }
                   >
@@ -600,14 +590,14 @@ const ComercioLayout = () => {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-purple-100 bg-white/50 mt-auto">
+      <footer className="border-t border-[#E2E8F0] bg-white mt-auto">
         <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between text-xs text-[#64748B]">
-            <span className="flex items-center gap-1">
-              <Building2 className="w-3 h-3 text-[#8B5CF6]" />
-              NailCost Business
+            <span className="flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-[#1E3A5F]" />
+              <span className="font-medium text-[#0F172A]">NailCost Business</span>
             </span>
-            <span>USD</span>
+            <span>© 2024 - Todos los derechos reservados</span>
           </div>
         </div>
       </footer>
@@ -621,7 +611,6 @@ const ComercioLayout = () => {
 export const Layout = () => {
   const { isBusinessUser } = useAuth();
   
-  // Render different layout based on user type
   if (isBusinessUser) {
     return <ComercioLayout />;
   }

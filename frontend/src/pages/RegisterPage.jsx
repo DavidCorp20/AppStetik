@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2, UserPlus, Sparkles, Check, User, Building2, ArrowRight, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
@@ -21,6 +22,7 @@ export default function RegisterPage() {
     nombre_negocio: "",
     telefono: "",
     user_type: "",
+    aceptaTerminos: false,
   });
 
   const handleSelectType = (type) => {
@@ -43,6 +45,11 @@ export default function RegisterPage() {
 
     if (formData.password.length < 6) {
       toast.error("La contraseña debe tener al menos 6 caracteres");
+      return;
+    }
+
+    if (!formData.aceptaTerminos) {
+      toast.error("Debes aceptar los términos y condiciones");
       return;
     }
 
@@ -297,6 +304,30 @@ export default function RegisterPage() {
                     className="rounded-xl border-[#FCE7F0] focus:border-[#E84A8A] h-12"
                     data-testid="register-telefono-input"
                   />
+                </div>
+
+                {/* Terms Checkbox */}
+                <div className="flex items-start space-x-3 py-2">
+                  <Checkbox
+                    id="terminos"
+                    checked={formData.aceptaTerminos}
+                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, aceptaTerminos: checked }))}
+                    className="mt-0.5 border-[#E84A8A] data-[state=checked]:bg-[#E84A8A]"
+                    data-testid="accept-terms-checkbox"
+                  />
+                  <label
+                    htmlFor="terminos"
+                    className="text-sm text-[#64748B] leading-relaxed cursor-pointer"
+                  >
+                    Acepto los{" "}
+                    <Link to="/terminos" target="_blank" className="text-[#E84A8A] hover:underline">
+                      Términos y Condiciones
+                    </Link>{" "}
+                    y la{" "}
+                    <Link to="/privacidad" target="_blank" className="text-[#E84A8A] hover:underline">
+                      Política de Privacidad
+                    </Link>
+                  </label>
                 </div>
 
                 <Button

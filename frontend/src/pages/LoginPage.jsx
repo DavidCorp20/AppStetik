@@ -79,7 +79,16 @@ export default function LoginPage() {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-[#1A1A2E]">Contraseña</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password" className="text-[#1A1A2E]">Contraseña</Label>
+                  <Link 
+                    to="/recuperar-contrasena" 
+                    className="text-xs text-[#E84A8A] hover:underline"
+                    data-testid="forgot-password-link"
+                  >
+                    ¿Olvidaste tu contraseña?
+                  </Link>
+                </div>
                 <Input
                   id="password"
                   type="password"
@@ -120,6 +129,15 @@ export default function LoginPage() {
         <p className="text-center text-[#94A3B8] text-xs mt-6">
           Calculadora profesional para nail artists
         </p>
+        <div className="flex items-center justify-center gap-4 mt-3">
+          <Link to="/terminos" className="text-xs text-[#94A3B8] hover:text-[#E84A8A]">
+            Términos
+          </Link>
+          <span className="text-[#CBD5E1]">•</span>
+          <Link to="/privacidad" className="text-xs text-[#94A3B8] hover:text-[#E84A8A]">
+            Privacidad
+          </Link>
+        </div>
       </div>
     </div>
   );

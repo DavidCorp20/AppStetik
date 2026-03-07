@@ -5,7 +5,6 @@ import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { 
   Package, 
   Users, 
@@ -24,83 +23,146 @@ import {
   ArrowDownRight,
   Bell,
   Box,
-  Sparkles,
   Crown,
   PieChart,
-  Briefcase
+  Briefcase,
+  Activity,
+  FileText,
+  Settings,
+  ChevronDown,
+  MoreHorizontal,
+  CheckCircle2,
+  XCircle,
+  AlertCircle
 } from "lucide-react";
 
-// Metric Card for business dashboard
-const MetricCard = ({ title, value, change, changeType, icon: Icon, color, to }) => {
-  const colors = {
-    rose: { bg: 'bg-[#FDF2F7]', icon: 'bg-gradient-to-br from-[#E84A8A] to-[#FF6B9D]', text: 'text-[#E84A8A]' },
-    purple: { bg: 'bg-purple-50', icon: 'bg-gradient-to-br from-[#8B5CF6] to-[#A78BFA]', text: 'text-purple-600' },
-    blue: { bg: 'bg-blue-50', icon: 'bg-gradient-to-br from-[#3B82F6] to-[#60A5FA]', text: 'text-blue-600' },
-    emerald: { bg: 'bg-emerald-50', icon: 'bg-gradient-to-br from-[#10B981] to-[#34D399]', text: 'text-emerald-600' },
-    amber: { bg: 'bg-amber-50', icon: 'bg-gradient-to-br from-[#F59E0B] to-[#FBBF24]', text: 'text-amber-600' },
+// KPI Card Component
+const KPICard = ({ title, value, subtitle, icon: Icon, trend, trendValue, variant = "default" }) => {
+  const variants = {
+    default: "kpi-card",
+    blue: "kpi-card kpi-card-blue",
+    green: "kpi-card kpi-card-green",
+    amber: "kpi-card kpi-card-amber",
+    purple: "kpi-card kpi-card-purple",
   };
-  const c = colors[color] || colors.rose;
 
-  const content = (
-    <Card className={`${c.bg} border-none shadow-sm hover:shadow-md transition-shadow cursor-pointer`}>
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-xs font-medium text-[#64748B] uppercase tracking-wider">{title}</p>
-            <p className="text-2xl font-bold text-[#1A1A2E] mt-1">{value}</p>
-            {change !== undefined && (
-              <div className={`flex items-center gap-1 mt-2 text-xs ${changeType === 'up' ? 'text-emerald-600' : 'text-red-500'}`}>
-                {changeType === 'up' ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                <span>{change}% vs mes anterior</span>
-              </div>
-            )}
-          </div>
-          <div className={`w-12 h-12 ${c.icon} rounded-xl flex items-center justify-center shadow-sm`}>
-            <Icon className="w-6 h-6 text-white" />
-          </div>
+  return (
+    <div className={variants[variant]}>
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-xs font-semibold text-[#64748B] uppercase tracking-wider mb-1">{title}</p>
+          <p className="text-3xl font-bold text-[#0F172A]">{value}</p>
+          {subtitle && <p className="text-sm text-[#64748B] mt-1">{subtitle}</p>}
         </div>
-      </CardContent>
-    </Card>
+        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#1E3A5F] to-[#3B82F6] flex items-center justify-center shadow-lg">
+          <Icon className="w-6 h-6 text-white" />
+        </div>
+      </div>
+      {trend && (
+        <div className={`flex items-center gap-1 mt-3 text-sm ${trend === 'up' ? 'text-emerald-600' : 'text-red-500'}`}>
+          {trend === 'up' ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
+          <span className="font-medium">{trendValue}</span>
+          <span className="text-[#64748B]">vs mes anterior</span>
+        </div>
+      )}
+    </div>
   );
-
-  return to ? <Link to={to} className="block">{content}</Link> : content;
 };
 
-// Employee Status Card
-const EmployeeCard = ({ employee }) => (
-  <div className="flex items-center gap-3 p-3 bg-white rounded-xl border border-purple-100 hover:border-purple-200 transition-colors">
-    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white font-semibold">
+// Status Badge
+const StatusBadge = ({ status }) => {
+  const styles = {
+    confirmada: { bg: "bg-emerald-100", text: "text-emerald-700", icon: CheckCircle2 },
+    pendiente: { bg: "bg-amber-100", text: "text-amber-700", icon: AlertCircle },
+    cancelada: { bg: "bg-red-100", text: "text-red-700", icon: XCircle },
+  };
+  const s = styles[status] || styles.pendiente;
+  const Icon = s.icon;
+
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium ${s.bg} ${s.text}`}>
+      <Icon className="w-3 h-3" />
+      {status.charAt(0).toUpperCase() + status.slice(1)}
+    </span>
+  );
+};
+
+// Appointment Row
+const AppointmentRow = ({ cita, index }) => (
+  <div 
+    className="flex items-center gap-4 p-4 bg-white border border-[#E2E8F0] rounded-xl hover:border-[#3B82F6]/30 hover:shadow-sm transition-all animate-slide-up"
+    style={{ animationDelay: `${index * 0.1}s` }}
+  >
+    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#1E3A5F] to-[#3B82F6] flex flex-col items-center justify-center text-white">
+      <span className="text-lg font-bold leading-none">{cita.hora?.split(':')[0]}</span>
+      <span className="text-xs opacity-80">{cita.hora?.split(':')[1]}</span>
+    </div>
+    <div className="flex-1 min-w-0">
+      <p className="font-semibold text-[#0F172A] truncate">{cita.cliente_nombre}</p>
+      <p className="text-sm text-[#64748B] truncate">{cita.estilo_nombre}</p>
+    </div>
+    <StatusBadge status={cita.estado || 'pendiente'} />
+    <Button variant="ghost" size="icon" className="text-[#64748B] hover:text-[#1E3A5F]">
+      <MoreHorizontal className="w-5 h-5" />
+    </Button>
+  </div>
+);
+
+// Employee Mini Card
+const EmployeeMini = ({ employee }) => (
+  <div className="flex items-center gap-3 p-3 bg-[#F8FAFC] rounded-lg border border-[#E2E8F0] hover:border-[#3B82F6]/30 transition-colors">
+    <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-white font-semibold text-sm ${
+      employee.activo ? 'bg-gradient-to-br from-[#1E3A5F] to-[#3B82F6]' : 'bg-gray-400'
+    }`}>
       {employee.nombre?.charAt(0).toUpperCase()}
     </div>
     <div className="flex-1 min-w-0">
-      <p className="font-medium text-[#1A1A2E] truncate">{employee.nombre}</p>
+      <p className="font-medium text-[#0F172A] text-sm truncate">{employee.nombre}</p>
       <p className="text-xs text-[#64748B]">{employee.especialidad || 'General'}</p>
     </div>
-    <Badge variant={employee.activo ? "default" : "secondary"} className={employee.activo ? "bg-emerald-100 text-emerald-700" : ""}>
-      {employee.activo ? 'Activo' : 'Inactivo'}
-    </Badge>
+    <div className={`w-2 h-2 rounded-full ${employee.activo ? 'bg-emerald-500' : 'bg-gray-400'}`} />
   </div>
 );
 
-// Inventory Alert Card
-const InventoryAlertCard = ({ alert }) => (
-  <div className={`flex items-center gap-3 p-3 rounded-xl ${alert.tipo === 'agotado' ? 'bg-red-50 border border-red-100' : 'bg-amber-50 border border-amber-100'}`}>
-    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${alert.tipo === 'agotado' ? 'bg-red-100' : 'bg-amber-100'}`}>
-      <Box className={`w-5 h-5 ${alert.tipo === 'agotado' ? 'text-red-600' : 'text-amber-600'}`} />
+// Alert Item
+const AlertItem = ({ alert }) => (
+  <div className={`flex items-center gap-3 p-3 rounded-lg ${
+    alert.tipo === 'agotado' ? 'bg-red-50 border border-red-100' : 'bg-amber-50 border border-amber-100'
+  }`}>
+    <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
+      alert.tipo === 'agotado' ? 'bg-red-100' : 'bg-amber-100'
+    }`}>
+      <Box className={`w-4 h-4 ${alert.tipo === 'agotado' ? 'text-red-600' : 'text-amber-600'}`} />
     </div>
     <div className="flex-1 min-w-0">
-      <p className="font-medium text-[#1A1A2E] truncate">{alert.producto_nombre}</p>
+      <p className="font-medium text-[#0F172A] text-sm truncate">{alert.producto_nombre}</p>
       <p className={`text-xs ${alert.tipo === 'agotado' ? 'text-red-600' : 'text-amber-600'}`}>
-        {alert.tipo === 'agotado' ? 'Agotado' : `Stock: ${alert.cantidad_actual}`}
+        {alert.tipo === 'agotado' ? 'Sin stock' : `Stock: ${alert.cantidad_actual} unidades`}
       </p>
     </div>
-    <Link to="/productos">
-      <Button size="sm" variant="ghost" className="text-[#64748B]">
-        <ChevronRight className="w-4 h-4" />
-      </Button>
-    </Link>
   </div>
 );
+
+// Service Performance Row
+const ServiceRow = ({ service, index, maxValue }) => {
+  const percentage = (service.rentabilidad_hora / maxValue) * 100;
+  return (
+    <div className="space-y-2 animate-slide-up" style={{ animationDelay: `${index * 0.1}s` }}>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <span className="w-6 h-6 rounded-md bg-[#1E3A5F] text-white text-xs font-bold flex items-center justify-center">
+            {index + 1}
+          </span>
+          <span className="font-medium text-[#0F172A] text-sm">{service.nombre}</span>
+        </div>
+        <span className="font-bold text-[#1E3A5F]">${service.rentabilidad_hora.toFixed(2)}/h</span>
+      </div>
+      <div className="progress-corp">
+        <div className="progress-corp-fill" style={{ width: `${percentage}%` }} />
+      </div>
+    </div>
+  );
+};
 
 export default function ComercioDashboard() {
   const { user, isPremium } = useAuth();
@@ -115,36 +177,32 @@ export default function ComercioDashboard() {
   const API = process.env.REACT_APP_BACKEND_URL + '/api';
 
   useEffect(() => {
+    // Add comercio theme class to body
+    document.body.classList.add('comercio-theme');
+    return () => document.body.classList.remove('comercio-theme');
+  }, []);
+
+  useEffect(() => {
     const fetchData = async () => {
       const token = localStorage.getItem('nailcost_token');
       if (!token) return;
 
       try {
-        // Fetch employees
-        const empRes = await fetch(`${API}/empleados`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const [empRes, alertRes, statsRes] = await Promise.all([
+          fetch(`${API}/empleados`, { headers: { Authorization: `Bearer ${token}` }}),
+          fetch(`${API}/alertas-inventario`, { headers: { Authorization: `Bearer ${token}` }}),
+          fetch(`${API}/quick-stats`, { headers: { Authorization: `Bearer ${token}` }})
+        ]);
+
         if (empRes.ok) setEmpleados(await empRes.json());
-
-        // Fetch inventory alerts
-        const alertRes = await fetch(`${API}/alertas-inventario`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
         if (alertRes.ok) setAlertasInventario(await alertRes.json());
-
-        // Fetch quick stats
-        const statsRes = await fetch(`${API}/quick-stats`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
         if (statsRes.ok) setStats(await statsRes.json());
 
-        // Fetch report
         if (estilos.length > 0) {
           const data = await getReporte();
           setReporte(data);
         }
 
-        // Fetch today's appointments
         const citas = await getCitasProximas();
         setCitasHoy(citas.filter(c => c.fecha === new Date().toISOString().split('T')[0]));
       } catch (err) {
@@ -170,188 +228,194 @@ export default function ComercioDashboard() {
 
   return (
     <div className="space-y-6 pb-8" data-testid="comercio-dashboard">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#8B5CF6] to-[#A78BFA] flex items-center justify-center shadow-lg">
-              <Building2 className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-[#1A1A2E]" style={{ fontFamily: 'Playfair Display, serif' }}>
-                {user?.nombre_negocio || 'Mi Negocio'}
-              </h1>
-              <p className="text-sm text-[#64748B]">Panel de Control</p>
-            </div>
+      {/* Header Section */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="animate-fade-in">
+          <div className="flex items-center gap-2 text-sm text-[#64748B] mb-1">
+            <Activity className="w-4 h-4" />
+            <span>Panel de Control</span>
           </div>
+          <h1 className="text-2xl lg:text-3xl font-bold text-[#0F172A]">
+            {user?.nombre_negocio || 'Mi Negocio'}
+          </h1>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-3 animate-slide-left">
           <Link to="/calculadora">
-            <Button className="bg-gradient-to-r from-[#8B5CF6] to-[#A78BFA] hover:from-[#7C3AED] hover:to-[#8B5CF6] text-white rounded-xl">
+            <Button className="btn-corp rounded-xl h-11">
               <Calculator className="w-4 h-4 mr-2" />
               Nueva Cotización
             </Button>
           </Link>
-          <Link to="/agenda">
-            <Button variant="outline" className="border-purple-200 text-purple-600 hover:bg-purple-50 rounded-xl">
-              <Calendar className="w-4 h-4 mr-2" />
-              Agenda
+          <Link to="/reportes-mensuales">
+            <Button variant="outline" className="btn-corp-outline rounded-xl h-11">
+              <FileText className="w-4 h-4 mr-2" />
+              Reportes
             </Button>
           </Link>
         </div>
       </div>
 
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <KPICard 
+          title="Ingresos Estimados"
+          value={`$${reporte?.rentabilidad_mensual_estimada?.toFixed(0) || '0'}`}
+          subtitle="Este mes"
+          icon={DollarSign}
+          variant="green"
+        />
+        <KPICard 
+          title="Clientes Activos"
+          value={clientes.length}
+          subtitle="Registrados"
+          icon={Users}
+          variant="blue"
+        />
+        <KPICard 
+          title="Equipo"
+          value={empleados.filter(e => e.activo).length}
+          subtitle={`de ${empleados.length} total`}
+          icon={UserCheck}
+          variant="purple"
+        />
+        <KPICard 
+          title="Gastos Mensuales"
+          value={`$${gastosTotal().toFixed(0)}`}
+          subtitle="Operativos"
+          icon={PieChart}
+          variant="amber"
+        />
+      </div>
+
       {/* Monthly Goal Progress */}
-      {reporte && configGanancias?.meta_ingreso_mensual > 0 && (
-        <Card className="bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-100">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Target className="w-5 h-5 text-purple-600" />
-                <span className="font-semibold text-purple-800">Meta Mensual</span>
+      {configGanancias?.meta_ingreso_mensual > 0 && (
+        <Card className="card-corp">
+          <CardContent className="p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1E3A5F] to-[#3B82F6] flex items-center justify-center">
+                  <Target className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-[#0F172A]">Meta Mensual</h3>
+                  <p className="text-sm text-[#64748B]">Progreso hacia tu objetivo</p>
+                </div>
               </div>
-              <span className="text-2xl font-bold text-purple-600">{metaProgress().toFixed(0)}%</span>
+              <div className="text-right">
+                <span className="text-3xl font-bold text-[#1E3A5F]">{metaProgress().toFixed(0)}%</span>
+                <p className="text-sm text-[#64748B]">completado</p>
+              </div>
             </div>
-            <Progress value={metaProgress()} className="h-3 bg-purple-100" />
-            <div className="flex justify-between mt-2 text-sm text-purple-600">
-              <span>${reporte.rentabilidad_mensual_estimada?.toFixed(2) || '0'}</span>
-              <span>Meta: ${configGanancias.meta_ingreso_mensual}</span>
+            <div className="progress-corp h-3">
+              <div className="progress-corp-fill" style={{ width: `${metaProgress()}%` }} />
+            </div>
+            <div className="flex justify-between mt-3 text-sm">
+              <span className="text-[#64748B]">Actual: <strong className="text-[#0F172A]">${reporte?.rentabilidad_mensual_estimada?.toFixed(0) || '0'}</strong></span>
+              <span className="text-[#64748B]">Meta: <strong className="text-[#0F172A]">${configGanancias.meta_ingreso_mensual}</strong></span>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Key Metrics Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard 
-          title="Ingresos Est." 
-          value={`$${reporte?.rentabilidad_mensual_estimada?.toFixed(0) || '0'}`} 
-          icon={DollarSign} 
-          color="emerald"
-          to="/reportes-mensuales"
-        />
-        <MetricCard 
-          title="Clientes" 
-          value={clientes.length} 
-          icon={Users} 
-          color="purple"
-          to="/clientes"
-        />
-        <MetricCard 
-          title="Empleados" 
-          value={empleados.filter(e => e.activo).length} 
-          icon={UserCheck} 
-          color="blue"
-          to="/empleados"
-        />
-        <MetricCard 
-          title="Gastos/Mes" 
-          value={`$${gastosTotal().toFixed(0)}`} 
-          icon={PieChart} 
-          color="amber"
-          to="/gastos"
-        />
-      </div>
-
-      {/* Main Content Grid */}
+      {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column - Main Content */}
+        {/* Left - Main Content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Today's Schedule */}
-          <Card className="border-[#E5E7EB]">
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-purple-600" />
-                  <h2 className="font-semibold text-[#1A1A2E]">Agenda de Hoy</h2>
+          <Card className="card-corp">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1E3A5F] to-[#3B82F6] flex items-center justify-center">
+                    <Calendar className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-[#0F172A]">Agenda de Hoy</h3>
+                    <p className="text-sm text-[#64748B]">{citasHoy.length} citas programadas</p>
+                  </div>
                 </div>
                 <Link to="/agenda">
-                  <Button variant="ghost" size="sm" className="text-purple-600">
+                  <Button variant="ghost" className="text-[#1E3A5F] hover:bg-[#F1F5F9]">
                     Ver todo <ChevronRight className="w-4 h-4 ml-1" />
                   </Button>
                 </Link>
               </div>
               
               {citasHoy.length > 0 ? (
-                <div className="space-y-2">
-                  {citasHoy.map((cita, i) => (
-                    <div key={i} className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                      <div className="text-center">
-                        <p className="text-lg font-bold text-purple-600">{cita.hora}</p>
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-medium text-[#1A1A2E]">{cita.cliente_nombre}</p>
-                        <p className="text-sm text-[#64748B]">{cita.estilo_nombre}</p>
-                      </div>
-                      <Badge className="bg-purple-100 text-purple-700">{cita.estado || 'Pendiente'}</Badge>
-                    </div>
+                <div className="space-y-3">
+                  {citasHoy.slice(0, 4).map((cita, i) => (
+                    <AppointmentRow key={i} cita={cita} index={i} />
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 text-[#64748B]">
-                  <Calendar className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                  <p>No hay citas programadas para hoy</p>
+                <div className="text-center py-10 bg-[#F8FAFC] rounded-xl">
+                  <Calendar className="w-12 h-12 mx-auto text-[#CBD5E1] mb-3" />
+                  <p className="text-[#64748B]">No hay citas programadas para hoy</p>
+                  <Link to="/agenda" className="inline-block mt-3">
+                    <Button variant="outline" size="sm" className="btn-corp-outline">
+                      Programar cita
+                    </Button>
+                  </Link>
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Performance Overview */}
-          <Card className="border-[#E5E7EB]">
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5 text-purple-600" />
-                  <h2 className="font-semibold text-[#1A1A2E]">Rendimiento</h2>
+          {/* Service Performance */}
+          <Card className="card-corp">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1E3A5F] to-[#3B82F6] flex items-center justify-center">
+                    <BarChart3 className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-[#0F172A]">Rendimiento por Servicio</h3>
+                    <p className="text-sm text-[#64748B]">Rentabilidad por hora</p>
+                  </div>
                 </div>
                 {isPremium && (
                   <Link to="/reportes-mensuales">
-                    <Button variant="ghost" size="sm" className="text-purple-600">
-                      Reportes <ChevronRight className="w-4 h-4 ml-1" />
+                    <Button variant="ghost" className="text-[#1E3A5F] hover:bg-[#F1F5F9]">
+                      Análisis <ChevronRight className="w-4 h-4 ml-1" />
                     </Button>
                   </Link>
                 )}
               </div>
               
               {reporte?.servicios_ranking?.length > 0 ? (
-                <div className="space-y-3">
-                  {reporte.servicios_ranking.slice(0, 4).map((s, i) => (
-                    <div key={i} className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center text-purple-600 font-bold text-sm">
-                        {i + 1}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex justify-between items-center mb-1">
-                          <span className="text-sm font-medium text-[#1A1A2E]">{s.nombre}</span>
-                          <span className="text-sm font-bold text-purple-600">${s.rentabilidad_hora.toFixed(2)}/h</span>
-                        </div>
-                        <Progress value={(s.rentabilidad_hora / (reporte.servicios_ranking[0]?.rentabilidad_hora || 1)) * 100} className="h-2" />
-                      </div>
-                    </div>
+                <div className="space-y-4">
+                  {reporte.servicios_ranking.slice(0, 5).map((s, i) => (
+                    <ServiceRow 
+                      key={i} 
+                      service={s} 
+                      index={i} 
+                      maxValue={reporte.servicios_ranking[0]?.rentabilidad_hora || 1} 
+                    />
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 text-[#64748B]">
-                  <BarChart3 className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                  <p>Agrega estilos para ver el rendimiento</p>
+                <div className="text-center py-10 bg-[#F8FAFC] rounded-xl">
+                  <BarChart3 className="w-12 h-12 mx-auto text-[#CBD5E1] mb-3" />
+                  <p className="text-[#64748B]">Agrega estilos para ver análisis</p>
                 </div>
               )}
             </CardContent>
           </Card>
         </div>
 
-        {/* Right Column - Sidebar Content */}
+        {/* Right - Sidebar */}
         <div className="space-y-6">
-          {/* Employees */}
-          <Card className="border-purple-100 bg-gradient-to-br from-white to-purple-50/50">
+          {/* Team Section */}
+          <Card className="card-corp">
             <CardContent className="p-5">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <UserCheck className="w-5 h-5 text-purple-600" />
-                  <h3 className="font-semibold text-[#1A1A2E]">Equipo</h3>
+                  <UserCheck className="w-5 h-5 text-[#1E3A5F]" />
+                  <h3 className="font-semibold text-[#0F172A]">Equipo</h3>
                 </div>
                 <Link to="/empleados">
-                  <Button variant="ghost" size="sm" className="text-purple-600">
+                  <Button variant="ghost" size="sm" className="text-[#1E3A5F] hover:bg-[#F1F5F9] h-8 px-2">
                     <ChevronRight className="w-4 h-4" />
                   </Button>
                 </Link>
@@ -359,23 +423,23 @@ export default function ComercioDashboard() {
               
               {empleados.length > 0 ? (
                 <div className="space-y-2">
-                  {empleados.slice(0, 3).map((emp) => (
-                    <EmployeeCard key={emp.id} employee={emp} />
+                  {empleados.slice(0, 4).map((emp) => (
+                    <EmployeeMini key={emp.id} employee={emp} />
                   ))}
-                  {empleados.length > 3 && (
+                  {empleados.length > 4 && (
                     <Link to="/empleados" className="block">
-                      <Button variant="ghost" className="w-full text-purple-600 mt-2">
-                        Ver {empleados.length - 3} más
+                      <Button variant="ghost" className="w-full text-[#1E3A5F] hover:bg-[#F1F5F9] text-sm">
+                        Ver {empleados.length - 4} más
                       </Button>
                     </Link>
                   )}
                 </div>
               ) : (
-                <div className="text-center py-4">
-                  <p className="text-sm text-[#64748B] mb-3">No hay empleados registrados</p>
+                <div className="text-center py-6 bg-[#F8FAFC] rounded-lg">
+                  <p className="text-sm text-[#64748B] mb-3">Sin empleados</p>
                   <Link to="/empleados">
-                    <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white rounded-lg">
-                      Agregar Empleado
+                    <Button size="sm" className="btn-corp text-sm">
+                      Agregar
                     </Button>
                   </Link>
                 </div>
@@ -384,45 +448,75 @@ export default function ComercioDashboard() {
           </Card>
 
           {/* Inventory Alerts */}
-          <Card className={`border-amber-100 ${alertasInventario.length > 0 ? 'bg-gradient-to-br from-white to-amber-50/50' : ''}`}>
+          <Card className="card-corp">
             <CardContent className="p-5">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <AlertTriangle className={`w-5 h-5 ${alertasInventario.length > 0 ? 'text-amber-500' : 'text-gray-400'}`} />
-                  <h3 className="font-semibold text-[#1A1A2E]">Inventario</h3>
+                  <AlertTriangle className={`w-5 h-5 ${alertasInventario.length > 0 ? 'text-amber-500' : 'text-[#CBD5E1]'}`} />
+                  <h3 className="font-semibold text-[#0F172A]">Inventario</h3>
                 </div>
                 {alertasInventario.length > 0 && (
-                  <Badge className="bg-amber-100 text-amber-700">{alertasInventario.length}</Badge>
+                  <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100">{alertasInventario.length}</Badge>
                 )}
               </div>
               
               {alertasInventario.length > 0 ? (
                 <div className="space-y-2">
                   {alertasInventario.slice(0, 4).map((alert, i) => (
-                    <InventoryAlertCard key={i} alert={alert} />
+                    <AlertItem key={i} alert={alert} />
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-4 text-emerald-600 bg-emerald-50 rounded-xl">
-                  <Box className="w-8 h-8 mx-auto mb-2" />
-                  <p className="text-sm">Inventario en orden</p>
+                <div className="text-center py-6 bg-emerald-50 rounded-lg border border-emerald-100">
+                  <CheckCircle2 className="w-8 h-8 mx-auto text-emerald-500 mb-2" />
+                  <p className="text-sm text-emerald-700 font-medium">Inventario en orden</p>
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Premium Upsell for Business */}
+          {/* Quick Stats */}
+          <Card className="card-corp bg-gradient-to-br from-[#1E3A5F] to-[#0F172A] text-white">
+            <CardContent className="p-5">
+              <h3 className="font-semibold mb-4 flex items-center gap-2">
+                <Activity className="w-5 h-5" />
+                Resumen Rápido
+              </h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-white/70 text-sm">Productos</span>
+                  <span className="font-semibold">{productos.length}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-white/70 text-sm">Estilos</span>
+                  <span className="font-semibold">{estilos.length}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-white/70 text-sm">Citas Hoy</span>
+                  <span className="font-semibold">{citasHoy.length}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-white/70 text-sm">Alertas</span>
+                  <span className={`font-semibold ${alertasInventario.length > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                    {alertasInventario.length}
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Premium Upsell */}
           {!isPremium && (
-            <Card className="bg-gradient-to-br from-amber-400 to-orange-500 border-none text-white overflow-hidden relative">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
-              <CardContent className="p-5 relative z-10">
+            <Card className="card-corp overflow-hidden border-none bg-gradient-to-br from-amber-400 to-orange-500 text-white">
+              <CardContent className="p-5 relative">
+                <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full" />
                 <Crown className="w-10 h-10 mb-3" />
-                <h3 className="font-bold text-lg">Premium Business</h3>
+                <h3 className="font-bold text-lg">Actualiza a Premium</h3>
                 <p className="text-sm text-white/90 mt-1 mb-4">
-                  Reportes avanzados, análisis por empleado y más
+                  Reportes avanzados, análisis y más
                 </p>
-                <Button className="w-full bg-white text-amber-600 hover:bg-white/90">
-                  Actualizar Plan
+                <Button className="w-full bg-white text-orange-600 hover:bg-white/90 font-semibold">
+                  Ver Beneficios
                 </Button>
               </CardContent>
             </Card>

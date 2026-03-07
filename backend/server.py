@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, status
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -7,12 +7,15 @@ import os
 import logging
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict, EmailStr
-from typing import List, Optional
+from typing import List, Optional, Dict
 import uuid
+import secrets
 from datetime import datetime, timezone, timedelta
 from enum import Enum
 from passlib.context import CryptContext
 from jose import JWTError, jwt
+from collections import defaultdict
+import time
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -23,7 +26,7 @@ client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
 # JWT Configuration
-SECRET_KEY = os.environ.get('JWT_SECRET', 'nailcost-pro-secret-key-2024')
+SECRET_KEY = os.environ.get('JWT_SECRET', 'nailcost-pro-secret-key-2024-secure')
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_DAYS = 30
 
@@ -32,6 +35,34 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Security
 security = HTTPBearer()
+
+# ======================
+# RATE LIMITING
+# ======================
+class RateLimiter:
+    def __init__(self):
+        self.requests: Dict[str, list] = defaultdict(list)
+        self.blocked: Dict[str, float] = {}
+    
+    def is_blocked(self, ip: str) -> bool:
+        if ip in self.blocked:
+            if time.time() < self.blocked[ip]:
+                return True
+            del self.blocked[ip]
+        return False
+    
+    def add_request(self, ip: str, max_requests: int = 5, window_seconds: int = 60, block_seconds: int = 300):
+        now = time.time()
+        # Clean old requests
+        self.requests[ip] = [t for t in self.requests[ip] if now - t < window_seconds]
+        self.requests[ip].append(now)
+        
+        if len(self.requests[ip]) > max_requests:
+            self.blocked[ip] = now + block_seconds
+            return False
+        return True
+
+rate_limiter = RateLimiter()
 
 # Create the main app
 app = FastAPI(title="NailCost Pro API")
@@ -93,6 +124,14 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserResponse
+
+# Password Reset Models
+class PasswordResetRequest(BaseModel):
+    email: str
+
+class PasswordResetConfirm(BaseModel):
+    token: str
+    new_password: str
 
 # Calculation History Model
 class CalculationHistory(BaseModel):
@@ -472,12 +511,19 @@ async def register(user_data: UserRegister):
     )
 
 @api_router.post("/auth/login", response_model=TokenResponse)
-async def login(credentials: UserLogin):
+async def login(credentials: UserLogin, request: Request):
+    # Rate limiting
+    client_ip = request.client.host if request.client else "unknown"
+    if rate_limiter.is_blocked(client_ip):
+        raise HTTPException(status_code=429, detail="Demasiados intentos. Espera 5 minutos.")
+    
     user = await db.users.find_one({"email": credentials.email.lower()})
     if not user:
+        rate_limiter.add_request(client_ip)
         raise HTTPException(status_code=401, detail="Email o contraseña incorrectos")
     
     if not verify_password(credentials.password, user["password"]):
+        rate_limiter.add_request(client_ip)
         raise HTTPException(status_code=401, detail="Email o contraseña incorrectos")
     
     access_token = create_access_token(data={"sub": user["id"]})
@@ -510,6 +556,67 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         user_type=current_user.get("user_type", "personal"),
         created_at=current_user["created_at"]
     )
+
+# Password Reset Endpoints
+@api_router.post("/auth/forgot-password")
+async def forgot_password(data: PasswordResetRequest):
+    user = await db.users.find_one({"email": data.email.lower()})
+    if not user:
+        # Don't reveal if email exists
+        return {"message": "Si el email existe, recibirás instrucciones para restablecer tu contraseña"}
+    
+    # Generate reset token
+    reset_token = secrets.token_urlsafe(32)
+    expires = datetime.now(timezone.utc) + timedelta(hours=1)
+    
+    await db.password_resets.insert_one({
+        "email": data.email.lower(),
+        "token": reset_token,
+        "expires_at": expires.isoformat(),
+        "used": False
+    })
+    
+    # In production, send email. For now, log to console
+    logging.info(f"🔑 PASSWORD RESET TOKEN for {data.email}: {reset_token}")
+    print(f"\n{'='*60}")
+    print(f"🔑 TOKEN DE RECUPERACIÓN DE CONTRASEÑA")
+    print(f"Email: {data.email}")
+    print(f"Token: {reset_token}")
+    print(f"Expira en: 1 hora")
+    print(f"{'='*60}\n")
+    
+    return {"message": "Si el email existe, recibirás instrucciones para restablecer tu contraseña", "debug_token": reset_token}
+
+@api_router.post("/auth/reset-password")
+async def reset_password(data: PasswordResetConfirm):
+    # Find valid token
+    reset_record = await db.password_resets.find_one({
+        "token": data.token,
+        "used": False
+    })
+    
+    if not reset_record:
+        raise HTTPException(status_code=400, detail="Token inválido o expirado")
+    
+    # Check expiration
+    expires_at = datetime.fromisoformat(reset_record["expires_at"])
+    if datetime.now(timezone.utc) > expires_at:
+        raise HTTPException(status_code=400, detail="Token expirado")
+    
+    # Update password
+    hashed = get_password_hash(data.new_password)
+    await db.users.update_one(
+        {"email": reset_record["email"]},
+        {"$set": {"password": hashed}}
+    )
+    
+    # Mark token as used
+    await db.password_resets.update_one(
+        {"token": data.token},
+        {"$set": {"used": True}}
+    )
+    
+    return {"message": "Contraseña actualizada exitosamente"}
 
 @api_router.put("/auth/profile")
 async def update_profile(
