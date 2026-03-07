@@ -202,11 +202,19 @@ const PersonaLayout = () => {
 
 const comercioMainNav = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
-  { to: "/clientes", icon: Users, label: "Clientes" },
   { to: "/agenda", icon: Calendar, label: "Agenda" },
-  { to: "/empleados", icon: UserCheck, label: "Empleados" },
-  { to: "/inventario", icon: Package, label: "Inventario" },
+  { to: "/facturacion", icon: Receipt, label: "Facturación" },
 ];
+
+const comercioGestionGroup = {
+  label: "Gestión",
+  icon: Users,
+  items: [
+    { to: "/clientes", icon: Users, label: "Clientes" },
+    { to: "/empleados", icon: UserCheck, label: "Empleados" },
+    { to: "/inventario", icon: Package, label: "Inventario" },
+  ]
+};
 
 const comercioServiciosGroup = {
   label: "Servicios",
@@ -227,11 +235,15 @@ const comercioFinanzasGroup = {
   ]
 };
 
-const comercioToolsNav = [
-  { to: "/calculadora", icon: Calculator, label: "Cotizar" },
-  { to: "/reportes-mensuales", icon: BarChart3, label: "Reportes" },
-  { to: "/simulacion", icon: Target, label: "Simulación" },
-];
+const comercioHerramientasGroup = {
+  label: "Herramientas",
+  icon: Calculator,
+  items: [
+    { to: "/calculadora", icon: Calculator, label: "Cotizador" },
+    { to: "/reportes-mensuales", icon: BarChart3, label: "Reportes" },
+    { to: "/simulacion", icon: Target, label: "Simulación" },
+  ]
+};
 
 // Dropdown Component
 const NavDropdown = ({ group, isActive }) => {
@@ -389,8 +401,10 @@ const ComercioLayout = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
 
+  const isInGestionGroup = comercioGestionGroup.items.some(item => location.pathname === item.to);
   const isInServiciosGroup = comercioServiciosGroup.items.some(item => location.pathname === item.to);
   const isInFinanzasGroup = comercioFinanzasGroup.items.some(item => location.pathname === item.to);
+  const isInHerramientasGroup = comercioHerramientasGroup.items.some(item => location.pathname === item.to);
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]" data-testid="comercio-layout">
@@ -401,7 +415,7 @@ const ComercioLayout = () => {
             {/* Logo */}
             <NavLink to="/" className="flex items-center gap-3" data-testid="comercio-logo">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1E3A5F] to-[#3B82F6] flex items-center justify-center shadow-lg">
-                <Building2 className="w-5 h-5 text-white" />
+                <Sparkles className="w-5 h-5 text-white" />
               </div>
               <div className="hidden sm:flex items-baseline gap-2">
                 <span className="text-xl font-bold text-[#0F172A]">
@@ -436,28 +450,10 @@ const ComercioLayout = () => {
 
               <div className="w-px h-6 bg-[#E2E8F0] mx-2" />
 
+              <NavDropdown group={comercioGestionGroup} isActive={isInGestionGroup} />
               <NavDropdown group={comercioServiciosGroup} isActive={isInServiciosGroup} />
               <NavDropdown group={comercioFinanzasGroup} isActive={isInFinanzasGroup} />
-
-              <div className="w-px h-6 bg-[#E2E8F0] mx-2" />
-
-              {comercioToolsNav.map((item) => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  className={({ isActive }) =>
-                    cn(
-                      "flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all",
-                      isActive
-                        ? "bg-[#1E3A5F] text-white"
-                        : "text-[#64748B] hover:text-[#1E3A5F] hover:bg-[#F1F5F9]"
-                    )
-                  }
-                >
-                  <item.icon className="w-4 h-4" />
-                  <span>{item.label}</span>
-                </NavLink>
-              ))}
+              <NavDropdown group={comercioHerramientasGroup} isActive={isInHerramientasGroup} />
             </nav>
 
             {/* User Menu & Mobile Toggle */}

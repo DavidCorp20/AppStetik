@@ -185,6 +185,28 @@ class MovementCreate(BaseModel):
     cantidad: int
     notas: str = ""
 
+# Invoice Models
+class InvoiceItem(BaseModel):
+    descripcion: str
+    cantidad: int = 1
+    precio_unitario: float
+
+class InvoiceCreate(BaseModel):
+    cliente_id: str
+    cliente_nombre: str
+    cliente_telefono: str = ""
+    cliente_email: str = ""
+    items: List[InvoiceItem]
+    subtotal: float
+    descuento: float = 0
+    total: float
+    metodo_pago: str = "efectivo"
+    notas: str = ""
+    estado: str = "pendiente"
+
+class InvoiceStatusUpdate(BaseModel):
+    estado: str
+
 # Plan Limits
 PLAN_LIMITS = {
     "free": {
@@ -950,6 +972,77 @@ async def create_inventory_movement(
     await db.inventario_movimientos.insert_one(mov_data)
     
     return {"message": "Movimiento registrado", "new_stock": new_stock}
+
+# ======================
+# ENDPOINTS - Invoices (Facturación)
+# ======================
+@api_router.get("/facturas")
+async def get_invoices(current_user: dict = Depends(get_current_user)):
+    """Get all invoices"""
+    facturas = await db.facturas.find(
+        {"user_id": current_user["id"]},
+        {"_id": 0}
+    ).sort("fecha", -1).to_list(500)
+    return facturas
+
+@api_router.post("/facturas")
+async def create_invoice(invoice: InvoiceCreate, current_user: dict = Depends(get_current_user)):
+    """Create new invoice"""
+    # Get next invoice number
+    last_invoice = await db.facturas.find_one(
+        {"user_id": current_user["id"]},
+        sort=[("numero", -1)]
+    )
+    next_number = (last_invoice.get("numero", 0) if last_invoice else 0) + 1
+    
+    factura_data = {
+        "id": str(uuid.uuid4()),
+        "user_id": current_user["id"],
+        "numero": next_number,
+        "cliente_id": invoice.cliente_id,
+        "cliente_nombre": invoice.cliente_nombre,
+        "cliente_telefono": invoice.cliente_telefono,
+        "cliente_email": invoice.cliente_email,
+        "items": [item.model_dump() for item in invoice.items],
+        "subtotal": invoice.subtotal,
+        "descuento": invoice.descuento,
+        "total": invoice.total,
+        "metodo_pago": invoice.metodo_pago,
+        "notas": invoice.notas,
+        "estado": invoice.estado,
+        "fecha": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.facturas.insert_one(factura_data)
+    del factura_data["_id"]
+    
+    return factura_data
+
+@api_router.put("/facturas/{factura_id}/estado")
+async def update_invoice_status(
+    factura_id: str, 
+    status: InvoiceStatusUpdate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update invoice status"""
+    result = await db.facturas.update_one(
+        {"id": factura_id, "user_id": current_user["id"]},
+        {"$set": {"estado": status.estado}}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Factura no encontrada")
+    return {"message": "Estado actualizado"}
+
+@api_router.delete("/facturas/{factura_id}")
+async def delete_invoice(factura_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete invoice"""
+    result = await db.facturas.delete_one({
+        "id": factura_id,
+        "user_id": current_user["id"]
+    })
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Factura no encontrada")
+    return {"message": "Factura eliminada"}
 
 # ======================
 # ENDPOINTS - Quick Stats (for dashboard)
