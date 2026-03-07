@@ -11,6 +11,7 @@ import {
   History,
   Sparkles,
   TrendingUp,
+  TrendingDown,
   Clock,
   DollarSign,
   ChevronRight,
@@ -20,59 +21,155 @@ import {
   Crown,
   ArrowRight,
   Bell,
-  PartyPopper,
   Gift,
-  Flame,
   Target,
   Award,
   Share2,
   Copy,
-  Loader2
+  Loader2,
+  AlertCircle,
+  CheckCircle2,
+  PiggyBank,
+  Wallet,
+  Receipt,
+  BarChart3,
+  ArrowUpRight,
+  ArrowDownRight,
+  Percent,
+  Eye,
+  Package
 } from "lucide-react";
 import { toast } from "sonner";
 
-// Confetti Component
-const Confetti = ({ active }) => {
-  if (!active) return null;
-  
+// Visual Progress Ring
+const ProgressRing = ({ value, max, size = 80, strokeWidth = 8, color = "#E84A8A" }) => {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const percentage = max > 0 ? Math.min(100, (value / max) * 100) : 0;
+  const offset = circumference - (percentage / 100) * circumference;
+
   return (
-    <div className="fixed inset-0 pointer-events-none z-50">
-      {[...Array(30)].map((_, i) => (
-        <div
-          key={i}
-          className="confetti-piece"
-          style={{
-            left: `${Math.random() * 100}%`,
-            top: '-20px',
-            animationDelay: `${Math.random() * 0.5}s`,
-            animationDuration: `${1 + Math.random() * 1}s`,
-          }}
+    <div className="relative" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="transform -rotate-90">
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="#FCE7F0"
+          strokeWidth={strokeWidth}
         />
-      ))}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke={color}
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          className="transition-all duration-1000 ease-out"
+        />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className="text-lg font-bold text-[#1A1A2E]">{percentage.toFixed(0)}%</span>
+      </div>
     </div>
   );
 };
 
-// Quick Action - Interactive Card with tap effect
-const QuickAction = ({ icon: Icon, label, to, color = "rose", badge, delay = 0 }) => {
+// Visual Stat Card - Easy to understand
+const VisualStatCard = ({ icon: Icon, label, value, subtext, trend, color = "rose", onClick }) => {
+  const colors = {
+    rose: { bg: "bg-gradient-to-br from-[#FDF2F7] to-[#FFE4EE]", icon: "text-[#E84A8A]", accent: "#E84A8A" },
+    emerald: { bg: "bg-gradient-to-br from-emerald-50 to-teal-50", icon: "text-emerald-600", accent: "#10B981" },
+    amber: { bg: "bg-gradient-to-br from-amber-50 to-orange-50", icon: "text-amber-600", accent: "#F59E0B" },
+    blue: { bg: "bg-gradient-to-br from-blue-50 to-indigo-50", icon: "text-blue-600", accent: "#3B82F6" },
+  };
+  const c = colors[color];
+
+  return (
+    <button 
+      onClick={onClick}
+      className={`${c.bg} rounded-2xl p-4 text-left w-full transition-all hover:shadow-md hover:scale-[1.02] active:scale-[0.98]`}
+    >
+      <div className="flex items-start justify-between mb-2">
+        <Icon className={`w-6 h-6 ${c.icon}`} />
+        {trend !== undefined && (
+          <div className={`flex items-center gap-1 text-xs ${trend >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+            {trend >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+            {Math.abs(trend)}%
+          </div>
+        )}
+      </div>
+      <p className="text-2xl font-bold text-[#1A1A2E]">{value}</p>
+      <p className="text-sm text-[#64748B] mt-1">{label}</p>
+      {subtext && <p className="text-xs text-[#94A3B8] mt-0.5">{subtext}</p>}
+    </button>
+  );
+};
+
+// Alert Card - Friendly notifications
+const AlertCard = ({ type, title, message, action, actionLabel }) => {
+  const styles = {
+    warning: { bg: "bg-amber-50 border-amber-200", icon: AlertCircle, iconColor: "text-amber-500" },
+    success: { bg: "bg-emerald-50 border-emerald-200", icon: CheckCircle2, iconColor: "text-emerald-500" },
+    info: { bg: "bg-blue-50 border-blue-200", icon: Bell, iconColor: "text-blue-500" },
+    danger: { bg: "bg-red-50 border-red-200", icon: AlertCircle, iconColor: "text-red-500" },
+  };
+  const s = styles[type] || styles.info;
+  const Icon = s.icon;
+
+  return (
+    <div className={`${s.bg} border rounded-2xl p-4 flex items-start gap-3`}>
+      <Icon className={`w-5 h-5 ${s.iconColor} flex-shrink-0 mt-0.5`} />
+      <div className="flex-1 min-w-0">
+        <p className="font-medium text-[#1A1A2E] text-sm">{title}</p>
+        <p className="text-xs text-[#64748B] mt-0.5">{message}</p>
+      </div>
+      {action && (
+        <Button size="sm" variant="ghost" onClick={action} className="text-xs">
+          {actionLabel}
+        </Button>
+      )}
+    </div>
+  );
+};
+
+// Simple Bar Chart
+const SimpleBarChart = ({ data, maxValue }) => (
+  <div className="flex items-end gap-1 h-16">
+    {data.map((item, i) => (
+      <div key={i} className="flex-1 flex flex-col items-center gap-1">
+        <div 
+          className="w-full bg-gradient-to-t from-[#E84A8A] to-[#FF6B9D] rounded-t-sm transition-all duration-500"
+          style={{ height: `${maxValue > 0 ? (item.value / maxValue) * 100 : 0}%`, minHeight: item.value > 0 ? 4 : 0 }}
+        />
+        <span className="text-[9px] text-[#94A3B8]">{item.label}</span>
+      </div>
+    ))}
+  </div>
+);
+
+// Quick Action Button
+const QuickAction = ({ icon: Icon, label, to, color = "rose", badge }) => {
   const colors = {
     rose: "from-[#E84A8A] to-[#FF6B9D]",
-    purple: "from-[#8B5CF6] to-[#A78BFA]",
-    blue: "from-[#3B82F6] to-[#60A5FA]",
-    emerald: "from-[#10B981] to-[#34D399]",
-    amber: "from-[#F59E0B] to-[#FBBF24]",
-    pink: "from-[#EC4899] to-[#F472B6]",
+    emerald: "from-emerald-500 to-teal-500",
+    blue: "from-blue-500 to-indigo-500",
+    amber: "from-amber-500 to-orange-500",
   };
 
   return (
-    <Link to={to} className="block animate-pop" style={{ animationDelay: `${delay}s` }}>
-      <div className="group relative bg-white rounded-3xl p-4 border border-[#FCE7F0] tap-effect hover:shadow-xl hover:border-[#E84A8A]/30 transition-all duration-300">
-        <div className={`w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br ${colors[color]} flex items-center justify-center shadow-lg group-hover:scale-110 group-active:scale-95 transition-transform duration-300`}>
-          <Icon className="w-7 h-7 text-white" />
+    <Link to={to} className="block">
+      <div className="group bg-white rounded-2xl p-4 border border-[#FCE7F0] active:scale-95 transition-all hover:shadow-lg">
+        <div className={`w-12 h-12 mx-auto rounded-xl bg-gradient-to-br ${colors[color]} flex items-center justify-center shadow-md group-hover:scale-110 transition-transform`}>
+          <Icon className="w-6 h-6 text-white" />
         </div>
-        <p className="text-center text-sm font-medium text-[#1A1A2E] mt-3">{label}</p>
+        <p className="text-center text-xs font-medium text-[#1A1A2E] mt-2">{label}</p>
         {badge && (
-          <span className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-red-500 to-orange-500 text-white text-xs rounded-full flex items-center justify-center animate-bounce-soft shadow-lg">
+          <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
             {badge}
           </span>
         )}
@@ -81,119 +178,42 @@ const QuickAction = ({ icon: Icon, label, to, color = "rose", badge, delay = 0 }
   );
 };
 
-// Recent Calculation Card - Interactive
-const RecentCalcCard = ({ calc, delay, onShare }) => {
-  const [expanded, setExpanded] = useState(false);
+// Insight Card - Easy explanations
+const InsightCard = ({ emoji, title, value, explanation, color = "rose" }) => {
+  const colors = {
+    rose: "from-[#FDF2F7] to-white",
+    emerald: "from-emerald-50 to-white",
+    amber: "from-amber-50 to-white",
+  };
 
   return (
-    <div 
-      className={`bg-white rounded-2xl border border-[#FCE7F0] overflow-hidden tap-effect animate-slide-up hover:shadow-lg transition-all duration-300 ${expanded ? 'ring-2 ring-[#E84A8A]/30' : ''}`}
-      style={{ animationDelay: `${delay}s` }}
-    >
-      <button 
-        onClick={() => setExpanded(!expanded)} 
-        className="w-full p-4 text-left"
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex-1 min-w-0">
-            <p className="font-semibold text-[#1A1A2E] truncate">{calc.estilo_nombre}</p>
-            <p className="text-xs text-[#64748B] flex items-center gap-1 mt-1">
-              <Clock className="w-3 h-3" />
-              {new Date(calc.created_at).toLocaleDateString('es-MX', { 
-                day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' 
-              })}
-            </p>
-          </div>
-          <div className="text-right">
-            <p className="text-xl font-bold text-[#E84A8A]">${calc.precio_recomendado?.toFixed(2)}</p>
-            <p className="text-xs text-emerald-500 font-medium">+${calc.ganancia?.toFixed(2)}</p>
-          </div>
-        </div>
-      </button>
-
-      {expanded && (
-        <div className="px-4 pb-4 pt-0 animate-slide-down">
-          <div className="h-px bg-gradient-to-r from-transparent via-[#FCE7F0] to-transparent my-3" />
-          <div className="grid grid-cols-2 gap-2 mb-3">
-            <div className="bg-[#FDF2F7] rounded-xl p-3 text-center">
-              <p className="text-xs text-[#64748B]">Costo</p>
-              <p className="font-semibold text-[#1A1A2E]">${calc.costo_total?.toFixed(2)}</p>
-            </div>
-            <div className="bg-emerald-50 rounded-xl p-3 text-center">
-              <p className="text-xs text-[#64748B]">Ganancia</p>
-              <p className="font-semibold text-emerald-600">${calc.ganancia?.toFixed(2)}</p>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              onClick={() => {
-                const text = `💅 Cotización: ${calc.estilo_nombre} - $${calc.precio_recomendado?.toFixed(2)}`;
-                navigator.clipboard.writeText(text);
-                toast.success("¡Copiado!");
-              }}
-              variant="outline"
-              size="sm"
-              className="flex-1 rounded-xl border-[#FCE7F0] tap-effect"
-            >
-              <Copy className="w-4 h-4 mr-1" />
-              Copiar
-            </Button>
-            <Button
-              onClick={() => onShare(calc)}
-              size="sm"
-              className="flex-1 rounded-xl bg-[#25D366] hover:bg-[#20BD5A] text-white tap-effect"
-            >
-              <Share2 className="w-4 h-4 mr-1" />
-              WhatsApp
-            </Button>
-          </div>
-        </div>
-      )}
+    <div className={`bg-gradient-to-b ${colors[color]} rounded-2xl p-4 border border-[#FCE7F0]`}>
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-xl">{emoji}</span>
+        <span className="text-sm font-medium text-[#1A1A2E]">{title}</span>
+      </div>
+      <p className="text-2xl font-bold text-[#1A1A2E] mb-1">{value}</p>
+      <p className="text-xs text-[#64748B] leading-relaxed">{explanation}</p>
     </div>
   );
 };
 
-// Stat Bubble - Animated
-const StatBubble = ({ value, label, icon: Icon, delay = 0 }) => (
-  <div className="flex flex-col items-center animate-pop" style={{ animationDelay: `${delay}s` }}>
-    <div className="w-16 h-16 rounded-full bg-white shadow-lg flex items-center justify-center border-4 border-[#FDF2F7] hover:scale-110 tap-effect transition-transform">
-      <span className="text-xl font-bold text-[#1A1A2E]">{value}</span>
-    </div>
-    <div className="flex items-center gap-1 mt-2">
-      <Icon className="w-3 h-3 text-[#E84A8A]" />
-      <span className="text-xs text-white/90">{label}</span>
-    </div>
-  </div>
-);
-
-// Achievement Card
-const AchievementCard = ({ icon: Icon, title, description, color }) => (
-  <div className={`flex items-center gap-3 p-3 rounded-2xl ${color} tap-effect hover:scale-102 transition-transform`}>
-    <div className="w-10 h-10 rounded-xl bg-white/90 flex items-center justify-center shadow-sm">
-      <Icon className="w-5 h-5 text-[#E84A8A]" />
-    </div>
-    <div className="flex-1">
-      <p className="font-semibold text-[#1A1A2E] text-sm">{title}</p>
-      <p className="text-xs text-[#64748B]">{description}</p>
-    </div>
-    <ChevronRight className="w-5 h-5 text-[#E84A8A]/50" />
-  </div>
-);
-
 export default function PersonaDashboard() {
   const { user, isPremium } = useAuth();
-  const { estilos, clientes, getCitasProximas } = useApp();
+  const { estilos, clientes, productos, gastos, configGanancias, getCitasProximas, getReporte } = useApp();
   const [historial, setHistorial] = useState([]);
   const [citasHoy, setCitasHoy] = useState([]);
   const [stats, setStats] = useState(null);
+  const [reporte, setReporte] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showConfetti, setShowConfetti] = useState(false);
+  const [weeklyData, setWeeklyData] = useState([]);
+  const [alerts, setAlerts] = useState([]);
 
   const API = process.env.REACT_APP_BACKEND_URL + '/api';
 
   useEffect(() => {
-    // Add persona theme class to body
     document.body.classList.add('persona-theme');
+    document.body.classList.remove('comercio-theme');
     return () => document.body.classList.remove('persona-theme');
   }, []);
 
@@ -210,12 +230,73 @@ export default function PersonaDashboard() {
 
         if (histRes.ok) {
           const data = await histRes.json();
-          setHistorial(data.slice(0, 5));
+          setHistorial(data);
+          
+          // Generate weekly data
+          const last7Days = [...Array(7)].map((_, i) => {
+            const date = new Date();
+            date.setDate(date.getDate() - (6 - i));
+            const dayStr = date.toISOString().split('T')[0];
+            const dayCalcs = data.filter(h => h.created_at?.startsWith(dayStr));
+            return {
+              label: date.toLocaleDateString('es-MX', { weekday: 'short' }).charAt(0).toUpperCase(),
+              value: dayCalcs.reduce((sum, h) => sum + (h.precio_recomendado || 0), 0)
+            };
+          });
+          setWeeklyData(last7Days);
         }
         if (statsRes.ok) setStats(await statsRes.json());
 
         const citas = await getCitasProximas();
-        setCitasHoy(citas.filter(c => c.fecha === new Date().toISOString().split('T')[0]));
+        const hoy = new Date().toISOString().split('T')[0];
+        setCitasHoy(citas.filter(c => c.fecha === hoy));
+
+        if (estilos.length > 0) {
+          const rep = await getReporte();
+          setReporte(rep);
+        }
+
+        // Generate alerts
+        const newAlerts = [];
+        
+        // Low stock alert
+        const lowStockProducts = productos.filter(p => (p.cantidad_disponible || 0) <= (p.stock_minimo || 5));
+        if (lowStockProducts.length > 0) {
+          newAlerts.push({
+            type: 'warning',
+            title: `${lowStockProducts.length} producto(s) con stock bajo`,
+            message: 'Revisa tu inventario antes de quedarte sin material'
+          });
+        }
+
+        // Upcoming appointments
+        if (citasHoy.length > 0) {
+          newAlerts.push({
+            type: 'info',
+            title: `Tienes ${citasHoy.length} cita(s) hoy`,
+            message: `Próxima: ${citasHoy[0]?.cliente_nombre} a las ${citasHoy[0]?.hora}`
+          });
+        }
+
+        // Goal progress
+        if (configGanancias?.meta_ingreso_mensual && reporte?.rentabilidad_mensual_estimada) {
+          const progress = (reporte.rentabilidad_mensual_estimada / configGanancias.meta_ingreso_mensual) * 100;
+          if (progress >= 100) {
+            newAlerts.push({
+              type: 'success',
+              title: '¡Felicidades! Alcanzaste tu meta',
+              message: 'Tu esfuerzo está dando frutos. ¡Sigue así!'
+            });
+          } else if (progress >= 80) {
+            newAlerts.push({
+              type: 'info',
+              title: '¡Ya casi llegas a tu meta!',
+              message: `Te falta ${(100 - progress).toFixed(0)}% para alcanzarla`
+            });
+          }
+        }
+
+        setAlerts(newAlerts);
       } catch (err) {
         console.error(err);
       } finally {
@@ -223,17 +304,7 @@ export default function PersonaDashboard() {
       }
     };
     fetchData();
-  }, [API, getCitasProximas]);
-
-  const handleShare = useCallback((calc) => {
-    const text = encodeURIComponent(
-      `💅 *Cotización NailCost*\n\n` +
-      `✨ Servicio: ${calc.estilo_nombre}\n` +
-      `💰 Precio: $${calc.precio_recomendado?.toFixed(2)}\n\n` +
-      `¡Gracias por tu preferencia! 💖`
-    );
-    window.open(`https://wa.me/?text=${text}`, '_blank');
-  }, []);
+  }, [API, estilos, productos, configGanancias, getCitasProximas, getReporte]);
 
   const greeting = () => {
     const hour = new Date().getHours();
@@ -242,205 +313,253 @@ export default function PersonaDashboard() {
     return { text: "Buenas noches", emoji: "🌙" };
   };
 
-  const greet = greeting();
+  // Calculations for insights
+  const totalGastosOperativos = gastos 
+    ? Object.entries(gastos)
+        .filter(([key]) => !['clientes_mes', 'servicios_mes', 'dias_trabajo'].includes(key))
+        .reduce((sum, [, val]) => sum + (typeof val === 'number' ? val : 0), 0)
+    : 0;
 
-  // Calculate streak (days with activity)
-  const streak = historial.length > 0 ? Math.min(7, historial.length) : 0;
+  const gananciaReal = (reporte?.rentabilidad_mensual_estimada || 0) - totalGastosOperativos;
+  const margenGanancia = reporte?.rentabilidad_mensual_estimada > 0 
+    ? ((gananciaReal / reporte.rentabilidad_mensual_estimada) * 100) 
+    : 0;
+
+  const totalIngresos7Dias = weeklyData.reduce((sum, d) => sum + d.value, 0);
+  const maxWeeklyValue = Math.max(...weeklyData.map(d => d.value), 1);
+
+  const metaProgress = configGanancias?.meta_ingreso_mensual > 0 
+    ? (reporte?.rentabilidad_mensual_estimada || 0) / configGanancias.meta_ingreso_mensual 
+    : 0;
+
+  const greet = greeting();
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center animate-pulse">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#E84A8A] to-[#FF6B9D] flex items-center justify-center mx-auto mb-4 animate-bounce-soft">
+        <div className="text-center">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#E84A8A] to-[#FF6B9D] flex items-center justify-center mx-auto mb-4 animate-pulse">
             <Sparkles className="w-8 h-8 text-white" />
           </div>
-          <p className="text-[#64748B]">Cargando...</p>
+          <p className="text-[#64748B]">Cargando tu resumen...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 pb-24" data-testid="persona-dashboard">
-      <Confetti active={showConfetti} />
-
-      {/* Hero Header - Interactive */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-[#E84A8A] via-[#FF6B9D] to-[#FF8FAB] rounded-[28px] p-5 text-white animate-fade-in">
-        {/* Animated background shapes */}
-        <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl animate-float" />
-        <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-1/2 right-1/4 w-20 h-20 bg-white/5 rounded-full blur-xl animate-float" style={{ animationDelay: '0.5s' }} />
-        
-        <div className="relative z-10">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-2xl">{greet.emoji}</span>
-            <span className="text-white/80 text-sm">{greet.text}</span>
-          </div>
-          <h1 className="text-2xl font-bold" style={{ fontFamily: 'Playfair Display, serif' }}>
-            {user?.nombre || 'Artista'}
+    <div className="space-y-5 pb-24" data-testid="persona-dashboard">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm text-[#64748B] flex items-center gap-1">
+            <span>{greet.emoji}</span> {greet.text}
+          </p>
+          <h1 className="text-2xl font-bold text-[#1A1A2E]" style={{ fontFamily: 'Playfair Display, serif' }}>
+            {user?.nombre?.split(' ')[0] || 'Hola'}
           </h1>
-          
-          {/* Streak indicator */}
-          {streak > 0 && (
-            <div className="flex items-center gap-2 mt-2 bg-white/20 rounded-full px-3 py-1 w-fit">
-              <Flame className="w-4 h-4 text-amber-300" />
-              <span className="text-sm font-medium">{streak} días activa</span>
-            </div>
-          )}
-          
-          {/* Quick Stats Bubbles */}
-          <div className="flex justify-around mt-6 mb-2">
-            <StatBubble value={stats?.calculos_hoy || 0} label="Hoy" icon={Calculator} delay={0.1} />
-            <StatBubble value={citasHoy.length} label="Citas" icon={Calendar} delay={0.2} />
-            <StatBubble value={clientes.length} label="Clientes" icon={Users} delay={0.3} />
-          </div>
         </div>
+        <Link to="/reportes-mensuales">
+          <Button variant="outline" size="sm" className="rounded-full border-[#FCE7F0] text-[#E84A8A]">
+            <Eye className="w-4 h-4 mr-1" />
+            Ver Reportes
+          </Button>
+        </Link>
       </div>
 
-      {/* Quick Actions Grid - Animated */}
-      <div className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
-        <h2 className="text-lg font-semibold text-[#1A1A2E] mb-3 flex items-center gap-2">
-          <Zap className="w-5 h-5 text-[#E84A8A]" />
-          Acceso Rápido
-        </h2>
-        <div className="grid grid-cols-4 gap-3">
-          <QuickAction icon={Calculator} label="Calcular" to="/calculadora" color="rose" delay={0.1} />
-          <QuickAction icon={Users} label="Clientes" to="/clientes" color="purple" delay={0.15} badge={clientes.length === 0 ? "!" : null} />
-          <QuickAction icon={Calendar} label="Agenda" to="/agenda" color="blue" delay={0.2} badge={citasHoy.length > 0 ? citasHoy.length : null} />
-          <QuickAction icon={History} label="Historial" to="/historial" color="emerald" delay={0.25} />
-        </div>
-      </div>
-
-      {/* Today's Appointments - Interactive */}
-      {citasHoy.length > 0 && (
-        <div className="animate-slide-up" style={{ animationDelay: '0.3s' }}>
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-4 border border-blue-100">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center">
-                <Bell className="w-4 h-4 text-white" />
-              </div>
-              <h3 className="font-semibold text-blue-800">Citas de Hoy</h3>
-              <span className="ml-auto bg-blue-500 text-white text-xs px-2 py-1 rounded-full">{citasHoy.length}</span>
-            </div>
-            <div className="space-y-2">
-              {citasHoy.slice(0, 3).map((cita, i) => (
-                <div 
-                  key={i} 
-                  className="bg-white rounded-xl p-3 flex justify-between items-center tap-effect hover:shadow-md transition-all animate-slide-right"
-                  style={{ animationDelay: `${0.3 + i * 0.1}s` }}
-                >
-                  <div>
-                    <p className="font-medium text-[#1A1A2E]">{cita.cliente_nombre}</p>
-                    <p className="text-xs text-[#64748B]">{cita.estilo_nombre}</p>
-                  </div>
-                  <span className="text-lg font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-lg">{cita.hora}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+      {/* Alerts */}
+      {alerts.length > 0 && (
+        <div className="space-y-2">
+          {alerts.slice(0, 2).map((alert, i) => (
+            <AlertCard key={i} {...alert} />
+          ))}
         </div>
       )}
 
-      {/* Recent Calculations - Interactive Cards */}
-      <div className="animate-fade-in" style={{ animationDelay: '0.4s' }}>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-[#1A1A2E] flex items-center gap-2">
-            <History className="w-5 h-5 text-[#E84A8A]" />
-            Cálculos Recientes
-          </h2>
-          <Link to="/historial" className="text-sm text-[#E84A8A] flex items-center gap-1 tap-effect">
-            Ver todo <ChevronRight className="w-4 h-4" />
-          </Link>
-        </div>
-        
-        {historial.length > 0 ? (
-          <div className="space-y-3">
-            {historial.map((calc, i) => (
-              <RecentCalcCard key={calc.id} calc={calc} delay={i * 0.1} onShare={handleShare} />
-            ))}
-          </div>
-        ) : (
-          <div className="bg-gradient-to-br from-[#FDF2F7] to-[#FFE4EE] rounded-2xl p-6 text-center">
-            <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mx-auto mb-3 shadow-lg animate-bounce-soft">
-              <Calculator className="w-8 h-8 text-[#E84A8A]" />
+      {/* Main Financial Summary - Easy to understand */}
+      <Card className="bg-gradient-to-br from-[#E84A8A] via-[#FF6B9D] to-[#FF8FAB] border-none text-white overflow-hidden">
+        <CardContent className="p-5 relative">
+          <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
+          
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-white/80 text-sm">Este mes estás ganando</p>
+              <p className="text-3xl font-bold mt-1">${(reporte?.rentabilidad_mensual_estimada || 0).toFixed(0)}</p>
             </div>
-            <p className="text-[#64748B] mb-3">¡Haz tu primer cálculo!</p>
-            <Link to="/calculadora">
-              <Button className="btn-interactive rounded-full px-6">
-                <Sparkles className="w-4 h-4 mr-2" />
-                Comenzar
-              </Button>
-            </Link>
+            {configGanancias?.meta_ingreso_mensual > 0 && (
+              <ProgressRing 
+                value={reporte?.rentabilidad_mensual_estimada || 0} 
+                max={configGanancias.meta_ingreso_mensual}
+                color="#ffffff"
+                size={70}
+                strokeWidth={6}
+              />
+            )}
           </div>
-        )}
+
+          {/* Simple explanation */}
+          <div className="bg-white/20 rounded-xl p-3 backdrop-blur-sm">
+            <div className="flex items-center gap-3">
+              <div className="flex-1">
+                <p className="text-sm text-white/90">Tu ganancia real después de gastos</p>
+                <p className="text-xl font-bold text-white">${gananciaReal.toFixed(0)}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-white/70">Margen</p>
+                <p className={`text-lg font-bold ${margenGanancia >= 50 ? 'text-white' : 'text-amber-200'}`}>
+                  {margenGanancia.toFixed(0)}%
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-4 gap-3">
+        <QuickAction icon={Calculator} label="Calcular" to="/calculadora" color="rose" />
+        <QuickAction icon={Users} label="Clientes" to="/clientes" color="blue" />
+        <QuickAction icon={Calendar} label="Agenda" to="/agenda" color="emerald" badge={citasHoy.length || null} />
+        <QuickAction icon={Receipt} label="Gastos" to="/gastos" color="amber" />
       </div>
 
-      {/* Achievement/Tips Section */}
-      <div className="space-y-3 animate-fade-in" style={{ animationDelay: '0.5s' }}>
-        <h2 className="text-lg font-semibold text-[#1A1A2E] flex items-center gap-2">
-          <Award className="w-5 h-5 text-[#E84A8A]" />
-          Logros y Tips
-        </h2>
-        
-        {estilos.length >= 5 && (
-          <AchievementCard 
-            icon={Star}
-            title="¡5 Estilos Creados!"
-            description="Tu catálogo está creciendo"
-            color="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-100"
-          />
-        )}
-        
-        {clientes.length >= 10 && (
-          <AchievementCard 
-            icon={Heart}
-            title="¡10 Clientes!"
-            description="Tu negocio está despegando"
-            color="bg-gradient-to-r from-pink-50 to-rose-50 border border-pink-100"
-          />
-        )}
+      {/* Weekly Performance Chart */}
+      <Card className="border-[#FCE7F0]">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="font-semibold text-[#1A1A2E]">Tu semana</h3>
+              <p className="text-xs text-[#64748B]">Últimos 7 días</p>
+            </div>
+            <div className="text-right">
+              <p className="text-lg font-bold text-[#E84A8A]">${totalIngresos7Dias.toFixed(0)}</p>
+              <p className="text-xs text-[#64748B]">en cotizaciones</p>
+            </div>
+          </div>
+          <SimpleBarChart data={weeklyData} maxValue={maxWeeklyValue} />
+        </CardContent>
+      </Card>
 
-        {/* Tip of the day */}
-        <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl p-4 border border-purple-100 tap-effect">
+      {/* Easy Insights */}
+      <div className="grid grid-cols-2 gap-3">
+        <InsightCard 
+          emoji="💰"
+          title="Cobras en promedio"
+          value={`$${historial.length > 0 ? (historial.reduce((s, h) => s + (h.precio_recomendado || 0), 0) / historial.length).toFixed(0) : '0'}`}
+          explanation="Por cada servicio que cotizas"
+          color="rose"
+        />
+        <InsightCard 
+          emoji="📊"
+          title="Gastos del mes"
+          value={`$${totalGastosOperativos.toFixed(0)}`}
+          explanation="Renta, luz, materiales y más"
+          color="amber"
+        />
+      </div>
+
+      {/* Visual Stats */}
+      <div className="grid grid-cols-2 gap-3">
+        <VisualStatCard 
+          icon={Users}
+          label="Clientes"
+          value={clientes.length}
+          subtext="registrados"
+          color="blue"
+        />
+        <VisualStatCard 
+          icon={Package}
+          label="Productos"
+          value={productos.length}
+          subtext="en inventario"
+          color="emerald"
+        />
+      </div>
+
+      {/* Recent Activity */}
+      {historial.length > 0 && (
+        <Card className="border-[#FCE7F0]">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold text-[#1A1A2E]">Actividad reciente</h3>
+              <Link to="/historial" className="text-sm text-[#E84A8A] flex items-center gap-1">
+                Ver todo <ChevronRight className="w-4 h-4" />
+              </Link>
+            </div>
+            <div className="space-y-2">
+              {historial.slice(0, 3).map((h, i) => (
+                <div key={i} className="flex items-center justify-between p-3 bg-[#FDF2F7] rounded-xl">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-[#1A1A2E] text-sm truncate">{h.estilo_nombre}</p>
+                    <p className="text-xs text-[#64748B]">
+                      {new Date(h.created_at).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}
+                    </p>
+                  </div>
+                  <p className="text-lg font-bold text-[#E84A8A]">${h.precio_recomendado?.toFixed(0)}</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Today's Appointments */}
+      {citasHoy.length > 0 && (
+        <Card className="border-blue-100 bg-blue-50/50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Calendar className="w-5 h-5 text-blue-600" />
+              <h3 className="font-semibold text-[#1A1A2E]">Citas de hoy</h3>
+            </div>
+            <div className="space-y-2">
+              {citasHoy.slice(0, 3).map((cita, i) => (
+                <div key={i} className="flex items-center justify-between p-3 bg-white rounded-xl">
+                  <div>
+                    <p className="font-medium text-[#1A1A2E] text-sm">{cita.cliente_nombre}</p>
+                    <p className="text-xs text-[#64748B]">{cita.estilo_nombre}</p>
+                  </div>
+                  <span className="text-lg font-bold text-blue-600">{cita.hora}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Tip / CTA */}
+      <Card className="border-[#FCE7F0] bg-gradient-to-r from-purple-50 to-pink-50">
+        <CardContent className="p-4">
           <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
               <Gift className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h3 className="font-semibold text-purple-800">Tip del día</h3>
-              <p className="text-sm text-purple-700 mt-1">
-                {estilos.length < 3 
-                  ? "Agrega más estilos de uñas para ofrecer variedad a tus clientes."
-                  : clientes.length < 5
-                  ? "Registra a tus clientes frecuentes para dar seguimiento personalizado."
-                  : "Comparte tus cotizaciones por WhatsApp directamente desde la calculadora."}
+              <h3 className="font-semibold text-[#1A1A2E]">Tip para crecer</h3>
+              <p className="text-sm text-[#64748B] mt-1">
+                {clientes.length < 10 
+                  ? "Registra a tus clientes frecuentes para enviarles recordatorios y ofertas especiales."
+                  : historial.length < 20
+                  ? "Cada cotización que guardas te ayuda a entender mejor tu negocio. ¡Sigue así!"
+                  : "Revisa tus reportes mensuales para identificar qué servicios te dan más ganancia."
+                }
               </p>
             </div>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      {/* Premium Upsell - Animated */}
+      {/* Premium Upsell */}
       {!isPremium && (
-        <Link to="/premium" className="block animate-fade-in" style={{ animationDelay: '0.6s' }}>
-          <div className="relative overflow-hidden bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 rounded-2xl p-5 text-white tap-effect hover:scale-102 transition-transform">
-            <div className="absolute -right-4 top-1/2 -translate-y-1/2 opacity-20">
-              <Crown className="w-32 h-32" />
+        <Card className="border-none bg-gradient-to-r from-amber-500 to-orange-500 text-white">
+          <CardContent className="p-4 flex items-center gap-4">
+            <Crown className="w-10 h-10" />
+            <div className="flex-1">
+              <p className="font-bold">Pasa a Premium</p>
+              <p className="text-sm text-white/90">Reportes detallados y sin límites</p>
             </div>
-            <div className="relative z-10">
-              <div className="flex items-center gap-2 mb-1">
-                <PartyPopper className="w-5 h-5" />
-                <span className="text-sm font-medium text-white/90">Oferta especial</span>
-              </div>
-              <p className="font-bold text-xl">¡Desbloquea Premium!</p>
-              <p className="text-sm text-white/90 mt-1">Reportes, simulaciones y funciones ilimitadas</p>
-              <div className="flex items-center gap-2 mt-3 text-sm font-medium">
-                <span>Ver beneficios</span>
-                <ArrowRight className="w-4 h-4 animate-pulse" />
-              </div>
-            </div>
-          </div>
-        </Link>
+            <ChevronRight className="w-6 h-6" />
+          </CardContent>
+        </Card>
       )}
     </div>
   );

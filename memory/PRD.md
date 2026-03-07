@@ -1,72 +1,91 @@
 # NailCost Pro - PRD (Product Requirements Document)
 
 ## Problema Original
-Calculadora Inteligente de Costos para Uñas - Sistema profesional de cálculo de costos y precios para servicios de uñas diseñado para nail artists, salones de belleza y emprendedoras del sector beauty.
-
-## Preferencias del Usuario
-- **Idioma:** Español
-- **Moneda:** USD
-- **Experiencia Persona:** Rosa interactivo, tipo app móvil
-- **Experiencia Comercio:** Azul corporativo profesional
+Calculadora Inteligente de Costos para Uñas - Sistema profesional de cálculo de costos y precios para servicios de uñas.
 
 ---
 
 ## Lo Implementado ✅
 
 ### Sistema de Autenticación
-- ✅ Registro de usuarios con email/contraseña
-- ✅ Login/Logout con JWT (30 días)
-- ✅ **Rate limiting** en login (5 intentos, bloqueo 5 min)
-- ✅ **Recuperación de contraseña** con token
-- ✅ Selección de tipo de cuenta (Personal/Negocio)
+- ✅ Registro con tipo de cuenta (Personal/Negocio)
+- ✅ Login con rate limiting (5 intentos, bloqueo 5 min)
+- ✅ Recuperación de contraseña con token
+- ✅ JWT con 30 días de expiración
 
-### Experiencia Dual UX (Diciembre 2025)
+### Experiencia COMERCIO (Minimalista Profesional)
 
-#### Usuario Personal (Rosa #E84A8A)
-- ✅ Dashboard interactivo tipo app móvil
-- ✅ Hero card con saludo dinámico y racha de actividad
-- ✅ Stats circulares animados
-- ✅ Acceso Rápido con iconos grandes y badges
-- ✅ Cálculos Recientes expandibles con compartir WhatsApp
-- ✅ Logros y Tips personalizados
-- ✅ **Bottom navigation bar** fija con 5 items
-- ✅ Botón central de Calcular destacado
-- ✅ FloatingCalculator para acceso rápido
-- ✅ Página de Historial de cálculos
+**Dashboard:**
+- ✅ Diseño minimalista gris/blanco (sin colores excesivos)
+- ✅ KPIs simples: Ingresos, Gastos, Clientes, Inventario
+- ✅ Barra de meta mensual con progreso
+- ✅ Tabla de Agenda de Hoy profesional
+- ✅ Ranking de Servicios Más Rentables
+- ✅ Card de Resumen oscura (negro)
+- ✅ Panel de Equipo y Stock en sidebar
 
-#### Usuario Negocio (Azul corporativo #1E3A5F)
-- ✅ Dashboard profesional con métricas empresariales
-- ✅ Header con navegación completa y dropdowns
-- ✅ KPIs Cards: Ingresos, Clientes, Equipo, Gastos
-- ✅ Barra de progreso de Meta Mensual
-- ✅ Agenda de Hoy con estados de citas
-- ✅ Rendimiento por Servicio con rankings
-- ✅ Panel de Equipo en sidebar
-- ✅ Alertas de Inventario
-- ✅ Gestión de Empleados (CRUD completo)
-- ✅ Tema corporativo con tipografía Inter
+**Control de Inventario:**
+- ✅ Stats: Total productos, Stock normal, Stock bajo, Agotados
+- ✅ Tabla de productos con estado de stock
+- ✅ Indicador visual de nivel (Normal/Bajo/Crítico/Agotado)
+- ✅ Botones de Entrada/Salida de stock
+- ✅ Registro de movimientos de inventario
+- ✅ Historial de movimientos
+- ✅ Filtros por estado
+- ✅ Exportar datos
+
+**Navegación:**
+- ✅ Header profesional con logo "NailCost BUSINESS"
+- ✅ Menú: Dashboard, Clientes, Agenda, Empleados, Inventario
+- ✅ Dropdowns: Servicios, Finanzas
+- ✅ Herramientas: Cotizar, Reportes, Simulación
+
+### Experiencia PERSONA (Emprendedora)
+
+**Dashboard:**
+- ✅ Diseño rosa profesional pero amigable
+- ✅ Saludo personalizado con hora del día
+- ✅ Card principal con ganancia del mes + Progress Ring
+- ✅ "Tu ganancia real después de gastos" visible
+- ✅ Margen de ganancia en porcentaje
+- ✅ Gráfico "Tu semana" (barras últimos 7 días)
+- ✅ Acceso rápido: Calcular, Clientes, Agenda, **Gastos**
+
+**Reportes Visuales (fáciles de entender):**
+- ✅ 💰 "Cobras en promedio" - Por servicio
+- ✅ 📊 "Gastos del mes" - Total operativos
+- ✅ Cards de Insights con emojis y explicaciones simples
+- ✅ Actividad reciente con precios
+
+**Alertas Inteligentes:**
+- ✅ Stock bajo de productos
+- ✅ Citas del día
+- ✅ Progreso hacia meta mensual
+- ✅ Mensajes amigables ("¡Ya casi llegas a tu meta!")
+
+**Navegación:**
+- ✅ Bottom bar fija: Inicio, Clientes, Calcular, Agenda, Historial
+- ✅ Botón central destacado (Calcular)
+- ✅ Menú desplegable con más opciones
 
 ### Páginas Legales
-- ✅ Términos y Condiciones (/terminos)
-- ✅ Política de Privacidad (/privacidad)
-- ✅ Checkbox de aceptación en registro
+- ✅ /terminos - Términos y Condiciones
+- ✅ /privacidad - Política de Privacidad
+- ✅ /recuperar-contrasena - Flujo de reset
 
 ### Funcionalidades Core
-- ✅ Gestión de Productos/Insumos
+- ✅ Gestión de Productos con stock mínimo
 - ✅ Gestión de Estilos de Uñas
 - ✅ Gestión de Diseños/Decoraciones
 - ✅ Configuración de Gastos Operativos
-- ✅ Configuración de Ganancias
+- ✅ Configuración de Ganancias y Metas
 - ✅ Calculadora de Precio Final
-- ✅ Reporte de Rentabilidad
 - ✅ Gestión de Clientes
-- ✅ Sistema de Agenda
+- ✅ Sistema de Agenda con estados
 - ✅ Reportes Mensuales con gráficos
 - ✅ Simulación de Ingresos
-
-### Sistema de Planes
-- **Plan Básico (free):** Límites en productos, estilos, clientes
-- **Plan Premium:** Todo ilimitado + reportes avanzados
+- ✅ Historial de Cálculos (Personal)
+- ✅ Gestión de Empleados (Comercio)
 
 ---
 
@@ -80,72 +99,30 @@ Calculadora Inteligente de Costos para Uñas - Sistema profesional de cálculo d
 
 ---
 
-## Stack Tecnológico
+## API Endpoints
 
-### Frontend
-- React 19
-- Tailwind CSS
-- Shadcn/UI
-- Lucide Icons
-- Recharts
-
-### Backend
-- FastAPI
-- Motor (MongoDB async)
-- python-jose (JWT)
-- passlib (bcrypt)
-
-### Base de Datos
-- MongoDB
-
----
-
-## API Endpoints Clave
+### Inventario (Nuevo)
+```
+GET  /api/inventario/movimientos     - Historial de movimientos
+POST /api/inventario/movimiento      - Registrar entrada/salida/ajuste
+GET  /api/alertas-inventario         - Alertas de stock
+```
 
 ### Autenticación
 ```
-POST /api/auth/register     - Registro con user_type
-POST /api/auth/login        - Login con rate limiting
-GET  /api/auth/me           - Info del usuario actual
-POST /api/auth/forgot-password  - Solicitar reset
-POST /api/auth/reset-password   - Confirmar nuevo password
-```
-
-### Negocio (Comercio)
-```
-GET/POST   /api/empleados           - CRUD empleados
-GET        /api/alertas-inventario  - Alertas de stock
-```
-
-### Personal
-```
-GET/POST   /api/historial-calculos  - Historial de cálculos
-DELETE     /api/historial-calculos/:id
+POST /api/auth/register
+POST /api/auth/login
+GET  /api/auth/me
+POST /api/auth/forgot-password
+POST /api/auth/reset-password
 ```
 
 ---
 
-## Arquitectura de Archivos
-
-```
-/app/
-├── backend/
-│   └── server.py         # FastAPI con rate limiting, password reset
-├── frontend/src/
-│   ├── App.js            # Router con rutas legales
-│   ├── index.css         # Temas rosa y azul corporativo
-│   ├── components/
-│   │   ├── Layout.jsx    # PersonaLayout + ComercioLayout
-│   │   └── FloatingCalculator.jsx
-│   ├── pages/
-│   │   ├── PersonaDashboard.jsx    # Dashboard interactivo
-│   │   ├── ComercioDashboard.jsx   # Dashboard profesional
-│   │   ├── HistorialPage.jsx
-│   │   ├── EmpleadosPage.jsx
-│   │   ├── ForgotPasswordPage.jsx
-│   │   ├── TerminosPage.jsx
-│   │   └── PrivacidadPage.jsx
-```
+## Stack Tecnológico
+- **Frontend:** React 19, Tailwind CSS, Shadcn/UI, Recharts
+- **Backend:** FastAPI, Motor (MongoDB async), python-jose, passlib
+- **Database:** MongoDB
 
 ---
 
@@ -153,14 +130,14 @@ DELETE     /api/historial-calculos/:id
 
 ### P1 (Alta Prioridad)
 - [ ] Integración Stripe para pagos Premium
-- [ ] Guardar cálculos automáticamente al historial
-- [ ] Envío real de emails para password reset
+- [ ] Envío real de emails (Resend/SendGrid)
+- [ ] Registro automático de cálculos al historial
 
 ### P2 (Media Prioridad)
-- [ ] Reportes por empleado (Negocio)
+- [ ] Reportes por empleado
+- [ ] Balance contable mensual detallado
 - [ ] Modo oscuro
 - [ ] PWA (instalable en móvil)
-- [ ] Notificaciones push
 
 ### P3 (Baja Prioridad)
 - [ ] Recordatorios SMS (Twilio)
@@ -171,22 +148,12 @@ DELETE     /api/historial-calculos/:id
 
 ## Changelog
 
-### Diciembre 2025
-- ✅ Experiencia dual Persona/Comercio
-- ✅ Nuevo tema azul corporativo para Comercio
-- ✅ Dashboard interactivo para Persona con animaciones
-- ✅ Bottom navigation bar móvil
+### Diciembre 2025 (Última actualización)
+- ✅ Dashboard COMERCIO minimalista profesional
+- ✅ Control de Inventario completo con movimientos
+- ✅ Dashboard PERSONA con reportes visuales fáciles
+- ✅ Insights y alertas amigables para emprendedoras
+- ✅ Gráfico semanal de ingresos
+- ✅ Acceso rápido a Gastos desde dashboard
 - ✅ Sistema de seguridad: rate limiting, password reset
-- ✅ Páginas legales: Términos y Privacidad
-- ✅ Credenciales admin actualizadas
-
-### Marzo 2025
-- ✅ Sistema de autenticación JWT
-- ✅ Multi-tenancy por usuario
-- ✅ Planes Básico/Premium
-- ✅ Panel de administración
-
-### Febrero 2025
-- ✅ MVP inicial
-- ✅ Calculadora de costos
-- ✅ Gestión de productos, estilos, diseños
+- ✅ Páginas legales completas

@@ -205,6 +205,7 @@ const comercioMainNav = [
   { to: "/clientes", icon: Users, label: "Clientes" },
   { to: "/agenda", icon: Calendar, label: "Agenda" },
   { to: "/empleados", icon: UserCheck, label: "Empleados" },
+  { to: "/inventario", icon: Package, label: "Inventario" },
 ];
 
 const comercioServiciosGroup = {

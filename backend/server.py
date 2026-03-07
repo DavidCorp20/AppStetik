@@ -168,6 +168,23 @@ class InventoryAlert(BaseModel):
     cantidad_minima: float
     tipo: str  # "bajo", "agotado"
 
+# Inventory Movement Model
+class InventoryMovement(BaseModel):
+    id: str = ""
+    user_id: str = ""
+    producto_id: str
+    producto_nombre: str = ""
+    tipo: str  # "entrada", "salida", "ajuste"
+    cantidad: int
+    notas: str = ""
+    fecha: str = ""
+
+class MovementCreate(BaseModel):
+    producto_id: str
+    tipo: str
+    cantidad: int
+    notas: str = ""
+
 # Plan Limits
 PLAN_LIMITS = {
     "free": {
@@ -870,6 +887,69 @@ async def get_alertas_inventario(current_user: dict = Depends(get_current_user))
             })
     
     return alertas
+
+# ======================
+# ENDPOINTS - Inventory Movements
+# ======================
+@api_router.get("/inventario/movimientos")
+async def get_inventory_movements(current_user: dict = Depends(get_current_user)):
+    """Get inventory movements"""
+    movimientos = await db.inventario_movimientos.find(
+        {"user_id": current_user["id"]},
+        {"_id": 0}
+    ).sort("fecha", -1).to_list(100)
+    return movimientos
+
+@api_router.post("/inventario/movimiento")
+async def create_inventory_movement(
+    movement: MovementCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create inventory movement (entrada/salida/ajuste)"""
+    # Get product
+    producto = await db.productos.find_one({
+        "id": movement.producto_id,
+        "user_id": current_user["id"]
+    })
+    
+    if not producto:
+        raise HTTPException(status_code=404, detail="Producto no encontrado")
+    
+    # Calculate new stock
+    stock_actual = producto.get("cantidad_disponible", producto.get("cantidad_comprada", 0))
+    
+    if movement.tipo == "entrada":
+        new_stock = stock_actual + movement.cantidad
+    elif movement.tipo == "salida":
+        if movement.cantidad > stock_actual:
+            raise HTTPException(status_code=400, detail="Stock insuficiente")
+        new_stock = stock_actual - movement.cantidad
+    else:  # ajuste
+        new_stock = movement.cantidad
+    
+    # Update product stock
+    await db.productos.update_one(
+        {"id": movement.producto_id, "user_id": current_user["id"]},
+        {"$set": {"cantidad_disponible": new_stock}}
+    )
+    
+    # Record movement
+    mov_data = {
+        "id": str(uuid.uuid4()),
+        "user_id": current_user["id"],
+        "producto_id": movement.producto_id,
+        "producto_nombre": producto["nombre"],
+        "tipo": movement.tipo,
+        "cantidad": movement.cantidad,
+        "stock_anterior": stock_actual,
+        "stock_nuevo": new_stock,
+        "notas": movement.notas,
+        "fecha": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.inventario_movimientos.insert_one(mov_data)
+    
+    return {"message": "Movimiento registrado", "new_stock": new_stock}
 
 # ======================
 # ENDPOINTS - Quick Stats (for dashboard)
