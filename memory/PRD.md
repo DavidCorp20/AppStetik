@@ -13,6 +13,18 @@ Calculadora Inteligente de Costos para Uñas - Sistema profesional de cálculo d
 - ✅ Recuperación de contraseña con token
 - ✅ JWT con 30 días de expiración
 
+### Sistema de Facturación (NUEVO - Dic 2025)
+- ✅ Página `/facturacion` para usuarios Comercio
+- ✅ Stats: Total facturas, Facturado (pagado), Pendientes, Mes actual
+- ✅ Tabla de facturas con búsqueda y filtros
+- ✅ Crear factura con cliente, items múltiples
+- ✅ Métodos de pago Venezuela: Efectivo, Transferencia, Pago Móvil, Tarjeta, Zelle
+- ✅ Descuentos y notas
+- ✅ Cálculo automático de subtotal y total
+- ✅ Cambio de estado (Pendiente/Pagada/Anulada)
+- ✅ Imprimir factura (HTML con estilos profesionales)
+- ✅ Descargar factura como HTML
+
 ### Experiencia COMERCIO (Minimalista Profesional)
 
 **Dashboard:**
@@ -36,8 +48,8 @@ Calculadora Inteligente de Costos para Uñas - Sistema profesional de cálculo d
 
 **Navegación:**
 - ✅ Header profesional con logo "NailCost BUSINESS"
-- ✅ Menú: Dashboard, Clientes, Agenda, Empleados, Inventario
-- ✅ Dropdowns: Servicios, Finanzas
+- ✅ Menú: Dashboard, Agenda, Facturación (NUEVO)
+- ✅ Dropdowns: Gestión (Clientes, Empleados, Inventario), Servicios, Finanzas
 - ✅ Herramientas: Cotizar, Reportes, Simulación
 
 ### Experiencia PERSONA (Emprendedora)
@@ -49,11 +61,11 @@ Calculadora Inteligente de Costos para Uñas - Sistema profesional de cálculo d
 - ✅ "Tu ganancia real después de gastos" visible
 - ✅ Margen de ganancia en porcentaje
 - ✅ Gráfico "Tu semana" (barras últimos 7 días)
-- ✅ Acceso rápido: Calcular, Clientes, Agenda, **Gastos**
+- ✅ Acceso rápido: Calcular, Clientes, Agenda, Gastos
 
-**Reportes Visuales (fáciles de entender):**
-- ✅ 💰 "Cobras en promedio" - Por servicio
-- ✅ 📊 "Gastos del mes" - Total operativos
+**Reportes Visuales:**
+- ✅ "Cobras en promedio" - Por servicio
+- ✅ "Gastos del mes" - Total operativos
 - ✅ Cards de Insights con emojis y explicaciones simples
 - ✅ Actividad reciente con precios
 
@@ -61,7 +73,7 @@ Calculadora Inteligente de Costos para Uñas - Sistema profesional de cálculo d
 - ✅ Stock bajo de productos
 - ✅ Citas del día
 - ✅ Progreso hacia meta mensual
-- ✅ Mensajes amigables ("¡Ya casi llegas a tu meta!")
+- ✅ Mensajes amigables
 
 **Navegación:**
 - ✅ Bottom bar fija: Inicio, Clientes, Calcular, Agenda, Historial
@@ -101,7 +113,15 @@ Calculadora Inteligente de Costos para Uñas - Sistema profesional de cálculo d
 
 ## API Endpoints
 
-### Inventario (Nuevo)
+### Facturación (Nuevo - Dic 2025)
+```
+GET  /api/facturas                   - Listar facturas del usuario
+POST /api/facturas                   - Crear nueva factura
+PUT  /api/facturas/{id}/estado       - Cambiar estado (pendiente/pagada/anulada)
+DELETE /api/facturas/{id}            - Eliminar factura
+```
+
+### Inventario
 ```
 GET  /api/inventario/movimientos     - Historial de movimientos
 POST /api/inventario/movimiento      - Registrar entrada/salida/ajuste
@@ -131,7 +151,7 @@ POST /api/auth/reset-password
 ### P1 (Alta Prioridad)
 - [ ] Integración Stripe para pagos Premium
 - [ ] Envío real de emails (Resend/SendGrid)
-- [ ] Registro automático de cálculos al historial
+- [ ] Configurar MongoDB Atlas para producción
 
 ### P2 (Media Prioridad)
 - [ ] Reportes por empleado
@@ -148,7 +168,15 @@ POST /api/auth/reset-password
 
 ## Changelog
 
-### Diciembre 2025 (Última actualización)
+### 7 Marzo 2026
+- ✅ **Sistema de Facturación completo** para usuarios Comercio
+- ✅ Métodos de pago Venezuela (Pago Móvil, Zelle, Transferencia)
+- ✅ Generación de facturas HTML para imprimir/descargar
+- ✅ Estadísticas de facturación en tiempo real
+- ✅ Integración con clientes existentes
+- ✅ Tests 100% pasados (Backend: 12/12, Frontend: todos los flujos)
+
+### Diciembre 2025
 - ✅ Dashboard COMERCIO minimalista profesional
 - ✅ Control de Inventario completo con movimientos
 - ✅ Dashboard PERSONA con reportes visuales fáciles
