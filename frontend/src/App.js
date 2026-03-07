@@ -27,6 +27,7 @@ import { AdminPage } from "@/pages/AdminPage";
 import { HistorialPage } from "@/pages/HistorialPage";
 import { EmpleadosPage } from "@/pages/EmpleadosPage";
 import { InventarioPage } from "@/pages/InventarioPage";
+import { FacturacionPage } from "@/pages/FacturacionPage";
 import { ForgotPasswordPage } from "@/pages/ForgotPasswordPage";
 import { TerminosPage } from "@/pages/TerminosPage";
 import { PrivacidadPage } from "@/pages/PrivacidadPage";
@@ -124,6 +125,7 @@ function AppRoutes() {
           {/* Comercio-specific pages */}
           <Route path="empleados" element={<EmpleadosPage />} />
           <Route path="inventario" element={<InventarioPage />} />
+          <Route path="facturacion" element={<FacturacionPage />} />
         </Route>
       </Route>
 

@@ -557,7 +557,7 @@ const ComercioLayout = () => {
             <div>
               <p className="text-xs font-semibold text-[#1E3A5F] uppercase tracking-wider mb-3 px-2">Herramientas</p>
               <div className="grid grid-cols-3 gap-2">
-                {comercioToolsNav.map((item) => (
+                {comercioHerramientasGroup.items.map((item) => (
                   <NavLink
                     key={item.to}
                     to={item.to}
