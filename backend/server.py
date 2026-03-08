@@ -899,6 +899,62 @@ async def admin_get_revenue(admin: dict = Depends(get_admin_user)):
         }
     }
 
+@api_router.get("/admin/users/{user_id}/metrics")
+async def admin_get_user_metrics(user_id: str, admin: dict = Depends(get_admin_user)):
+    """Get detailed metrics for a specific user (admin only)"""
+    user = await db.users.find_one({"id": user_id}, {"_id": 0, "password": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    # Count user's data
+    total_clientes = await db.clientes.count_documents({"user_id": user_id})
+    total_productos = await db.productos.count_documents({"user_id": user_id})
+    total_estilos = await db.estilos.count_documents({"user_id": user_id})
+    total_facturas = await db.facturas.count_documents({"user_id": user_id})
+    total_citas = await db.citas.count_documents({"user_id": user_id})
+    total_calculos = await db.historial_calculos.count_documents({"user_id": user_id})
+    
+    # Get recent activity from activity_logs
+    recent_activity = await db.activity_logs.find(
+        {"user_id": user_id}, 
+        {"_id": 0}
+    ).sort("created_at", -1).limit(10).to_list(10)
+    
+    # Calculate total revenue from invoices
+    facturas = await db.facturas.find({"user_id": user_id}, {"_id": 0, "total": 1, "estado": 1}).to_list(1000)
+    total_revenue = sum(f.get("total", 0) for f in facturas if f.get("estado") == "pagada")
+    pending_revenue = sum(f.get("total", 0) for f in facturas if f.get("estado") == "pendiente")
+    
+    # Get gastos if any
+    gastos = await db.gastos_operativos.find_one({"user_id": user_id}, {"_id": 0})
+    total_gastos = 0
+    if gastos:
+        total_gastos = sum(v for k, v in gastos.items() if isinstance(v, (int, float)) and k not in ['user_id', 'clientes_mes', 'servicios_mes', 'dias_trabajo'])
+    
+    # Estimated profitability
+    rentabilidad = total_revenue - total_gastos if total_revenue > 0 else 0
+    
+    return {
+        "user": user,
+        "metrics": {
+            "clientes": total_clientes,
+            "productos": total_productos,
+            "estilos": total_estilos,
+            "facturas": total_facturas,
+            "citas": total_citas,
+            "calculos": total_calculos,
+        },
+        "financials": {
+            "total_revenue": round(total_revenue, 2),
+            "pending_revenue": round(pending_revenue, 2),
+            "total_gastos": round(total_gastos, 2),
+            "rentabilidad_estimada": round(rentabilidad, 2),
+        },
+        "recent_activity": recent_activity,
+        "last_login": user.get("last_login"),
+        "created_at": user.get("created_at"),
+    }
+
 @api_router.post("/admin/users/{user_id}/reset-password")
 async def admin_reset_password(user_id: str, admin: dict = Depends(get_admin_user)):
     """Reset user password to a temporary one (admin only)"""
@@ -1579,6 +1635,33 @@ async def create_producto(producto: ProductoCreate, current_user: dict = Depends
     doc['user_id'] = current_user["id"]
     await db.productos.insert_one(doc)
     return producto_obj
+
+@api_router.get("/productos/compare-price/{nombre}")
+async def compare_product_price(nombre: str, new_price: float, current_user: dict = Depends(get_current_user)):
+    """Compare new purchase price with last price for the same product"""
+    # Find existing product with same name
+    existing = await db.productos.find_one(
+        {"user_id": current_user["id"], "nombre": {"$regex": f"^{nombre}$", "$options": "i"}},
+        {"_id": 0, "nombre": 1, "precio_compra": 1, "created_at": 1}
+    )
+    
+    if not existing:
+        return {"found": False, "message": "Producto nuevo"}
+    
+    old_price = existing.get("precio_compra", 0)
+    price_diff = new_price - old_price
+    price_change_pct = ((new_price - old_price) / old_price * 100) if old_price > 0 else 0
+    
+    return {
+        "found": True,
+        "nombre": existing.get("nombre"),
+        "precio_anterior": round(old_price, 2),
+        "precio_nuevo": round(new_price, 2),
+        "diferencia": round(price_diff, 2),
+        "cambio_porcentaje": round(price_change_pct, 2),
+        "tendencia": "aumento" if price_diff > 0 else "disminucion" if price_diff < 0 else "igual",
+        "mensaje": f"Este producto {'aumentó' if price_diff > 0 else 'bajó' if price_diff < 0 else 'mantiene'} de precio ({'+' if price_diff > 0 else ''}{price_change_pct:.1f}%)"
+    }
 
 @api_router.put("/productos/{producto_id}", response_model=Producto)
 async def update_producto(producto_id: str, producto: ProductoCreate, current_user: dict = Depends(get_current_user)):

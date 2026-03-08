@@ -4,6 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { RecommendationsPanel } from "@/components/RecommendationsPanel";
 import { 
   Calculator, 
   Users, 
@@ -591,6 +592,9 @@ export default function PersonaDashboard() {
           </CardContent>
         </Card>
       )}
+
+      {/* Recommendations Panel */}
+      <RecommendationsPanel />
 
       {/* Premium Upsell */}
       {!isPremium && (

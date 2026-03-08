@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { RecommendationsPanel } from "@/components/RecommendationsPanel";
 import { formatCurrency } from "@/lib/utils";
 import { 
   Package, 
@@ -488,6 +489,9 @@ export default function ComercioDashboard() {
               )}
             </CardContent>
           </Card>
+
+          {/* Recommendations Panel */}
+          <RecommendationsPanel />
 
           {/* Premium CTA */}
           {!isPremium && (
