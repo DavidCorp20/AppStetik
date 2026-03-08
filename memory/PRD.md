@@ -5,72 +5,56 @@
 |-------|----------|
 | **admin@nailcost.pro** | **NailCost@Adm1n#2024Secure** |
 
-> Se restaura automáticamente cada vez que el servidor arranca
-
 ---
 
-## Modelo de Negocio
-
-### Precios de Suscripción
+## Precios de Suscripción
 | Plan | Personal | Comercio |
 |------|----------|----------|
 | Básico | $5/mes | $15/mes |
 | Premium | $10/mes | $20/mes |
 
-### Trial: 15 días de prueba gratuita
+**Trial:** 15 días gratis
 
 ---
 
-## Funcionalidades Implementadas ✅
+## Funcionalidades ✅
 
-### Sistema de Activación de Usuarios (NUEVO)
-- ✅ Registro con estado "pendiente" - requiere aprobación admin
-- ✅ Login bloqueado hasta que admin active la cuenta
-- ✅ Trial de 15 días automático al activar
-- ✅ Mensajes claros al usuario sobre estado de cuenta
+### Login Profesional (MEJORADO)
+- ✅ Diseño split-screen: branding + formulario
+- ✅ Panel izquierdo oscuro con features
+- ✅ Equilibrio profesional para todos los usuarios
+- ✅ Badges "Emprendedoras" y "Salones"
 
-### Panel Admin Mejorado
-- ✅ **3 Tabs**: Usuarios, Suscripciones, Facturas
-- ✅ **Dashboard de ingresos** con proyección mensual/anual
-- ✅ **Stats**: Pendientes, En Prueba, Activos, Expirados
-- ✅ **Gestión de usuarios**:
-  - Activar cuenta (inicia trial 15 días)
-  - Configurar suscripción (meses + plan)
-  - Generar factura de suscripción
-  - Blanquear contraseña
-  - Habilitar/deshabilitar cuenta
-- ✅ **Control de suscripciones**:
-  - Fecha inicio/fin de suscripción
-  - Días restantes con alerta si < 5
-  - Renovar suscripción
-- ✅ **Facturas admin**:
-  - Número de factura automático
-  - Estados: Pendiente/Pagada/Cancelada
-  - Total pendiente/cobrado
+### Sistema de Activación (MEJORADO)
+- ✅ Registro → Estado PENDIENTE (no puede usar)
+- ✅ Admin activa → Inicia TRIAL 15 días
+- ✅ Trial vence → Bloqueo con mensaje de pago
+- ✅ Admin registra pago → Activa suscripción
+- ✅ Suscripción vence → Bloqueo automático
+
+### Panel Admin Especializado (NUEVO)
+- ✅ **Diseño oscuro profesional**
+- ✅ **Stats**: Ingresos/mes, Pendientes, Vencidos, Activos
+- ✅ **Tabs especializados:**
+  - Pendientes Activación (con botón Activar)
+  - Vencidos/Espera Pago (con Registrar Pago)
+  - Usuarios Activos (gestión completa)
+  - Facturas Pendientes (marcar pagadas)
+  - Todas las Facturas (historial)
+- ✅ **Acciones**: Activar, Registrar pago, Generar factura, Blanquear contraseña, Suspender
+- ✅ **Alertas**: Notificación de usuarios pendientes/vencidos
+
+### Control de Suscripciones
+- ✅ Fecha inicio/fin visible
+- ✅ Días restantes con alerta < 5 días
+- ✅ Renovación desde admin
+- ✅ Generación de facturas automáticas
 
 ### Reportes Financieros (Comercio)
-- ✅ **Estado de Resultados**:
-  - Ingresos brutos, costos, utilidad bruta/neta
-  - Margen bruto y neto
-- ✅ **Dashboard de métricas**:
-  - Ingresos del mes con tendencia
-  - Servicios realizados
-  - Clientes activos
-  - Citas pendientes
-  - Alertas de stock bajo
-- ✅ **Ranking de servicios** por ganancia
-- ✅ **Desglose de gastos** con gráfico de pie
-- ✅ **Facturación por método de pago**
-
-### Navegación Mejorada (Comercio)
-- ✅ Header profesional estilo admin
-- ✅ Dropdowns: Dashboard, Agenda, Facturación
-- ✅ Grupos: Gestión, Servicios, Finanzas, Herramientas
-- ✅ Reportes Financieros en menú Herramientas
-
-### Notificaciones Push
-- ✅ Service Worker para PWA
-- ✅ Banner diferenciado (Persona rosa, Comercio azul)
+- ✅ Estado de Resultados
+- ✅ Ranking de servicios por ganancia
+- ✅ Desglose de gastos
+- ✅ Tendencias mensuales
 
 ---
 
@@ -81,50 +65,58 @@ mongodb+srv://arenasdavid1_db_user:***@cluster0.s2mz4tv.mongodb.net/nailcost_pro
 
 ---
 
-## API Endpoints Nuevos
+## Archivos Importantes
 
-### Suscripciones Admin
-```
-POST /api/admin/users/{id}/activate      - Activar cuenta + trial 15 días
-POST /api/admin/users/{id}/subscription  - Configurar suscripción
-GET  /api/admin/subscriptions            - Lista con días restantes
-POST /api/admin/users/{id}/generate-invoice
-GET  /api/admin/invoices
-PUT  /api/admin/invoices/{id}/status
-```
+- `/app/GUIA_LANZAMIENTO.md` - Pasos para lanzar la app
+- `/app/memory/PRD.md` - Este documento
 
-### Reportes Financieros
+---
+
+## Flujo de Pago
+
 ```
-GET /api/reportes/financiero      - Estado de resultados
-GET /api/reportes/estado-empresa  - Métricas generales
+Usuario se registra → PENDIENTE
+     ↓
+Admin activa → TRIAL 15 días
+     ↓
+Trial vence → BLOQUEADO (mensaje: "Realiza tu pago")
+     ↓
+Usuario paga (Pago Móvil/Zelle)
+     ↓
+Contacta admin (WhatsApp/Email)
+     ↓
+Admin registra pago → ACTIVO (1-12 meses)
+     ↓
+Suscripción vence → BLOQUEADO → Repetir
 ```
 
 ---
 
 ## Backlog
 
-### Para monetizar
-- [ ] Integrar Stripe para cobro automático de suscripciones
-- [ ] Envío de emails reales (recordatorios de vencimiento)
+### Para monetizar automático
+- [ ] Integrar Stripe para cobros automáticos
+- [ ] Renovación automática mensual
+- [ ] Emails de recordatorio de vencimiento
 
 ### Mejoras UI/UX
 - [ ] Modo oscuro
-- [ ] PWA completa (instalable)
+- [ ] PWA instalable completa
 
 ---
 
 ## Changelog
 
-### 8 Marzo 2026
-- ✅ Sistema de activación de usuarios (pendiente → activo)
-- ✅ Trial de 15 días automático
-- ✅ Panel admin con tabs (Usuarios/Suscripciones/Facturas)
-- ✅ Control de fechas de suscripción
-- ✅ Generación de facturas de suscripción admin
-- ✅ Reportes financieros para comercio
-- ✅ Navegación mejorada estilo admin para comercio
-- ✅ MongoDB Atlas conectado en producción
+### 8 Marzo 2026 (Sesión actual)
+- ✅ Login profesional con diseño split-screen
+- ✅ Panel Admin especializado con tema oscuro
+- ✅ Sistema de bloqueo por suscripción vencida
+- ✅ Flujo de espera de pago
+- ✅ Guía de lanzamiento completa
 
-### 7 Marzo 2026
-- ✅ Sistema de Facturación completo
-- ✅ Métodos de pago Venezuela
+### Anteriores
+- Sistema de facturación completo
+- Control de inventario
+- Reportes financieros
+- Notificaciones push
+- MongoDB Atlas conectado

@@ -591,6 +591,33 @@ async def login(credentials: UserLogin, request: Request):
     if account_status == "suspended":
         raise HTTPException(status_code=403, detail="Tu cuenta ha sido suspendida. Contacta al administrador.")
     
+    # Check subscription/trial expiration
+    now = datetime.now(timezone.utc)
+    trial_ends = user.get("trial_ends_at")
+    sub_ends = user.get("subscription_ends_at")
+    
+    is_expired = False
+    if sub_ends:
+        sub_end_date = datetime.fromisoformat(sub_ends.replace('Z', '+00:00'))
+        if now > sub_end_date:
+            is_expired = True
+    elif trial_ends:
+        trial_end_date = datetime.fromisoformat(trial_ends.replace('Z', '+00:00'))
+        if now > trial_end_date:
+            is_expired = True
+    
+    # Allow admin to always login
+    if is_expired and user.get("role") != "admin":
+        # Update status to awaiting_payment
+        await db.users.update_one(
+            {"id": user["id"]},
+            {"$set": {"payment_status": "awaiting_payment"}}
+        )
+        raise HTTPException(
+            status_code=403, 
+            detail="Tu suscripción ha vencido. Por favor realiza el pago para continuar usando NailCost Pro. Contacta al administrador para renovar."
+        )
+    
     # Update last login
     await db.users.update_one(
         {"id": user["id"]},
