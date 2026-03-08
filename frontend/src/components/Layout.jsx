@@ -607,7 +607,12 @@ const ComercioLayout = () => {
 // MAIN LAYOUT COMPONENT
 // =========================
 export const Layout = () => {
-  const { isBusinessUser } = useAuth();
+  const { isBusinessUser, user } = useAuth();
+  
+  // Admin uses dedicated dark theme in AdminPage (no layout wrapper needed)
+  if (user?.role === "admin") {
+    return <Outlet />;
+  }
   
   if (isBusinessUser) {
     return <ComercioLayout />;
