@@ -17,7 +17,29 @@
 
 ---
 
-## Funcionalidades Nuevas ✅
+## Última Actualización: 08 Marzo 2025
+
+### ✅ AdminLayout Dedicado (COMPLETADO)
+- ✅ Layout exclusivo para administradores con tema violeta oscuro
+- ✅ Header con branding "NailCost ADMIN" y icono de escudo
+- ✅ Navegación específica: Dashboard, Pendientes, Vencidos, Usuarios, Facturas, Analytics
+- ✅ NO muestra navegación de Comercio (Cotizador, Inventario, Facturación)
+- ✅ Redirección automática de admin a `/admin` desde `/`
+- ✅ Footer dedicado "NailCost Admin Panel"
+
+### ✅ Facturación Venezolana SENIAT (COMPLETADO)
+- ✅ Configuración Fiscal con campos: Nombre Empresa, RIF, Dirección Fiscal
+- ✅ Checkbox para activar IVA 16%
+- ✅ Indicador "IVA 16% Activo" en el header de la página
+- ✅ Cálculo automático en facturas: Subtotal → Base Imponible → IVA (16%) → TOTAL
+- ✅ Campos de cliente: RIF/CI, Dirección Fiscal
+- ✅ Tab "Reportes Fiscales" para generar reportes mensuales
+- ✅ Reporte mensual con desglose de IVA para declaraciones
+- ✅ Persistencia de configuración en localStorage
+
+---
+
+## Funcionalidades Anteriores ✅
 
 ### Login Profesional
 - ✅ Diseño split-screen: branding + formulario

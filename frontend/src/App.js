@@ -35,9 +35,14 @@ import { PrivacidadPage } from "@/pages/PrivacidadPage";
 import { ReportesFinancierosPage } from "@/pages/ReportesFinancierosPage";
 import { Loader2 } from "lucide-react";
 
-// Dashboard Router - selects based on user type
+// Dashboard Router - selects based on user type and redirects admin
 function DashboardRouter() {
-  const { isBusinessUser } = useAuth();
+  const { isBusinessUser, isAdmin } = useAuth();
+  
+  // Admin users should go to /admin
+  if (isAdmin) {
+    return <Navigate to="/admin" replace />;
+  }
   
   if (isBusinessUser) {
     return <ComercioDashboard />;
