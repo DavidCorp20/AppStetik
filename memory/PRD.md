@@ -17,44 +17,59 @@
 
 ---
 
-## Funcionalidades ✅
+## Funcionalidades Nuevas ✅
 
-### Login Profesional (MEJORADO)
+### Login Profesional
 - ✅ Diseño split-screen: branding + formulario
 - ✅ Panel izquierdo oscuro con features
-- ✅ Equilibrio profesional para todos los usuarios
 - ✅ Badges "Emprendedoras" y "Salones"
 
-### Sistema de Activación (MEJORADO)
-- ✅ Registro → Estado PENDIENTE (no puede usar)
-- ✅ Admin activa → Inicia TRIAL 15 días
-- ✅ Trial vence → Bloqueo con mensaje de pago
-- ✅ Admin registra pago → Activa suscripción
-- ✅ Suscripción vence → Bloqueo automático
+### Registro Profesional (MEJORADO)
+- ✅ Split-screen con beneficios y testimonial
+- ✅ Selector de tipo con precios claros ($5 vs $15)
+- ✅ Badge "POPULAR" para Salón/Negocio
+- ✅ Features listados por tipo (Contabilidad, Nómina, Inventario, etc.)
+- ✅ Mensaje de activación pendiente
 
-### Panel Admin Especializado (NUEVO)
+### Panel Admin Especializado (MEJORADO)
 - ✅ **Diseño oscuro profesional**
-- ✅ **Stats**: Ingresos/mes, Pendientes, Vencidos, Activos
-- ✅ **Tabs especializados:**
-  - Pendientes Activación (con botón Activar)
-  - Vencidos/Espera Pago (con Registrar Pago)
-  - Usuarios Activos (gestión completa)
-  - Facturas Pendientes (marcar pagadas)
-  - Todas las Facturas (historial)
-- ✅ **Acciones**: Activar, Registrar pago, Generar factura, Blanquear contraseña, Suspender
-- ✅ **Alertas**: Notificación de usuarios pendientes/vencidos
+- ✅ **Dashboard** con stats: Ingresos, Por Activar, Por Cobrar, Total Usuarios
+- ✅ **Gráficos**: Ingresos por Plan (Pie), Estado de Suscripciones
+- ✅ **6 secciones**:
+  - Dashboard (vista general)
+  - Pendientes (activación con 1 click)
+  - Vencidos (registrar pago)
+  - Usuarios (gestión activos)
+  - Facturas (cobro con 1 click)
+  - **Analytics (NUEVO)**: Ingresos/Gastos/Servicios/Clientes por usuario
+- ✅ **Acciones rápidas** en dashboard
+- ✅ Sin funciones de usuario regular (especializado en admin)
 
-### Control de Suscripciones
-- ✅ Fecha inicio/fin visible
-- ✅ Días restantes con alerta < 5 días
-- ✅ Renovación desde admin
-- ✅ Generación de facturas automáticas
+### Gestión de Empleados (MEJORADO)
+- ✅ **3 tabs**: Equipo, Rendimiento, Nómina
+- ✅ **Tipos de contrato**: Solo Comisión, Salario Fijo, Mixto
+- ✅ **Campos nuevos**: Salario base, Horario, Fecha ingreso
+- ✅ **Rendimiento**: Gráficos de servicios/empleado, Top performers
+- ✅ **Nómina**: Cálculo automático salario + comisiones
+- ✅ **Distribución por especialidad** (gráfico pie)
 
-### Reportes Financieros (Comercio)
-- ✅ Estado de Resultados
-- ✅ Ranking de servicios por ganancia
-- ✅ Desglose de gastos
-- ✅ Tendencias mensuales
+### Sistema de Bloqueo por Pago
+- ✅ Trial vence → Usuario bloqueado
+- ✅ Suscripción vence → Bloqueo automático
+- ✅ Mensaje claro para el usuario
+- ✅ Admin registra pago → Activo nuevamente
+
+---
+
+## Guía de Lanzamiento
+Ver archivo: `/app/GUIA_LANZAMIENTO.md`
+
+**Pasos principales:**
+1. Configurar dominio personalizado
+2. Variables de producción (.env)
+3. Seguridad (JWT_SECRET, CORS)
+4. Marketing inicial
+5. Cobro manual o Stripe (futuro)
 
 ---
 
@@ -65,29 +80,27 @@ mongodb+srv://arenasdavid1_db_user:***@cluster0.s2mz4tv.mongodb.net/nailcost_pro
 
 ---
 
-## Archivos Importantes
+## API Endpoints
 
-- `/app/GUIA_LANZAMIENTO.md` - Pasos para lanzar la app
-- `/app/memory/PRD.md` - Este documento
-
----
-
-## Flujo de Pago
-
+### Admin
 ```
-Usuario se registra → PENDIENTE
-     ↓
-Admin activa → TRIAL 15 días
-     ↓
-Trial vence → BLOQUEADO (mensaje: "Realiza tu pago")
-     ↓
-Usuario paga (Pago Móvil/Zelle)
-     ↓
-Contacta admin (WhatsApp/Email)
-     ↓
-Admin registra pago → ACTIVO (1-12 meses)
-     ↓
-Suscripción vence → BLOQUEADO → Repetir
+GET  /api/admin/subscriptions    - Lista con días restantes, ingresos/gastos
+POST /api/admin/users/{id}/activate
+POST /api/admin/users/{id}/subscription
+POST /api/admin/users/{id}/generate-invoice
+GET  /api/admin/invoices
+PUT  /api/admin/invoices/{id}/status
+```
+
+### Empleados
+```
+GET/POST/PUT/DELETE /api/empleados
+```
+
+### Reportes
+```
+GET /api/reportes/financiero
+GET /api/reportes/estado-empresa
 ```
 
 ---
@@ -95,27 +108,29 @@ Suscripción vence → BLOQUEADO → Repetir
 ## Backlog
 
 ### Para monetizar automático
-- [ ] Integrar Stripe para cobros automáticos
-- [ ] Renovación automática mensual
-- [ ] Emails de recordatorio de vencimiento
+- [ ] Integrar Stripe
+- [ ] Emails de recordatorio
 
-### Mejoras UI/UX
-- [ ] Modo oscuro
-- [ ] PWA instalable completa
+### Mejoras pendientes
+- [ ] Modo oscuro para usuarios
+- [ ] PWA instalable
+- [ ] Exportar reportes a Excel
 
 ---
 
 ## Changelog
 
 ### 8 Marzo 2026 (Sesión actual)
-- ✅ Login profesional con diseño split-screen
-- ✅ Panel Admin especializado con tema oscuro
-- ✅ Sistema de bloqueo por suscripción vencida
-- ✅ Flujo de espera de pago
+- ✅ Login profesional split-screen
+- ✅ Registro profesional con testimonial y precios
+- ✅ Panel Admin especializado con Analytics
+- ✅ Seguimiento de Ingresos/Gastos por usuario
+- ✅ Gestión de Empleados con Nómina y Rendimiento
+- ✅ Tipos de contrato (comisión/fijo/mixto)
 - ✅ Guía de lanzamiento completa
 
 ### Anteriores
-- Sistema de facturación completo
+- Sistema de facturación
 - Control de inventario
 - Reportes financieros
 - Notificaciones push
