@@ -171,11 +171,14 @@ export default function InventarioPage() {
     setDialogOpen(true);
   };
 
+  // Helper to get stock value (fallback to cantidad_comprada for older products)
+  const getStock = (p) => p.cantidad_disponible ?? p.cantidad_comprada ?? 0;
+
   // Filter products
   const filteredProducts = productos.filter(p => {
     const matchesSearch = p.nombre?.toLowerCase().includes(searchTerm.toLowerCase());
     const stockMinimo = p.stock_minimo || 5;
-    const stockActual = p.cantidad_disponible || 0;
+    const stockActual = getStock(p);
     
     if (filterStatus === "agotado") return matchesSearch && stockActual === 0;
     if (filterStatus === "bajo") return matchesSearch && stockActual > 0 && stockActual <= stockMinimo;
@@ -185,9 +188,9 @@ export default function InventarioPage() {
 
   // Stats
   const totalProducts = productos.length;
-  const outOfStock = productos.filter(p => (p.cantidad_disponible || 0) === 0).length;
+  const outOfStock = productos.filter(p => getStock(p) === 0).length;
   const lowStock = productos.filter(p => {
-    const stock = p.cantidad_disponible || 0;
+    const stock = getStock(p);
     const min = p.stock_minimo || 5;
     return stock > 0 && stock <= min;
   }).length;
@@ -336,7 +339,7 @@ export default function InventarioPage() {
               </thead>
               <tbody>
                 {filteredProducts.map((product) => {
-                  const stockActual = product.cantidad_disponible || 0;
+                  const stockActual = getStock(product);
                   const stockMinimo = product.stock_minimo || 5;
                   return (
                     <tr key={product.id} className="border-b border-gray-50 hover:bg-gray-50/50">
@@ -436,7 +439,7 @@ export default function InventarioPage() {
             {selectedProduct && (
               <div className="p-3 bg-gray-50 rounded-lg">
                 <p className="font-medium text-gray-900">{selectedProduct.nombre}</p>
-                <p className="text-sm text-gray-500">Stock actual: {selectedProduct.cantidad_disponible || 0}</p>
+                <p className="text-sm text-gray-500">Stock actual: {getStock(selectedProduct)}</p>
               </div>
             )}
 

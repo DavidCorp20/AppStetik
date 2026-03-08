@@ -613,6 +613,13 @@ export default function PersonaDashboard() {
           </CardContent>
         </Card>
       )}
+      
+      {/* Tutorial Modal for Persona */}
+      <TutorialModal 
+        isOpen={showTutorial} 
+        onClose={closeTutorial} 
+        variant="persona" 
+      />
     </div>
   );
 }

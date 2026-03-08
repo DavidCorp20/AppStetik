@@ -299,6 +299,8 @@ class ProductoBase(BaseModel):
     cantidad_comprada: float
     unidad: str = "unidades"
     uso_por_servicio: float
+    cantidad_disponible: Optional[float] = None  # Stock actual (puede ser diferente de cantidad_comprada)
+    stock_minimo: Optional[float] = 5  # Nivel mínimo para alertas
     
 class ProductoCreate(ProductoBase):
     pass
@@ -1616,6 +1618,12 @@ async def get_tips_rentabilidad(current_user: dict = Depends(get_current_user)):
 @api_router.get("/productos", response_model=List[Producto])
 async def get_productos(current_user: dict = Depends(get_current_user)):
     productos = await db.productos.find({"user_id": current_user["id"]}, {"_id": 0}).to_list(1000)
+    # Ensure cantidad_disponible exists (fallback to cantidad_comprada for legacy products)
+    for p in productos:
+        if p.get('cantidad_disponible') is None:
+            p['cantidad_disponible'] = p.get('cantidad_comprada', 0)
+        if p.get('stock_minimo') is None:
+            p['stock_minimo'] = 5
     return productos
 
 @api_router.post("/productos", response_model=Producto)

@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { RecommendationsPanel } from "@/components/RecommendationsPanel";
+import { TutorialModal, useComercioTutorial } from "@/components/TutorialModal";
 import { formatCurrency } from "@/lib/utils";
 import { 
   Package, 
@@ -124,6 +125,9 @@ export default function ComercioDashboard() {
   const [ingresos, setIngresos] = useState({ mes: 0, anterior: 0 });
   const [gastosTotal, setGastosTotal] = useState({ mes: 0, anterior: 0 });
   const [loading, setLoading] = useState(true);
+  
+  // Tutorial hook for Comercio
+  const { showTutorial, closeTutorial } = useComercioTutorial();
 
   const API = process.env.REACT_APP_BACKEND_URL + '/api';
 
@@ -508,6 +512,13 @@ export default function ComercioDashboard() {
           )}
         </div>
       </div>
+      
+      {/* Tutorial Modal for Comercio */}
+      <TutorialModal 
+        isOpen={showTutorial} 
+        onClose={closeTutorial} 
+        variant="comercio" 
+      />
     </div>
   );
 }
