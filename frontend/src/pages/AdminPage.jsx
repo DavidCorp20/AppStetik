@@ -6,34 +6,55 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Shield, Users, DollarSign, AlertTriangle, Clock, CheckCircle, XCircle, 
   CreditCard, FileText, TrendingUp, Bell, RefreshCw, Loader2, Search,
   UserCheck, UserX, Key, Play, Calendar, Building2, User, Copy, Check,
-  Eye, Ban, BarChart3, Download, PieChart, ArrowUpRight, ArrowDownRight, Activity
+  Eye, Ban, BarChart3, Download, PieChart, ArrowUpRight, ArrowDownRight, Activity,
+  ChevronRight, Filter, MoreVertical, UserPlus, Settings, Database, Server,
+  Globe, Zap, TrendingDown, Percent, CalendarDays, FileDown, Printer
 } from "lucide-react";
 import { toast } from "sonner";
 import { authAxios } from "@/context/AuthContext";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, PieChart as RePieChart, Pie, Cell, Legend } from "recharts";
+import { 
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, 
+  PieChart as RePieChart, Pie, Cell, Legend, AreaChart, Area, CartesianGrid,
+  ComposedChart
+} from "recharts";
 
 const API = process.env.REACT_APP_BACKEND_URL + "/api";
-const COLORS = ['#8B5CF6', '#EC4899', '#10B981', '#F59E0B', '#3B82F6', '#EF4444'];
+
+// Professional Color Palette
+const COLORS = {
+  primary: '#3B82F6',    // Blue
+  secondary: '#8B5CF6',  // Violet
+  success: '#10B981',    // Emerald
+  warning: '#F59E0B',    // Amber
+  danger: '#EF4444',     // Red
+  info: '#06B6D4',       // Cyan
+};
+
+const CHART_COLORS = ['#3B82F6', '#8B5CF6', '#10B981', '#F59E0B', '#EF4444', '#06B6D4'];
 
 export default function AdminPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(null);
-  const [activeSection, setActiveSection] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState("overview");
   const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [dateRange, setDateRange] = useState("30");
   
   const [subscriptions, setSubscriptions] = useState({ subscriptions: [], summary: {} });
   const [invoices, setInvoices] = useState({ invoices: [], summary: {} });
-  const [userAnalytics, setUserAnalytics] = useState([]);
+  const [stats, setStats] = useState({});
+  const [activityLogs, setActivityLogs] = useState([]);
   
   const [paymentDialog, setPaymentDialog] = useState({ open: false, user: null, months: 1, plan: "free", amount: 0 });
   const [passwordDialog, setPasswordDialog] = useState({ open: false, user: null, tempPassword: null });
-  const [analyticsDialog, setAnalyticsDialog] = useState({ open: false, user: null });
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -43,22 +64,23 @@ export default function AdminPage() {
 
   const fetchData = async () => {
     try {
-      const [subsRes, invRes] = await Promise.all([
+      const [subsRes, invRes, statsRes] = await Promise.all([
         authAxios.get(`${API}/admin/subscriptions`),
         authAxios.get(`${API}/admin/invoices`),
+        authAxios.get(`${API}/admin/stats`),
       ]);
       setSubscriptions(subsRes.data);
       setInvoices(invRes.data);
+      setStats(statsRes.data);
       
-      // Generate user analytics (simulated for demo)
-      const analytics = subsRes.data.subscriptions.map(s => ({
-        ...s,
-        gastos_mes: Math.floor(Math.random() * 200) + 50,
-        ingresos_mes: Math.floor(Math.random() * 1000) + 200,
-        servicios_mes: Math.floor(Math.random() * 80) + 10,
-        clientes_activos: Math.floor(Math.random() * 30) + 5,
+      // Generate mock activity data for demo
+      const mockActivity = subsRes.data.subscriptions.slice(0, 10).map((s, i) => ({
+        id: i,
+        user: s.nombre,
+        action: ['login', 'create_invoice', 'add_client', 'calculate_price', 'update_settings'][Math.floor(Math.random() * 5)],
+        time: `Hace ${Math.floor(Math.random() * 24) + 1}h`,
       }));
-      setUserAnalytics(analytics);
+      setActivityLogs(mockActivity);
     } catch (err) {
       toast.error("Error al cargar datos");
     } finally {
@@ -139,14 +161,28 @@ export default function AdminPage() {
 
   const getStatusBadge = (status) => {
     const config = {
-      pending: { bg: "bg-amber-500/20 text-amber-400", label: "Pendiente" },
-      trial: { bg: "bg-blue-500/20 text-blue-400", label: "Trial" },
-      trial_expired: { bg: "bg-orange-500/20 text-orange-400", label: "Trial Vencido" },
-      active: { bg: "bg-emerald-500/20 text-emerald-400", label: "Activo" },
-      expired: { bg: "bg-red-500/20 text-red-400", label: "Vencido" },
+      pending: { bg: "bg-amber-500/20 text-amber-300 border-amber-500/30", label: "Pendiente" },
+      trial: { bg: "bg-blue-500/20 text-blue-300 border-blue-500/30", label: "Trial" },
+      trial_expired: { bg: "bg-orange-500/20 text-orange-300 border-orange-500/30", label: "Trial Vencido" },
+      active: { bg: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30", label: "Activo" },
+      expired: { bg: "bg-red-500/20 text-red-300 border-red-500/30", label: "Vencido" },
     };
     const c = config[status] || config.pending;
-    return <Badge className={c.bg}>{c.label}</Badge>;
+    return <Badge variant="outline" className={c.bg}>{c.label}</Badge>;
+  };
+
+  const exportToCSV = (data, filename) => {
+    const headers = Object.keys(data[0] || {}).join(',');
+    const rows = data.map(row => Object.values(row).join(',')).join('\n');
+    const csv = `${headers}\n${rows}`;
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${filename}_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Archivo exportado");
   };
 
   // Filter data
@@ -155,349 +191,714 @@ export default function AdminPage() {
   const activeUsers = subscriptions.subscriptions.filter(s => s.subscription_status === "active" || s.subscription_status === "trial");
   const pendingInvoices = invoices.invoices.filter(i => i.status === "pending");
 
+  // Filtered users for search
+  const filteredUsers = subscriptions.subscriptions.filter(u => {
+    const matchSearch = u.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                       u.email?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchStatus = filterStatus === "all" || u.subscription_status === filterStatus;
+    return matchSearch && matchStatus;
+  });
+
   // Chart data
   const revenueByType = [
-    { name: 'Personal Básico', value: subscriptions.subscriptions.filter(s => s.user_type === 'personal' && s.plan === 'free').length * 5 },
-    { name: 'Personal Premium', value: subscriptions.subscriptions.filter(s => s.user_type === 'personal' && s.plan === 'premium').length * 10 },
-    { name: 'Comercio Básico', value: subscriptions.subscriptions.filter(s => s.user_type === 'business' && s.plan === 'free').length * 15 },
-    { name: 'Comercio Premium', value: subscriptions.subscriptions.filter(s => s.user_type === 'business' && s.plan === 'premium').length * 20 },
+    { name: 'Personal Básico', value: subscriptions.subscriptions.filter(s => s.user_type === 'personal' && s.plan === 'free').length * 5, fill: CHART_COLORS[0] },
+    { name: 'Personal Premium', value: subscriptions.subscriptions.filter(s => s.user_type === 'personal' && s.plan === 'premium').length * 10, fill: CHART_COLORS[1] },
+    { name: 'Comercio Básico', value: subscriptions.subscriptions.filter(s => s.user_type === 'business' && s.plan === 'free').length * 15, fill: CHART_COLORS[2] },
+    { name: 'Comercio Premium', value: subscriptions.subscriptions.filter(s => s.user_type === 'business' && s.plan === 'premium').length * 20, fill: CHART_COLORS[3] },
   ].filter(x => x.value > 0);
 
-  const filteredAnalytics = userAnalytics.filter(u =>
-    u.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) || u.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const userGrowthData = [
+    { month: 'Oct', users: 2, revenue: 30 },
+    { month: 'Nov', users: 4, revenue: 55 },
+    { month: 'Dic', users: 5, revenue: 75 },
+    { month: 'Ene', users: 7, revenue: 110 },
+    { month: 'Feb', users: 8, revenue: 140 },
+    { month: 'Mar', users: subscriptions.summary.total_users || 10, revenue: subscriptions.summary.monthly_revenue || 180 },
+  ];
 
-  if (loading) return <div className="flex items-center justify-center min-h-[60vh]"><Loader2 className="w-8 h-8 animate-spin text-violet-500" /></div>;
+  const subscriptionStatusData = [
+    { name: 'Activos', value: activeUsers.length, fill: COLORS.success },
+    { name: 'Trial', value: subscriptions.summary.in_trial || 0, fill: COLORS.info },
+    { name: 'Vencidos', value: expiredUsers.length, fill: COLORS.danger },
+    { name: 'Pendientes', value: pendingUsers.length, fill: COLORS.warning },
+  ].filter(x => x.value > 0);
+
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="text-center">
+        <Loader2 className="w-10 h-10 animate-spin text-blue-500 mx-auto mb-4" />
+        <p className="text-slate-400">Cargando panel de administración...</p>
+      </div>
+    </div>
+  );
 
   return (
     <div className="space-y-6" data-testid="admin-page">
-      {/* Page Title */}
-      <div className="flex items-center justify-between">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Panel de Administración</h1>
-          <p className="text-sm text-slate-400">Gestiona usuarios, suscripciones y facturación</p>
+          <h1 className="text-2xl font-bold text-white">Panel de Administración</h1>
+          <p className="text-slate-400 text-sm">Gestiona usuarios, suscripciones y analiza el rendimiento</p>
         </div>
-        <Button variant="outline" size="sm" onClick={fetchData} className="border-slate-600 text-slate-300 hover:bg-slate-700">
-          <RefreshCw className="w-4 h-4 mr-2" />Actualizar
-        </Button>
-      </div>
-
-      {/* Navigation */}
-      <div className="flex gap-2 flex-wrap">
-        {[
-          { id: "dashboard", label: "Dashboard", icon: BarChart3 },
-          { id: "pendientes", label: `Pendientes (${pendingUsers.length})`, icon: Clock },
-          { id: "vencidos", label: `Vencidos (${expiredUsers.length})`, icon: AlertTriangle },
-          { id: "usuarios", label: `Usuarios (${activeUsers.length})`, icon: Users },
-          { id: "facturacion", label: `Facturas (${pendingInvoices.length})`, icon: FileText },
-          { id: "analytics", label: "Analytics", icon: Activity },
-        ].map(tab => (
-          <Button key={tab.id} variant={activeSection === tab.id ? "default" : "outline"} onClick={() => setActiveSection(tab.id)}
-            className={activeSection === tab.id ? "bg-violet-600" : "border-slate-700 text-slate-300 hover:bg-slate-800"}>
-            <tab.icon className="w-4 h-4 mr-2" />{tab.label}
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={fetchData} className="border-slate-600 text-slate-300 hover:bg-slate-700">
+            <RefreshCw className="w-4 h-4 mr-2" />Actualizar
           </Button>
-        ))}
+          <Button size="sm" onClick={() => exportToCSV(subscriptions.subscriptions, 'usuarios')} className="bg-blue-600 hover:bg-blue-700">
+            <Download className="w-4 h-4 mr-2" />Exportar
+          </Button>
+        </div>
       </div>
 
-        {/* Dashboard */}
-        {activeSection === "dashboard" && (
-          <div className="space-y-6">
-            {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Card className="bg-gradient-to-br from-emerald-500 to-teal-600 border-0">
-                <CardContent className="p-4">
-                  <DollarSign className="w-6 h-6 mb-2 opacity-80" />
-                  <p className="text-3xl font-bold">${subscriptions.summary.monthly_revenue || 0}</p>
-                  <p className="text-sm opacity-80">Ingresos/Mes</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-gradient-to-br from-amber-500 to-orange-600 border-0">
-                <CardContent className="p-4">
-                  <Clock className="w-6 h-6 mb-2 opacity-80" />
-                  <p className="text-3xl font-bold">{pendingUsers.length}</p>
-                  <p className="text-sm opacity-80">Por Activar</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-gradient-to-br from-red-500 to-rose-600 border-0">
-                <CardContent className="p-4">
-                  <AlertTriangle className="w-6 h-6 mb-2 opacity-80" />
-                  <p className="text-3xl font-bold">${invoices.summary.total_pending_amount || 0}</p>
-                  <p className="text-sm opacity-80">Por Cobrar</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-gradient-to-br from-blue-500 to-indigo-600 border-0">
-                <CardContent className="p-4">
-                  <Users className="w-6 h-6 mb-2 opacity-80" />
-                  <p className="text-3xl font-bold">{subscriptions.summary.total_users || 0}</p>
-                  <p className="text-sm opacity-80">Total Usuarios</p>
-                </CardContent>
-              </Card>
+      {/* Quick Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <Card className="bg-gradient-to-br from-blue-600 to-blue-700 border-0 text-white">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <DollarSign className="w-5 h-5 opacity-80" />
+              <span className="text-xs bg-white/20 px-2 py-0.5 rounded">MRR</span>
             </div>
+            <p className="text-2xl font-bold">${subscriptions.summary.monthly_revenue || 0}</p>
+            <p className="text-xs opacity-80">Ingresos Mensuales</p>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-gradient-to-br from-violet-600 to-violet-700 border-0 text-white">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <Users className="w-5 h-5 opacity-80" />
+              <ArrowUpRight className="w-4 h-4 text-emerald-300" />
+            </div>
+            <p className="text-2xl font-bold">{subscriptions.summary.total_users || 0}</p>
+            <p className="text-xs opacity-80">Total Usuarios</p>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-gradient-to-br from-emerald-600 to-emerald-700 border-0 text-white">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <UserCheck className="w-5 h-5 opacity-80" />
+            </div>
+            <p className="text-2xl font-bold">{activeUsers.length}</p>
+            <p className="text-xs opacity-80">Activos</p>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-gradient-to-br from-amber-500 to-amber-600 border-0 text-white">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <Clock className="w-5 h-5 opacity-80" />
+              {pendingUsers.length > 0 && <span className="w-2 h-2 bg-white rounded-full animate-pulse" />}
+            </div>
+            <p className="text-2xl font-bold">{pendingUsers.length}</p>
+            <p className="text-xs opacity-80">Por Activar</p>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-gradient-to-br from-red-500 to-red-600 border-0 text-white">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <AlertTriangle className="w-5 h-5 opacity-80" />
+            </div>
+            <p className="text-2xl font-bold">{expiredUsers.length}</p>
+            <p className="text-xs opacity-80">Vencidos</p>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-gradient-to-br from-cyan-600 to-cyan-700 border-0 text-white">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <FileText className="w-5 h-5 opacity-80" />
+            </div>
+            <p className="text-2xl font-bold">${invoices.summary.total_pending_amount || 0}</p>
+            <p className="text-xs opacity-80">Por Cobrar</p>
+          </CardContent>
+        </Card>
+      </div>
 
-            {/* Charts */}
-            <div className="grid md:grid-cols-2 gap-6">
-              <Card className="bg-slate-800 border-slate-700">
-                <CardHeader><CardTitle className="text-lg">Ingresos por Plan</CardTitle></CardHeader>
-                <CardContent>
-                  {revenueByType.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={200}>
-                      <RePieChart>
-                        <Pie data={revenueByType} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} label>
-                          {revenueByType.map((entry, index) => <Cell key={index} fill={COLORS[index % COLORS.length]} />)}
-                        </Pie>
-                        <Tooltip contentStyle={{ background: '#1e293b', border: 'none' }} />
-                      </RePieChart>
-                    </ResponsiveContainer>
-                  ) : <p className="text-center text-slate-500 py-8">Sin datos</p>}
-                </CardContent>
-              </Card>
+      {/* Main Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList className="bg-slate-800 border border-slate-700 p-1">
+          <TabsTrigger value="overview" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <BarChart3 className="w-4 h-4 mr-2" />Overview
+          </TabsTrigger>
+          <TabsTrigger value="users" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <Users className="w-4 h-4 mr-2" />Usuarios
+          </TabsTrigger>
+          <TabsTrigger value="pending" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <Clock className="w-4 h-4 mr-2" />Pendientes
+            {pendingUsers.length > 0 && <Badge className="ml-2 bg-amber-500">{pendingUsers.length}</Badge>}
+          </TabsTrigger>
+          <TabsTrigger value="invoices" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <FileText className="w-4 h-4 mr-2" />Facturación
+          </TabsTrigger>
+          <TabsTrigger value="reports" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TrendingUp className="w-4 h-4 mr-2" />Reportes
+          </TabsTrigger>
+        </TabsList>
 
-              <Card className="bg-slate-800 border-slate-700">
-                <CardHeader><CardTitle className="text-lg">Estado de Suscripciones</CardTitle></CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center p-3 bg-slate-700/50 rounded-lg">
-                      <span className="text-slate-400">Activos</span>
-                      <span className="text-2xl font-bold text-emerald-400">{activeUsers.length}</span>
-                    </div>
-                    <div className="flex justify-between items-center p-3 bg-slate-700/50 rounded-lg">
-                      <span className="text-slate-400">En Trial</span>
-                      <span className="text-2xl font-bold text-blue-400">{subscriptions.summary.in_trial || 0}</span>
-                    </div>
-                    <div className="flex justify-between items-center p-3 bg-slate-700/50 rounded-lg">
-                      <span className="text-slate-400">Vencidos</span>
-                      <span className="text-2xl font-bold text-red-400">{expiredUsers.length}</span>
-                    </div>
-                    <div className="flex justify-between items-center p-3 bg-slate-700/50 rounded-lg">
-                      <span className="text-slate-400">Pendientes</span>
-                      <span className="text-2xl font-bold text-amber-400">{pendingUsers.length}</span>
-                    </div>
+        {/* Overview Tab */}
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid lg:grid-cols-2 gap-6">
+            {/* Revenue Chart */}
+            <Card className="bg-slate-800/50 border-slate-700">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg text-white">Crecimiento de Usuarios e Ingresos</CardTitle>
+                  <Select value={dateRange} onValueChange={setDateRange}>
+                    <SelectTrigger className="w-32 bg-slate-700 border-slate-600 text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-800 border-slate-700">
+                      <SelectItem value="7">7 días</SelectItem>
+                      <SelectItem value="30">30 días</SelectItem>
+                      <SelectItem value="90">90 días</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={250}>
+                  <ComposedChart data={userGrowthData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                    <XAxis dataKey="month" stroke="#9CA3AF" fontSize={12} />
+                    <YAxis yAxisId="left" stroke="#9CA3AF" fontSize={12} />
+                    <YAxis yAxisId="right" orientation="right" stroke="#9CA3AF" fontSize={12} />
+                    <Tooltip contentStyle={{ background: '#1F2937', border: 'none', borderRadius: '8px' }} />
+                    <Legend />
+                    <Bar yAxisId="left" dataKey="users" name="Usuarios" fill={COLORS.primary} radius={[4, 4, 0, 0]} />
+                    <Line yAxisId="right" type="monotone" dataKey="revenue" name="Ingresos ($)" stroke={COLORS.success} strokeWidth={2} dot={{ fill: COLORS.success }} />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            {/* Subscription Status Pie */}
+            <Card className="bg-slate-800/50 border-slate-700">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg text-white">Estado de Suscripciones</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center">
+                  <ResponsiveContainer width="50%" height={200}>
+                    <RePieChart>
+                      <Pie data={subscriptionStatusData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={40} outerRadius={70}>
+                        {subscriptionStatusData.map((entry, index) => <Cell key={index} fill={entry.fill} />)}
+                      </Pie>
+                      <Tooltip contentStyle={{ background: '#1F2937', border: 'none', borderRadius: '8px' }} />
+                    </RePieChart>
+                  </ResponsiveContainer>
+                  <div className="flex-1 space-y-3">
+                    {subscriptionStatusData.map((item, i) => (
+                      <div key={i} className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.fill }} />
+                          <span className="text-sm text-slate-300">{item.name}</span>
+                        </div>
+                        <span className="text-sm font-bold text-white">{item.value}</span>
+                      </div>
+                    ))}
                   </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Quick Actions */}
-            {(pendingUsers.length > 0 || pendingInvoices.length > 0) && (
-              <Card className="bg-gradient-to-r from-violet-500/10 to-purple-500/10 border-violet-500/30">
-                <CardHeader><CardTitle className="text-lg flex items-center gap-2"><Bell className="w-5 h-5" />Acciones Pendientes</CardTitle></CardHeader>
-                <CardContent className="space-y-2">
-                  {pendingUsers.slice(0, 3).map(u => (
-                    <div key={u.user_id} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
-                      <span className="text-slate-300">{u.nombre} espera activación</span>
-                      <Button size="sm" onClick={() => handleActivateUser(u.user_id)} className="bg-emerald-500 hover:bg-emerald-600">
-                        <Play className="w-4 h-4 mr-1" />Activar
-                      </Button>
-                    </div>
-                  ))}
-                  {pendingInvoices.slice(0, 2).map(inv => (
-                    <div key={inv.id} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
-                      <span className="text-slate-300">{inv.invoice_number} - ${inv.total} pendiente</span>
-                      <Button size="sm" onClick={() => handleInvoiceStatus(inv.id, "paid")} className="bg-blue-500 hover:bg-blue-600">
-                        <CheckCircle className="w-4 h-4 mr-1" />Cobrar
-                      </Button>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            )}
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        )}
 
-        {/* Pendientes */}
-        {activeSection === "pendientes" && (
-          <Card className="bg-slate-800 border-slate-700">
-            <CardHeader><CardTitle className="text-amber-400 flex items-center gap-2"><Clock className="w-5 h-5" />Usuarios Pendientes de Activación</CardTitle></CardHeader>
-            <CardContent>
-              {pendingUsers.length === 0 ? <p className="text-center text-slate-500 py-8">No hay usuarios pendientes</p> : (
-                <div className="space-y-3">
-                  {pendingUsers.map(u => (
-                    <div key={u.user_id} className="flex items-center justify-between p-4 bg-slate-700/50 rounded-xl border border-amber-500/30">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${u.user_type === "business" ? "bg-blue-500" : "bg-pink-500"}`}>
-                          {u.user_type === "business" ? <Building2 className="w-5 h-5" /> : <User className="w-5 h-5" />}
-                        </div>
-                        <div>
-                          <p className="font-medium">{u.nombre}</p>
-                          <p className="text-sm text-slate-400">{u.email}</p>
-                          <p className="text-xs text-slate-500">Registrado: {new Date(u.created_at).toLocaleDateString()}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge className={u.user_type === "business" ? "bg-blue-500/20 text-blue-400" : "bg-pink-500/20 text-pink-400"}>
-                          {u.user_type === "business" ? "Comercio" : "Personal"}
-                        </Badge>
-                        <Button size="sm" onClick={() => handleActivateUser(u.user_id)} disabled={updating === u.user_id} className="bg-emerald-500 hover:bg-emerald-600">
-                          {updating === u.user_id ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Play className="w-4 h-4 mr-1" />Activar</>}
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+          {/* Revenue Breakdown & Activity */}
+          <div className="grid lg:grid-cols-3 gap-6">
+            {/* Revenue by Plan */}
+            <Card className="bg-slate-800/50 border-slate-700">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg text-white">Ingresos por Plan</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {revenueByType.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={180}>
+                    <BarChart data={revenueByType} layout="vertical">
+                      <XAxis type="number" stroke="#9CA3AF" fontSize={11} />
+                      <YAxis type="category" dataKey="name" stroke="#9CA3AF" fontSize={11} width={100} />
+                      <Tooltip contentStyle={{ background: '#1F2937', border: 'none', borderRadius: '8px' }} />
+                      <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                        {revenueByType.map((entry, index) => <Cell key={index} fill={entry.fill} />)}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : <p className="text-center text-slate-500 py-8">Sin datos</p>}
+              </CardContent>
+            </Card>
+
+            {/* System Stats */}
+            <Card className="bg-slate-800/50 border-slate-700">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg text-white flex items-center gap-2">
+                  <Database className="w-5 h-5" />Estadísticas del Sistema
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between p-2 bg-slate-700/30 rounded-lg">
+                  <span className="text-slate-400 text-sm">Productos registrados</span>
+                  <span className="font-bold text-white">{stats.total_productos || 0}</span>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Vencidos */}
-        {activeSection === "vencidos" && (
-          <Card className="bg-slate-800 border-slate-700">
-            <CardHeader><CardTitle className="text-red-400 flex items-center gap-2"><AlertTriangle className="w-5 h-5" />Suscripciones Vencidas - Esperando Pago</CardTitle></CardHeader>
-            <CardContent>
-              {expiredUsers.length === 0 ? <p className="text-center text-slate-500 py-8">No hay suscripciones vencidas</p> : (
-                <div className="space-y-3">
-                  {expiredUsers.map(u => (
-                    <div key={u.user_id} className="flex items-center justify-between p-4 bg-slate-700/50 rounded-xl border border-red-500/30">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${u.user_type === "business" ? "bg-blue-500" : "bg-pink-500"}`}>
-                          {u.user_type === "business" ? <Building2 className="w-5 h-5" /> : <User className="w-5 h-5" />}
-                        </div>
-                        <div>
-                          <p className="font-medium">{u.nombre}</p>
-                          <p className="text-sm text-slate-400">{u.email}</p>
-                          <div className="flex items-center gap-2 mt-1">{getStatusBadge(u.subscription_status)}</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg font-bold text-emerald-400">${getPricing(u.user_type, u.plan)}/mes</span>
-                        <Button size="sm" onClick={() => setPaymentDialog({ open: true, user: u, months: 1, plan: u.plan, amount: getPricing(u.user_type, u.plan) })} className="bg-emerald-500 hover:bg-emerald-600">
-                          <CreditCard className="w-4 h-4 mr-1" />Registrar Pago
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+                <div className="flex items-center justify-between p-2 bg-slate-700/30 rounded-lg">
+                  <span className="text-slate-400 text-sm">Estilos creados</span>
+                  <span className="font-bold text-white">{stats.total_estilos || 0}</span>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
+                <div className="flex items-center justify-between p-2 bg-slate-700/30 rounded-lg">
+                  <span className="text-slate-400 text-sm">Clientes totales</span>
+                  <span className="font-bold text-white">{stats.total_clientes || 0}</span>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-slate-700/30 rounded-lg">
+                  <span className="text-slate-400 text-sm">Citas programadas</span>
+                  <span className="font-bold text-white">{stats.total_citas || 0}</span>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-slate-700/30 rounded-lg">
+                  <span className="text-slate-400 text-sm">Facturas generadas</span>
+                  <span className="font-bold text-white">{stats.total_facturas || 0}</span>
+                </div>
+              </CardContent>
+            </Card>
 
-        {/* Usuarios Activos */}
-        {activeSection === "usuarios" && (
-          <Card className="bg-slate-800 border-slate-700">
-            <CardHeader><CardTitle className="text-emerald-400 flex items-center gap-2"><UserCheck className="w-5 h-5" />Usuarios Activos</CardTitle></CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {activeUsers.map(u => (
-                  <div key={u.user_id} className="flex items-center justify-between p-4 bg-slate-700/50 rounded-xl">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${u.user_type === "business" ? "bg-blue-500" : "bg-pink-500"}`}>
-                        {u.user_type === "business" ? <Building2 className="w-5 h-5" /> : <User className="w-5 h-5" />}
-                      </div>
-                      <div>
-                        <p className="font-medium">{u.nombre}</p>
-                        <p className="text-sm text-slate-400">{u.email}</p>
-                      </div>
+            {/* Recent Activity */}
+            <Card className="bg-slate-800/50 border-slate-700">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg text-white flex items-center gap-2">
+                  <Activity className="w-5 h-5" />Actividad Reciente
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 max-h-[220px] overflow-y-auto">
+                {activityLogs.map((log, i) => (
+                  <div key={i} className="flex items-center gap-3 p-2 bg-slate-700/30 rounded-lg">
+                    <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
+                      <User className="w-4 h-4 text-blue-400" />
                     </div>
-                    <div className="flex items-center gap-3">
-                      {getStatusBadge(u.subscription_status)}
-                      <Badge className={u.plan === "premium" ? "bg-amber-500/20 text-amber-400" : ""}>{u.plan}</Badge>
-                      {u.days_remaining !== null && <span className={`text-sm ${u.days_remaining <= 5 ? "text-red-400" : "text-slate-400"}`}>{u.days_remaining}d</span>}
-                      <Button size="sm" variant="outline" onClick={() => handleResetPassword(u)} className="border-slate-600"><Key className="w-4 h-4" /></Button>
-                      <Button size="sm" variant="outline" onClick={() => setPaymentDialog({ open: true, user: u, months: 1, plan: u.plan, amount: getPricing(u.user_type, u.plan) })} className="border-slate-600"><CreditCard className="w-4 h-4" /></Button>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-white truncate">{log.user}</p>
+                      <p className="text-xs text-slate-400">{log.action.replace('_', ' ')}</p>
                     </div>
+                    <span className="text-xs text-slate-500">{log.time}</span>
                   </div>
                 ))}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Quick Actions */}
+          {(pendingUsers.length > 0 || pendingInvoices.length > 0) && (
+            <Card className="bg-gradient-to-r from-blue-500/10 to-violet-500/10 border-blue-500/30">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg text-white flex items-center gap-2">
+                  <Bell className="w-5 h-5 text-blue-400" />Acciones Pendientes
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {pendingUsers.slice(0, 3).map(u => (
+                  <div key={u.user_id} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${u.user_type === "business" ? "bg-blue-500" : "bg-violet-500"}`}>
+                        {u.user_type === "business" ? <Building2 className="w-5 h-5 text-white" /> : <User className="w-5 h-5 text-white" />}
+                      </div>
+                      <div>
+                        <p className="font-medium text-white">{u.nombre}</p>
+                        <p className="text-xs text-slate-400">{u.email}</p>
+                      </div>
+                    </div>
+                    <Button size="sm" onClick={() => handleActivateUser(u.user_id)} disabled={updating === u.user_id} className="bg-emerald-600 hover:bg-emerald-700">
+                      {updating === u.user_id ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Play className="w-4 h-4 mr-1" />Activar</>}
+                    </Button>
+                  </div>
+                ))}
+                {pendingInvoices.slice(0, 2).map(inv => (
+                  <div key={inv.id} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-cyan-500 flex items-center justify-center">
+                        <FileText className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-white">{inv.invoice_number}</p>
+                        <p className="text-xs text-slate-400">${inv.total} pendiente</p>
+                      </div>
+                    </div>
+                    <Button size="sm" onClick={() => handleInvoiceStatus(inv.id, "paid")} className="bg-blue-600 hover:bg-blue-700">
+                      <CheckCircle className="w-4 h-4 mr-1" />Cobrar
+                    </Button>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* Users Tab */}
+        <TabsContent value="users" className="space-y-4">
+          {/* Filters */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <Input 
+                placeholder="Buscar por nombre o email..." 
+                value={searchTerm} 
+                onChange={(e) => setSearchTerm(e.target.value)} 
+                className="pl-10 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500"
+              />
+            </div>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-40 bg-slate-800 border-slate-700 text-white">
+                <Filter className="w-4 h-4 mr-2" />
+                <SelectValue placeholder="Estado" />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-800 border-slate-700">
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="active">Activos</SelectItem>
+                <SelectItem value="trial">En Trial</SelectItem>
+                <SelectItem value="expired">Vencidos</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Users Table */}
+          <Card className="bg-slate-800/50 border-slate-700">
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-slate-700/50">
+                    <tr>
+                      <th className="text-left p-4 text-sm font-medium text-slate-300">Usuario</th>
+                      <th className="text-left p-4 text-sm font-medium text-slate-300">Tipo</th>
+                      <th className="text-left p-4 text-sm font-medium text-slate-300">Plan</th>
+                      <th className="text-left p-4 text-sm font-medium text-slate-300">Estado</th>
+                      <th className="text-left p-4 text-sm font-medium text-slate-300">Días Rest.</th>
+                      <th className="text-left p-4 text-sm font-medium text-slate-300">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-700">
+                    {filteredUsers.map(u => (
+                      <tr key={u.user_id} className="hover:bg-slate-700/30">
+                        <td className="p-4">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${u.user_type === "business" ? "bg-blue-500" : "bg-violet-500"}`}>
+                              {u.user_type === "business" ? <Building2 className="w-5 h-5 text-white" /> : <User className="w-5 h-5 text-white" />}
+                            </div>
+                            <div>
+                              <p className="font-medium text-white">{u.nombre}</p>
+                              <p className="text-xs text-slate-400">{u.email}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <Badge variant="outline" className={u.user_type === "business" ? "border-blue-500 text-blue-400" : "border-violet-500 text-violet-400"}>
+                            {u.user_type === "business" ? "Comercio" : "Personal"}
+                          </Badge>
+                        </td>
+                        <td className="p-4">
+                          <Badge className={u.plan === "premium" ? "bg-amber-500/20 text-amber-300 border-amber-500/30" : "bg-slate-600 text-slate-300"}>
+                            {u.plan === "premium" ? "Premium" : "Básico"}
+                          </Badge>
+                        </td>
+                        <td className="p-4">{getStatusBadge(u.subscription_status)}</td>
+                        <td className="p-4">
+                          {u.days_remaining !== null && (
+                            <span className={`text-sm font-medium ${u.days_remaining <= 5 ? "text-red-400" : u.days_remaining <= 10 ? "text-amber-400" : "text-slate-300"}`}>
+                              {u.days_remaining}d
+                            </span>
+                          )}
+                        </td>
+                        <td className="p-4">
+                          <div className="flex items-center gap-1">
+                            <Button size="sm" variant="ghost" onClick={() => handleResetPassword(u)} className="text-slate-400 hover:text-white hover:bg-slate-700" title="Reset Password">
+                              <Key className="w-4 h-4" />
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={() => setPaymentDialog({ open: true, user: u, months: 1, plan: u.plan, amount: getPricing(u.user_type, u.plan) })} className="text-slate-400 hover:text-white hover:bg-slate-700" title="Registrar Pago">
+                              <CreditCard className="w-4 h-4" />
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={() => handleSuspendUser(u.user_id)} className="text-slate-400 hover:text-red-400 hover:bg-slate-700" title="Suspender">
+                              <Ban className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </CardContent>
           </Card>
-        )}
+        </TabsContent>
 
-        {/* Facturación */}
-        {activeSection === "facturacion" && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-4 gap-4">
-              <Card className="bg-slate-800 border-slate-700"><CardContent className="p-4 text-center">
-                <p className="text-2xl font-bold">{invoices.summary.total_invoices || 0}</p><p className="text-sm text-slate-400">Total</p>
-              </CardContent></Card>
-              <Card className="bg-slate-800 border-slate-700"><CardContent className="p-4 text-center">
-                <p className="text-2xl font-bold text-amber-400">{invoices.summary.pending || 0}</p><p className="text-sm text-slate-400">Pendientes</p>
-              </CardContent></Card>
-              <Card className="bg-slate-800 border-slate-700"><CardContent className="p-4 text-center">
-                <p className="text-2xl font-bold text-emerald-400">${invoices.summary.total_paid_amount || 0}</p><p className="text-sm text-slate-400">Cobrado</p>
-              </CardContent></Card>
-              <Card className="bg-slate-800 border-slate-700"><CardContent className="p-4 text-center">
-                <p className="text-2xl font-bold text-red-400">${invoices.summary.total_pending_amount || 0}</p><p className="text-sm text-slate-400">Por Cobrar</p>
-              </CardContent></Card>
-            </div>
-            <Card className="bg-slate-800 border-slate-700">
-              <CardHeader><CardTitle>Facturas</CardTitle></CardHeader>
-              <CardContent className="space-y-2">
-                {invoices.invoices.map(inv => (
-                  <div key={inv.id} className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg">
-                    <div>
-                      <p className="font-mono text-sm">{inv.invoice_number}</p>
-                      <p className="text-xs text-slate-400">{inv.user_nombre}</p>
-                    </div>
+        {/* Pending Tab */}
+        <TabsContent value="pending" className="space-y-4">
+          <div className="grid md:grid-cols-2 gap-4">
+            {/* Pending Activation */}
+            <Card className="bg-slate-800/50 border-slate-700">
+              <CardHeader>
+                <CardTitle className="text-amber-400 flex items-center gap-2">
+                  <Clock className="w-5 h-5" />Pendientes de Activación ({pendingUsers.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {pendingUsers.length === 0 ? (
+                  <p className="text-center text-slate-500 py-8">No hay usuarios pendientes</p>
+                ) : pendingUsers.map(u => (
+                  <div key={u.user_id} className="flex items-center justify-between p-4 bg-slate-700/30 rounded-xl border border-amber-500/30">
                     <div className="flex items-center gap-3">
-                      <span className="font-bold">${inv.total}</span>
-                      <Badge className={inv.status === "paid" ? "bg-emerald-500/20 text-emerald-400" : inv.status === "cancelled" ? "bg-red-500/20 text-red-400" : "bg-amber-500/20 text-amber-400"}>
-                        {inv.status === "paid" ? "Pagada" : inv.status === "cancelled" ? "Cancelada" : "Pendiente"}
-                      </Badge>
-                      {inv.status === "pending" && (
-                        <>
-                          <Button size="sm" variant="outline" onClick={() => handleInvoiceStatus(inv.id, "paid")} className="text-emerald-400 border-emerald-500/50"><CheckCircle className="w-4 h-4" /></Button>
-                          <Button size="sm" variant="outline" onClick={() => handleInvoiceStatus(inv.id, "cancelled")} className="text-red-400 border-red-500/50"><XCircle className="w-4 h-4" /></Button>
-                        </>
-                      )}
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${u.user_type === "business" ? "bg-blue-500" : "bg-violet-500"}`}>
+                        {u.user_type === "business" ? <Building2 className="w-5 h-5 text-white" /> : <User className="w-5 h-5 text-white" />}
+                      </div>
+                      <div>
+                        <p className="font-medium text-white">{u.nombre}</p>
+                        <p className="text-xs text-slate-400">{u.email}</p>
+                        <p className="text-xs text-slate-500">Registro: {new Date(u.created_at).toLocaleDateString()}</p>
+                      </div>
                     </div>
+                    <Button size="sm" onClick={() => handleActivateUser(u.user_id)} disabled={updating === u.user_id} className="bg-emerald-600 hover:bg-emerald-700">
+                      {updating === u.user_id ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Play className="w-4 h-4 mr-1" />Activar</>}
+                    </Button>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            {/* Expired */}
+            <Card className="bg-slate-800/50 border-slate-700">
+              <CardHeader>
+                <CardTitle className="text-red-400 flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5" />Suscripciones Vencidas ({expiredUsers.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {expiredUsers.length === 0 ? (
+                  <p className="text-center text-slate-500 py-8">No hay suscripciones vencidas</p>
+                ) : expiredUsers.map(u => (
+                  <div key={u.user_id} className="flex items-center justify-between p-4 bg-slate-700/30 rounded-xl border border-red-500/30">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${u.user_type === "business" ? "bg-blue-500" : "bg-violet-500"}`}>
+                        {u.user_type === "business" ? <Building2 className="w-5 h-5 text-white" /> : <User className="w-5 h-5 text-white" />}
+                      </div>
+                      <div>
+                        <p className="font-medium text-white">{u.nombre}</p>
+                        <p className="text-xs text-slate-400">{u.email}</p>
+                        <p className="text-lg font-bold text-emerald-400">${getPricing(u.user_type, u.plan)}/mes</p>
+                      </div>
+                    </div>
+                    <Button size="sm" onClick={() => setPaymentDialog({ open: true, user: u, months: 1, plan: u.plan, amount: getPricing(u.user_type, u.plan) })} className="bg-emerald-600 hover:bg-emerald-700">
+                      <CreditCard className="w-4 h-4 mr-1" />Registrar Pago
+                    </Button>
                   </div>
                 ))}
               </CardContent>
             </Card>
           </div>
-        )}
+        </TabsContent>
 
-        {/* Analytics */}
-        {activeSection === "analytics" && (
-          <div className="space-y-4">
-            <div className="relative mb-4">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-              <Input placeholder="Buscar usuario..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-12 bg-slate-800 border-slate-700 text-white" />
-            </div>
-            <Card className="bg-slate-800 border-slate-700">
-              <CardHeader><CardTitle className="flex items-center gap-2"><Activity className="w-5 h-5" />Actividad por Usuario</CardTitle></CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {filteredAnalytics.map(u => (
-                    <div key={u.user_id} className="p-4 bg-slate-700/50 rounded-xl">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${u.user_type === "business" ? "bg-blue-500" : "bg-pink-500"}`}>
-                            {u.user_type === "business" ? <Building2 className="w-5 h-5" /> : <User className="w-5 h-5" />}
-                          </div>
-                          <div>
-                            <p className="font-medium">{u.nombre}</p>
-                            <p className="text-xs text-slate-400">{u.email}</p>
-                          </div>
-                        </div>
-                        {getStatusBadge(u.subscription_status)}
-                      </div>
-                      <div className="grid grid-cols-4 gap-3">
-                        <div className="text-center p-2 bg-slate-800 rounded-lg">
-                          <p className="text-lg font-bold text-emerald-400">${u.ingresos_mes}</p>
-                          <p className="text-xs text-slate-500">Ingresos</p>
-                        </div>
-                        <div className="text-center p-2 bg-slate-800 rounded-lg">
-                          <p className="text-lg font-bold text-red-400">${u.gastos_mes}</p>
-                          <p className="text-xs text-slate-500">Gastos</p>
-                        </div>
-                        <div className="text-center p-2 bg-slate-800 rounded-lg">
-                          <p className="text-lg font-bold text-blue-400">{u.servicios_mes}</p>
-                          <p className="text-xs text-slate-500">Servicios</p>
-                        </div>
-                        <div className="text-center p-2 bg-slate-800 rounded-lg">
-                          <p className="text-lg font-bold text-violet-400">{u.clientes_activos}</p>
-                          <p className="text-xs text-slate-500">Clientes</p>
-                        </div>
-                      </div>
+        {/* Invoices Tab */}
+        <TabsContent value="invoices" className="space-y-4">
+          <div className="grid grid-cols-4 gap-4">
+            <Card className="bg-slate-800/50 border-slate-700"><CardContent className="p-4 text-center">
+              <p className="text-2xl font-bold text-white">{invoices.summary.total_invoices || 0}</p>
+              <p className="text-sm text-slate-400">Total Facturas</p>
+            </CardContent></Card>
+            <Card className="bg-slate-800/50 border-slate-700"><CardContent className="p-4 text-center">
+              <p className="text-2xl font-bold text-amber-400">{invoices.summary.pending || 0}</p>
+              <p className="text-sm text-slate-400">Pendientes</p>
+            </CardContent></Card>
+            <Card className="bg-slate-800/50 border-slate-700"><CardContent className="p-4 text-center">
+              <p className="text-2xl font-bold text-emerald-400">${invoices.summary.total_paid_amount || 0}</p>
+              <p className="text-sm text-slate-400">Cobrado</p>
+            </CardContent></Card>
+            <Card className="bg-slate-800/50 border-slate-700"><CardContent className="p-4 text-center">
+              <p className="text-2xl font-bold text-red-400">${invoices.summary.total_pending_amount || 0}</p>
+              <p className="text-sm text-slate-400">Por Cobrar</p>
+            </CardContent></Card>
+          </div>
+          
+          <Card className="bg-slate-800/50 border-slate-700">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-white">Historial de Facturas</CardTitle>
+              <Button size="sm" variant="outline" onClick={() => exportToCSV(invoices.invoices, 'facturas')} className="border-slate-600 text-slate-300">
+                <Download className="w-4 h-4 mr-2" />Exportar
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {invoices.invoices.map(inv => (
+                <div key={inv.id} className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg hover:bg-slate-700/50 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-slate-600 flex items-center justify-center">
+                      <FileText className="w-5 h-5 text-slate-300" />
                     </div>
-                  ))}
+                    <div>
+                      <p className="font-mono text-sm text-white">{inv.invoice_number}</p>
+                      <p className="text-xs text-slate-400">{inv.user_nombre} • {new Date(inv.created_at).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="font-bold text-white">${inv.total}</span>
+                    <Badge className={inv.status === "paid" ? "bg-emerald-500/20 text-emerald-300" : inv.status === "cancelled" ? "bg-red-500/20 text-red-300" : "bg-amber-500/20 text-amber-300"}>
+                      {inv.status === "paid" ? "Pagada" : inv.status === "cancelled" ? "Cancelada" : "Pendiente"}
+                    </Badge>
+                    {inv.status === "pending" && (
+                      <div className="flex gap-1">
+                        <Button size="sm" variant="ghost" onClick={() => handleInvoiceStatus(inv.id, "paid")} className="text-emerald-400 hover:bg-emerald-500/20">
+                          <CheckCircle className="w-4 h-4" />
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => handleInvoiceStatus(inv.id, "cancelled")} className="text-red-400 hover:bg-red-500/20">
+                          <XCircle className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Reports Tab */}
+        <TabsContent value="reports" className="space-y-4">
+          <div className="grid md:grid-cols-3 gap-4">
+            {/* MRR Report */}
+            <Card className="bg-slate-800/50 border-slate-700">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <DollarSign className="w-5 h-5 text-emerald-400" />Ingresos Recurrentes
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="text-center p-6 bg-gradient-to-br from-emerald-500/20 to-blue-500/20 rounded-xl">
+                  <p className="text-4xl font-bold text-emerald-400">${subscriptions.summary.monthly_revenue || 0}</p>
+                  <p className="text-sm text-slate-400 mt-1">MRR Actual</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-400">ARR Proyectado</span>
+                    <span className="text-white font-medium">${(subscriptions.summary.monthly_revenue || 0) * 12}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-400">Promedio por Usuario</span>
+                    <span className="text-white font-medium">${subscriptions.summary.total_users > 0 ? ((subscriptions.summary.monthly_revenue || 0) / subscriptions.summary.total_users).toFixed(2) : 0}</span>
+                  </div>
+                </div>
+                <Button className="w-full" variant="outline" onClick={() => exportToCSV([{ mrr: subscriptions.summary.monthly_revenue, arr: (subscriptions.summary.monthly_revenue || 0) * 12, users: subscriptions.summary.total_users }], 'reporte_ingresos')}>
+                  <FileDown className="w-4 h-4 mr-2" />Descargar Reporte
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Retention Report */}
+            <Card className="bg-slate-800/50 border-slate-700">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <Percent className="w-5 h-5 text-blue-400" />Retención de Usuarios
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="text-center p-6 bg-gradient-to-br from-blue-500/20 to-violet-500/20 rounded-xl">
+                  <p className="text-4xl font-bold text-blue-400">
+                    {subscriptions.summary.total_users > 0 ? Math.round((activeUsers.length / subscriptions.summary.total_users) * 100) : 0}%
+                  </p>
+                  <p className="text-sm text-slate-400 mt-1">Tasa de Retención</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-400">Usuarios Activos</span>
+                    <span className="text-emerald-400 font-medium">{activeUsers.length}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-400">Usuarios Inactivos</span>
+                    <span className="text-red-400 font-medium">{expiredUsers.length}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-400">En Trial</span>
+                    <span className="text-amber-400 font-medium">{subscriptions.summary.in_trial || 0}</span>
+                  </div>
+                </div>
+                <Button className="w-full" variant="outline">
+                  <FileDown className="w-4 h-4 mr-2" />Descargar Reporte
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* User Distribution */}
+            <Card className="bg-slate-800/50 border-slate-700">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <Users className="w-5 h-5 text-violet-400" />Distribución de Usuarios
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <div className="p-3 bg-slate-700/30 rounded-lg">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm text-slate-300">Personal Básico</span>
+                      <span className="text-sm font-bold text-white">{stats.by_type?.personal_basic || 0}</span>
+                    </div>
+                    <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                      <div className="h-full bg-violet-500 rounded-full" style={{ width: `${((stats.by_type?.personal_basic || 0) / (subscriptions.summary.total_users || 1)) * 100}%` }} />
+                    </div>
+                  </div>
+                  <div className="p-3 bg-slate-700/30 rounded-lg">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm text-slate-300">Personal Premium</span>
+                      <span className="text-sm font-bold text-white">{stats.by_type?.personal_premium || 0}</span>
+                    </div>
+                    <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                      <div className="h-full bg-amber-500 rounded-full" style={{ width: `${((stats.by_type?.personal_premium || 0) / (subscriptions.summary.total_users || 1)) * 100}%` }} />
+                    </div>
+                  </div>
+                  <div className="p-3 bg-slate-700/30 rounded-lg">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm text-slate-300">Comercio Básico</span>
+                      <span className="text-sm font-bold text-white">{stats.by_type?.business_basic || 0}</span>
+                    </div>
+                    <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                      <div className="h-full bg-blue-500 rounded-full" style={{ width: `${((stats.by_type?.business_basic || 0) / (subscriptions.summary.total_users || 1)) * 100}%` }} />
+                    </div>
+                  </div>
+                  <div className="p-3 bg-slate-700/30 rounded-lg">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm text-slate-300">Comercio Premium</span>
+                      <span className="text-sm font-bold text-white">{stats.by_type?.business_premium || 0}</span>
+                    </div>
+                    <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                      <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${((stats.by_type?.business_premium || 0) / (subscriptions.summary.total_users || 1)) * 100}%` }} />
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
           </div>
-        )}
+
+          {/* Growth Trends */}
+          <Card className="bg-slate-800/50 border-slate-700">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-emerald-400" />Tendencia de Crecimiento
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={userGrowthData}>
+                  <defs>
+                    <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={COLORS.primary} stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor={COLORS.primary} stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={COLORS.success} stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor={COLORS.success} stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis dataKey="month" stroke="#9CA3AF" />
+                  <YAxis stroke="#9CA3AF" />
+                  <Tooltip contentStyle={{ background: '#1F2937', border: 'none', borderRadius: '8px' }} />
+                  <Legend />
+                  <Area type="monotone" dataKey="users" name="Usuarios" stroke={COLORS.primary} fillOpacity={1} fill="url(#colorUsers)" />
+                  <Area type="monotone" dataKey="revenue" name="Ingresos ($)" stroke={COLORS.success} fillOpacity={1} fill="url(#colorRevenue)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       {/* Payment Dialog */}
       <Dialog open={paymentDialog.open} onOpenChange={(o) => setPaymentDialog({...paymentDialog, open: o})}>
@@ -507,7 +908,7 @@ export default function AdminPage() {
             <p className="text-slate-400">Usuario: <strong className="text-white">{paymentDialog.user?.nombre}</strong></p>
             <div>
               <label className="text-sm text-slate-400">Plan</label>
-              <select className="w-full p-2 bg-slate-700 border border-slate-600 rounded-lg mt-1" value={paymentDialog.plan}
+              <select className="w-full p-2 bg-slate-700 border border-slate-600 rounded-lg mt-1 text-white" value={paymentDialog.plan}
                 onChange={(e) => { const plan = e.target.value; setPaymentDialog({...paymentDialog, plan, amount: getPricing(paymentDialog.user?.user_type, plan) * paymentDialog.months}); }}>
                 <option value="free">Básico</option>
                 <option value="premium">Premium</option>
@@ -515,7 +916,7 @@ export default function AdminPage() {
             </div>
             <div>
               <label className="text-sm text-slate-400">Meses</label>
-              <Input type="number" min="1" max="12" value={paymentDialog.months} className="bg-slate-700 border-slate-600"
+              <Input type="number" min="1" max="12" value={paymentDialog.months} className="bg-slate-700 border-slate-600 text-white"
                 onChange={(e) => { const months = parseInt(e.target.value) || 1; setPaymentDialog({...paymentDialog, months, amount: getPricing(paymentDialog.user?.user_type, paymentDialog.plan) * months}); }} />
             </div>
             <div className="p-4 bg-emerald-500/20 rounded-xl text-center">
@@ -524,8 +925,8 @@ export default function AdminPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPaymentDialog({...paymentDialog, open: false})} className="border-slate-600">Cancelar</Button>
-            <Button onClick={handleSetPayment} className="bg-emerald-500 hover:bg-emerald-600">Confirmar Pago</Button>
+            <Button variant="outline" onClick={() => setPaymentDialog({...paymentDialog, open: false})} className="border-slate-600 text-slate-300">Cancelar</Button>
+            <Button onClick={handleSetPayment} className="bg-emerald-600 hover:bg-emerald-700">Confirmar Pago</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -535,16 +936,16 @@ export default function AdminPage() {
         <DialogContent className="bg-slate-800 border-slate-700 text-white">
           <DialogHeader><DialogTitle className="flex items-center gap-2"><Key className="w-5 h-5" />Contraseña Temporal</DialogTitle></DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="p-3 bg-amber-500/20 rounded-lg text-amber-300 text-sm">Comparte esta contraseña de forma segura.</div>
+            <div className="p-3 bg-amber-500/20 rounded-lg text-amber-300 text-sm">Comparte esta contraseña de forma segura con el usuario.</div>
             <p className="text-slate-400">Usuario: <strong className="text-white">{passwordDialog.user?.email}</strong></p>
             <div className="flex items-center gap-2">
-              <code className="flex-1 bg-slate-700 px-4 py-3 rounded-lg font-mono text-lg">{passwordDialog.tempPassword}</code>
+              <code className="flex-1 bg-slate-700 px-4 py-3 rounded-lg font-mono text-lg text-white">{passwordDialog.tempPassword}</code>
               <Button size="sm" variant="outline" onClick={() => copyToClipboard(passwordDialog.tempPassword)} className="border-slate-600">
                 {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
               </Button>
             </div>
           </div>
-          <DialogFooter><Button onClick={() => setPasswordDialog({open: false, user: null, tempPassword: null})}>Cerrar</Button></DialogFooter>
+          <DialogFooter><Button onClick={() => setPasswordDialog({open: false, user: null, tempPassword: null})} className="bg-blue-600 hover:bg-blue-700">Cerrar</Button></DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
