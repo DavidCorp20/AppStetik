@@ -604,19 +604,121 @@ const ComercioLayout = () => {
 };
 
 // =========================
+// ADMIN LAYOUT (Dedicated Admin Interface)
+// =========================
+const AdminLayout = () => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
+  const adminNavItems = [
+    { to: "/admin", icon: LayoutDashboard, label: "Dashboard", end: true },
+  ];
+
+  return (
+    <div className="min-h-screen bg-slate-900 text-white" data-testid="admin-layout">
+      {/* Admin Header */}
+      <header className="bg-slate-800/80 backdrop-blur-lg border-b border-slate-700/50 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo */}
+            <NavLink to="/admin" className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
+                <Shield className="w-5 h-5 text-white" />
+              </div>
+              <div className="hidden sm:flex items-baseline gap-2">
+                <span className="text-xl font-bold text-white">NailCost</span>
+                <span className="text-xs font-semibold text-violet-400 uppercase tracking-wider bg-violet-500/20 px-2 py-0.5 rounded">
+                  Admin
+                </span>
+              </div>
+            </NavLink>
+
+            {/* Nav */}
+            <nav className="hidden md:flex items-center gap-1">
+              {adminNavItems.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={item.end}
+                  className={({ isActive }) =>
+                    cn(
+                      "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
+                      isActive
+                        ? "bg-violet-600 text-white"
+                        : "text-slate-400 hover:text-white hover:bg-slate-700/50"
+                    )
+                  }
+                >
+                  <item.icon className="w-4 h-4" />
+                  <span>{item.label}</span>
+                </NavLink>
+              ))}
+            </nav>
+
+            {/* User Menu */}
+            <div className="flex items-center gap-3">
+              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-slate-700/50 rounded-lg border border-slate-600">
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
+                  <Shield className="w-3.5 h-3.5 text-white" />
+                </div>
+                <span className="text-sm font-medium text-slate-300">{user?.nombre || 'Admin'}</span>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleLogout}
+                className="text-slate-400 hover:text-red-400 hover:bg-red-500/10"
+              >
+                <LogOut className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6">
+        <Outlet />
+      </main>
+
+      {/* Footer */}
+      <footer className="border-t border-slate-700/50 bg-slate-800/30 mt-auto">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between text-xs text-slate-500">
+            <span className="flex items-center gap-2">
+              <Shield className="w-4 h-4 text-violet-500" />
+              <span className="font-medium text-slate-400">NailCost Admin Panel</span>
+            </span>
+            <span>© 2024 - Panel de Administración</span>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+};
+
+// =========================
 // MAIN LAYOUT COMPONENT
 // =========================
 export const Layout = () => {
-  const { isBusinessUser, user } = useAuth();
+  const { isBusinessUser, isAdmin } = useAuth();
   
-  // Admin uses dedicated dark theme in AdminPage (no layout wrapper needed)
-  if (user?.role === "admin") {
-    return <Outlet />;
+  // Admin gets dedicated layout
+  if (isAdmin) {
+    return <AdminLayout />;
   }
   
+  // Business users get corporate layout
   if (isBusinessUser) {
     return <ComercioLayout />;
   }
   
+  // Personal users get mobile-first layout
   return <PersonaLayout />;
 };

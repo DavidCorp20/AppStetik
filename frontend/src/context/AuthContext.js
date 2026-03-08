@@ -137,6 +137,7 @@ export const AuthProvider = ({ children }) => {
   const isPremium = user?.plan === 'premium';
   const isBusinessUser = user?.user_type === 'business';
   const isPersonalUser = user?.user_type === 'personal' || !user?.user_type;
+  const isAdmin = user?.role === 'admin';
 
   const value = {
     user,
@@ -146,6 +147,7 @@ export const AuthProvider = ({ children }) => {
     isPremium,
     isBusinessUser,
     isPersonalUser,
+    isAdmin,
     login,
     register,
     logout,

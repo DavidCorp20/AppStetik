@@ -167,45 +167,37 @@ export default function AdminPage() {
     u.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) || u.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (loading) return <div className="flex items-center justify-center min-h-screen bg-slate-900"><Loader2 className="w-8 h-8 animate-spin text-violet-500" /></div>;
+  if (loading) return <div className="flex items-center justify-center min-h-[60vh]"><Loader2 className="w-8 h-8 animate-spin text-violet-500" /></div>;
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white" data-testid="admin-page">
-      {/* Header */}
-      <header className="bg-slate-800/50 backdrop-blur border-b border-slate-700/50 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
-              <Shield className="w-5 h-5" />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold">Admin NailCost</h1>
-              <p className="text-xs text-slate-400">Panel de Control</p>
-            </div>
-          </div>
-          <Button variant="outline" size="sm" onClick={fetchData} className="border-slate-600 text-slate-300 hover:bg-slate-700">
-            <RefreshCw className="w-4 h-4 mr-2" />Actualizar
-          </Button>
+    <div className="space-y-6" data-testid="admin-page">
+      {/* Page Title */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Panel de Administración</h1>
+          <p className="text-sm text-slate-400">Gestiona usuarios, suscripciones y facturación</p>
         </div>
-      </header>
+        <Button variant="outline" size="sm" onClick={fetchData} className="border-slate-600 text-slate-300 hover:bg-slate-700">
+          <RefreshCw className="w-4 h-4 mr-2" />Actualizar
+        </Button>
+      </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        {/* Navigation */}
-        <div className="flex gap-2 mb-6 flex-wrap">
-          {[
-            { id: "dashboard", label: "Dashboard", icon: BarChart3 },
-            { id: "pendientes", label: `Pendientes (${pendingUsers.length})`, icon: Clock },
-            { id: "vencidos", label: `Vencidos (${expiredUsers.length})`, icon: AlertTriangle },
-            { id: "usuarios", label: `Usuarios (${activeUsers.length})`, icon: Users },
-            { id: "facturacion", label: `Facturas (${pendingInvoices.length})`, icon: FileText },
-            { id: "analytics", label: "Analytics", icon: Activity },
-          ].map(tab => (
-            <Button key={tab.id} variant={activeSection === tab.id ? "default" : "outline"} onClick={() => setActiveSection(tab.id)}
-              className={activeSection === tab.id ? "bg-violet-600" : "border-slate-700 text-slate-300 hover:bg-slate-800"}>
-              <tab.icon className="w-4 h-4 mr-2" />{tab.label}
-            </Button>
-          ))}
-        </div>
+      {/* Navigation */}
+      <div className="flex gap-2 flex-wrap">
+        {[
+          { id: "dashboard", label: "Dashboard", icon: BarChart3 },
+          { id: "pendientes", label: `Pendientes (${pendingUsers.length})`, icon: Clock },
+          { id: "vencidos", label: `Vencidos (${expiredUsers.length})`, icon: AlertTriangle },
+          { id: "usuarios", label: `Usuarios (${activeUsers.length})`, icon: Users },
+          { id: "facturacion", label: `Facturas (${pendingInvoices.length})`, icon: FileText },
+          { id: "analytics", label: "Analytics", icon: Activity },
+        ].map(tab => (
+          <Button key={tab.id} variant={activeSection === tab.id ? "default" : "outline"} onClick={() => setActiveSection(tab.id)}
+            className={activeSection === tab.id ? "bg-violet-600" : "border-slate-700 text-slate-300 hover:bg-slate-800"}>
+            <tab.icon className="w-4 h-4 mr-2" />{tab.label}
+          </Button>
+        ))}
+      </div>
 
         {/* Dashboard */}
         {activeSection === "dashboard" && (
@@ -506,7 +498,6 @@ export default function AdminPage() {
             </Card>
           </div>
         )}
-      </div>
 
       {/* Payment Dialog */}
       <Dialog open={paymentDialog.open} onOpenChange={(o) => setPaymentDialog({...paymentDialog, open: o})}>
