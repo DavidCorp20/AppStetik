@@ -5,136 +5,118 @@ Calculadora Inteligente de Costos para Uñas - Sistema profesional de cálculo d
 
 ---
 
+## 🔐 CREDENCIALES ADMIN (PERMANENTES)
+
+| Rol | Email | Password |
+|-----|-------|----------|
+| **Admin** | admin@nailcost.pro | NailCost@Adm1n#2024Secure |
+
+> ⚠️ Esta contraseña se restaura automáticamente cada vez que el servidor arranca
+
+### Usuarios de Prueba
+| Email | Password | Tipo |
+|-------|----------|------|
+| maria.personal@test.com | test123 | Personal |
+| ana.premium@test.com | test123 | Personal Premium |
+| salon.bella@test.com | test123 | Comercio |
+| nails.elegante@test.com | test123 | Comercio Premium |
+
+---
+
 ## Lo Implementado ✅
+
+### Panel de Administración Mejorado (Nuevo - Mar 2026)
+- ✅ **Dashboard de Ingresos Proyectados**
+  - Muestra ingreso mensual/anual basado en suscriptores
+  - Precios: Personal Básico $5, Premium $10 | Comercio Básico $15, Premium $20
+  - Desglose por tipo de usuario
+- ✅ **Gestión de Usuarios**
+  - Blanquear contraseñas (genera temporal)
+  - Habilitar/Deshabilitar cuentas
+  - Cambiar tipo (Personal ↔ Comercio)
+  - Cambiar plan (Básico ↔ Premium)
+- ✅ **Estadísticas Avanzadas**
+  - Usuarios totales, activos (30d), premium
+  - Por tipo: personales, comercios
+  - Deshabilitados
+- ✅ **Filtros y Búsqueda**
+  - Buscar por nombre, email, negocio
+  - Filtrar: Todos, Personal, Comercio, Premium, Deshabilitados
+
+### Notificaciones Push (Nuevo - Mar 2026)
+- ✅ **Service Worker** para PWA
+- ✅ **Banner de activación** diferenciado por tipo de usuario:
+  - Persona: "¡No te pierdas nada! 💅" - rosa/amigable
+  - Comercio: "¿Activar notificaciones?" - profesional/azul
+- ✅ **Tipos de notificaciones**:
+  - Persona: citas, metas, tips motivacionales
+  - Comercio: recordatorios de citas, stock bajo, facturas pendientes
+- ✅ **Hook useNotifications** para enviar notificaciones programáticas
 
 ### Sistema de Autenticación
 - ✅ Registro con tipo de cuenta (Personal/Negocio)
 - ✅ Login con rate limiting (5 intentos, bloqueo 5 min)
+- ✅ **Verificación de cuenta deshabilitada** en login
 - ✅ Recuperación de contraseña con token
 - ✅ JWT con 30 días de expiración
 
-### Sistema de Facturación (NUEVO - Dic 2025)
+### Sistema de Facturación
 - ✅ Página `/facturacion` para usuarios Comercio
-- ✅ Stats: Total facturas, Facturado (pagado), Pendientes, Mes actual
-- ✅ Tabla de facturas con búsqueda y filtros
-- ✅ Crear factura con cliente, items múltiples
 - ✅ Métodos de pago Venezuela: Efectivo, Transferencia, Pago Móvil, Tarjeta, Zelle
 - ✅ Descuentos y notas
-- ✅ Cálculo automático de subtotal y total
-- ✅ Cambio de estado (Pendiente/Pagada/Anulada)
-- ✅ Imprimir factura (HTML con estilos profesionales)
-- ✅ Descargar factura como HTML
+- ✅ Imprimir/Descargar factura como HTML
 
 ### Experiencia COMERCIO (Minimalista Profesional)
-
-**Dashboard:**
-- ✅ Diseño minimalista gris/blanco (sin colores excesivos)
-- ✅ KPIs simples: Ingresos, Gastos, Clientes, Inventario
-- ✅ Barra de meta mensual con progreso
-- ✅ Tabla de Agenda de Hoy profesional
-- ✅ Ranking de Servicios Más Rentables
-- ✅ Card de Resumen oscura (negro)
-- ✅ Panel de Equipo y Stock en sidebar
-
-**Control de Inventario:**
-- ✅ Stats: Total productos, Stock normal, Stock bajo, Agotados
-- ✅ Tabla de productos con estado de stock
-- ✅ Indicador visual de nivel (Normal/Bajo/Crítico/Agotado)
-- ✅ Botones de Entrada/Salida de stock
-- ✅ Registro de movimientos de inventario
-- ✅ Historial de movimientos
-- ✅ Filtros por estado
-- ✅ Exportar datos
-
-**Navegación:**
-- ✅ Header profesional con logo "NailCost BUSINESS"
-- ✅ Menú: Dashboard, Agenda, Facturación (NUEVO)
-- ✅ Dropdowns: Gestión (Clientes, Empleados, Inventario), Servicios, Finanzas
-- ✅ Herramientas: Cotizar, Reportes, Simulación
+- ✅ Dashboard con KPIs, meta mensual, agenda del día
+- ✅ Control de Inventario con movimientos
+- ✅ Navegación con dropdowns organizados
 
 ### Experiencia PERSONA (Emprendedora)
-
-**Dashboard:**
-- ✅ Diseño rosa profesional pero amigable
-- ✅ Saludo personalizado con hora del día
-- ✅ Card principal con ganancia del mes + Progress Ring
-- ✅ "Tu ganancia real después de gastos" visible
-- ✅ Margen de ganancia en porcentaje
-- ✅ Gráfico "Tu semana" (barras últimos 7 días)
-- ✅ Acceso rápido: Calcular, Clientes, Agenda, Gastos
-
-**Reportes Visuales:**
-- ✅ "Cobras en promedio" - Por servicio
-- ✅ "Gastos del mes" - Total operativos
-- ✅ Cards de Insights con emojis y explicaciones simples
-- ✅ Actividad reciente con precios
-
-**Alertas Inteligentes:**
-- ✅ Stock bajo de productos
-- ✅ Citas del día
-- ✅ Progreso hacia meta mensual
-- ✅ Mensajes amigables
-
-**Navegación:**
-- ✅ Bottom bar fija: Inicio, Clientes, Calcular, Agenda, Historial
-- ✅ Botón central destacado (Calcular)
-- ✅ Menú desplegable con más opciones
+- ✅ Dashboard rosa con ganancias y progress ring
+- ✅ Gráfico "Tu semana", accesos rápidos
+- ✅ Alertas inteligentes amigables
 
 ### Páginas Legales
 - ✅ /terminos - Términos y Condiciones
 - ✅ /privacidad - Política de Privacidad
 - ✅ /recuperar-contrasena - Flujo de reset
 
-### Funcionalidades Core
-- ✅ Gestión de Productos con stock mínimo
-- ✅ Gestión de Estilos de Uñas
-- ✅ Gestión de Diseños/Decoraciones
-- ✅ Configuración de Gastos Operativos
-- ✅ Configuración de Ganancias y Metas
-- ✅ Calculadora de Precio Final
-- ✅ Gestión de Clientes
-- ✅ Sistema de Agenda con estados
-- ✅ Reportes Mensuales con gráficos
-- ✅ Simulación de Ingresos
-- ✅ Historial de Cálculos (Personal)
-- ✅ Gestión de Empleados (Comercio)
-
 ---
 
-## Credenciales de Prueba
+## Configuración para Producción
 
-| Rol | Email | Password |
-|-----|-------|----------|
-| **Admin** | admin@nailcost.pro | NailCost@Admin2024! |
-| **Personal** | persona@test.com | test123 |
-| **Negocio** | negocio@test.com | test123 |
+### MongoDB Atlas
+```
+# backend/.env para producción
+MONGO_URL="mongodb+srv://arenasdavid1_db_user:5iQXCEYpLSjHj5ov@cluster0.s2mz4tv.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+DB_NAME="nailcost_pro"
+JWT_SECRET="[genera una clave segura de 64+ caracteres]"
+```
+
+> ⚠️ **IMPORTANTE**: En MongoDB Atlas, debes agregar la IP del servidor de producción a la whitelist:
+> 1. Ve a Network Access en Atlas
+> 2. Agrega la IP o usa 0.0.0.0/0 para permitir todas (menos seguro)
 
 ---
 
 ## API Endpoints
 
-### Facturación (Nuevo - Dic 2025)
+### Admin (Nuevo)
 ```
-GET  /api/facturas                   - Listar facturas del usuario
-POST /api/facturas                   - Crear nueva factura
-PUT  /api/facturas/{id}/estado       - Cambiar estado (pendiente/pagada/anulada)
-DELETE /api/facturas/{id}            - Eliminar factura
-```
-
-### Inventario
-```
-GET  /api/inventario/movimientos     - Historial de movimientos
-POST /api/inventario/movimiento      - Registrar entrada/salida/ajuste
-GET  /api/alertas-inventario         - Alertas de stock
+GET  /api/admin/stats              - Estadísticas completas
+GET  /api/admin/revenue            - Proyección de ingresos
+POST /api/admin/users/{id}/reset-password  - Blanquear contraseña
+POST /api/admin/users/{id}/toggle-status   - Habilitar/deshabilitar
+PUT  /api/admin/users/{id}/type    - Cambiar tipo (personal/business)
+PUT  /api/admin/users/{id}/plan    - Cambiar plan (free/premium)
 ```
 
-### Autenticación
+### Facturación
 ```
-POST /api/auth/register
-POST /api/auth/login
-GET  /api/auth/me
-POST /api/auth/forgot-password
-POST /api/auth/reset-password
+GET  /api/facturas                 - Listar facturas
+POST /api/facturas                 - Crear factura
+PUT  /api/facturas/{id}/estado     - Cambiar estado
+DELETE /api/facturas/{id}          - Eliminar
 ```
 
 ---
@@ -142,22 +124,36 @@ POST /api/auth/reset-password
 ## Stack Tecnológico
 - **Frontend:** React 19, Tailwind CSS, Shadcn/UI, Recharts
 - **Backend:** FastAPI, Motor (MongoDB async), python-jose, passlib
-- **Database:** MongoDB
+- **Database:** MongoDB (local dev / Atlas producción)
+- **PWA:** Service Worker, Web Push API
+
+---
+
+## Precios de Suscripción
+
+| Plan | Personal | Comercio |
+|------|----------|----------|
+| **Básico** | $5/mes | $15/mes |
+| **Premium** | $10/mes | $20/mes |
 
 ---
 
 ## Backlog
 
-### P1 (Alta Prioridad)
-- [ ] Integración Stripe para pagos Premium
+### P0 (Crítico para Lanzamiento)
+- [ ] **Configurar IP en MongoDB Atlas** para producción
+- [ ] **Integración Stripe** para cobro de suscripciones
 - [ ] Envío real de emails (Resend/SendGrid)
-- [ ] Configurar MongoDB Atlas para producción
+
+### P1 (Alta Prioridad)
+- [ ] Sistema de notificaciones por email
+- [ ] Recordatorios automáticos de citas
+- [ ] Exportar datos a Excel
 
 ### P2 (Media Prioridad)
 - [ ] Reportes por empleado
-- [ ] Balance contable mensual detallado
 - [ ] Modo oscuro
-- [ ] PWA (instalable en móvil)
+- [ ] Instalación PWA completa
 
 ### P3 (Baja Prioridad)
 - [ ] Recordatorios SMS (Twilio)
@@ -168,20 +164,20 @@ POST /api/auth/reset-password
 
 ## Changelog
 
+### 8 Marzo 2026
+- ✅ **Panel Admin mejorado** con proyección de ingresos
+- ✅ **Gestión completa de usuarios**: blanquear contraseñas, habilitar/deshabilitar, cambiar tipo/plan
+- ✅ **Notificaciones Push** con Service Worker
+- ✅ Banner de notificaciones diferenciado (Persona vs Comercio)
+- ✅ Credenciales admin permanentes (se restauran automáticamente)
+- ✅ Verificación de cuenta deshabilitada en login
+- ✅ Configuración preparada para MongoDB Atlas
+
 ### 7 Marzo 2026
-- ✅ **Sistema de Facturación completo** para usuarios Comercio
-- ✅ Métodos de pago Venezuela (Pago Móvil, Zelle, Transferencia)
-- ✅ Generación de facturas HTML para imprimir/descargar
-- ✅ Estadísticas de facturación en tiempo real
-- ✅ Integración con clientes existentes
-- ✅ Tests 100% pasados (Backend: 12/12, Frontend: todos los flujos)
+- ✅ Sistema de Facturación completo
+- ✅ Métodos de pago Venezuela
 
 ### Diciembre 2025
-- ✅ Dashboard COMERCIO minimalista profesional
-- ✅ Control de Inventario completo con movimientos
-- ✅ Dashboard PERSONA con reportes visuales fáciles
-- ✅ Insights y alertas amigables para emprendedoras
-- ✅ Gráfico semanal de ingresos
-- ✅ Acceso rápido a Gastos desde dashboard
-- ✅ Sistema de seguridad: rate limiting, password reset
-- ✅ Páginas legales completas
+- ✅ Dual UX: Persona y Comercio
+- ✅ Control de Inventario
+- ✅ Sistema de seguridad completo
