@@ -58,6 +58,7 @@ const PersonaLayout = () => {
     { to: "/productos", icon: Package, label: "Productos" },
     { to: "/estilos", icon: Palette, label: "Estilos" },
     { to: "/disenos", icon: Sparkles, label: "Diseños" },
+    { to: "/inventario", icon: Box, label: "Inventario" },
     { to: "/gastos", icon: Receipt, label: "Gastos" },
     { to: "/ganancias", icon: TrendingUp, label: "Ganancias" },
   ];
@@ -762,20 +763,11 @@ const ComercioLayout = () => {
 const AdminLayout = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
 
   const handleLogout = () => {
     logout();
     navigate("/login");
   };
-
-  const adminNavItems = [
-    { to: "/admin", icon: LayoutDashboard, label: "Dashboard", end: true },
-    { to: "/admin?tab=users", icon: Users, label: "Usuarios" },
-    { to: "/admin?tab=pending", icon: Clock, label: "Pendientes" },
-    { to: "/admin?tab=invoices", icon: Receipt, label: "Facturación" },
-    { to: "/admin?tab=reports", icon: BarChart3, label: "Reportes" },
-  ];
 
   return (
     <div className="min-h-screen bg-[#0F172A] text-white" data-testid="admin-layout">
@@ -795,28 +787,6 @@ const AdminLayout = () => {
                 </span>
               </div>
             </NavLink>
-
-            {/* Nav */}
-            <nav className="hidden md:flex items-center gap-1">
-              {adminNavItems.map((item, idx) => (
-                <NavLink
-                  key={idx}
-                  to={item.to}
-                  end={item.end}
-                  className={({ isActive }) =>
-                    cn(
-                      "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
-                      isActive || location.search.includes(item.to.split('?tab=')[1])
-                        ? "bg-blue-600 text-white"
-                        : "text-slate-300 hover:text-white hover:bg-white/10"
-                    )
-                  }
-                >
-                  <item.icon className="w-4 h-4" />
-                  <span>{item.label}</span>
-                </NavLink>
-              ))}
-            </nav>
 
             {/* User Menu */}
             <div className="flex items-center gap-3">

@@ -96,6 +96,17 @@ export const AppProvider = ({ children }) => {
     setProductos(prev => prev.filter(p => p.id !== id));
   };
 
+  // Refresh products from server
+  const refreshProductos = async () => {
+    try {
+      const res = await authAxios.get(`${API}/productos`);
+      setProductos(res.data || []);
+      return res.data;
+    } catch (err) {
+      console.error("Error refreshing products:", err);
+    }
+  };
+
   // CRUD Estilos
   const addEstilo = async (estilo) => {
     const res = await authAxios.post(`${API}/estilos`, estilo);
@@ -282,6 +293,7 @@ export const AppProvider = ({ children }) => {
     addProducto,
     updateProducto,
     deleteProducto,
+    refreshProductos,
     addEstilo,
     updateEstilo,
     deleteEstilo,

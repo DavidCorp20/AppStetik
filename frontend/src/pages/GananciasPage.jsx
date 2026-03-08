@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { TrendingUp, Save, Loader2, Target, DollarSign, Clock, Percent } from "lucide-react";
 import { toast } from "sonner";
+import { formatCurrency } from "@/lib/utils";
 
 export default function GananciasPage() {
   const { configGanancias, updateConfigGanancias, loading } = useApp();

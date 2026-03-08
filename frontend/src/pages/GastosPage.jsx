@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Receipt, Save, Loader2, Building, Zap, Droplets, Wifi, Phone, Megaphone, Wrench, SprayCan, CreditCard, Calculator as CalcIcon } from "lucide-react";
 import { toast } from "sonner";
+import { formatCurrency } from "@/lib/utils";
 
 const gastoFields = [
   { key: "renta", label: "Renta del Local", icon: Building },

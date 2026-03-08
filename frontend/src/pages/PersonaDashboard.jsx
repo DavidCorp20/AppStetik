@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RecommendationsPanel } from "@/components/RecommendationsPanel";
+import { TutorialModal, useTutorial } from "@/components/TutorialModal";
 import { 
   Calculator, 
   Users, 
@@ -209,6 +210,9 @@ export default function PersonaDashboard() {
   const [loading, setLoading] = useState(true);
   const [weeklyData, setWeeklyData] = useState([]);
   const [alerts, setAlerts] = useState([]);
+  
+  // Tutorial hook
+  const { showTutorial, closeTutorial } = useTutorial();
 
   const API = process.env.REACT_APP_BACKEND_URL + '/api';
 
