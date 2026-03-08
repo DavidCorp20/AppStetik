@@ -1,183 +1,130 @@
-# NailCost Pro - PRD (Product Requirements Document)
+# NailCost Pro - PRD
 
-## Problema Original
-Calculadora Inteligente de Costos para Uñas - Sistema profesional de cálculo de costos y precios para servicios de uñas.
+## Credenciales Admin (PERMANENTES)
+| Email | Password |
+|-------|----------|
+| **admin@nailcost.pro** | **NailCost@Adm1n#2024Secure** |
 
----
-
-## 🔐 CREDENCIALES ADMIN (PERMANENTES)
-
-| Rol | Email | Password |
-|-----|-------|----------|
-| **Admin** | admin@nailcost.pro | NailCost@Adm1n#2024Secure |
-
-> ⚠️ Esta contraseña se restaura automáticamente cada vez que el servidor arranca
-
-### Usuarios de Prueba
-| Email | Password | Tipo |
-|-------|----------|------|
-| maria.personal@test.com | test123 | Personal |
-| ana.premium@test.com | test123 | Personal Premium |
-| salon.bella@test.com | test123 | Comercio |
-| nails.elegante@test.com | test123 | Comercio Premium |
+> Se restaura automáticamente cada vez que el servidor arranca
 
 ---
 
-## Lo Implementado ✅
+## Modelo de Negocio
 
-### Panel de Administración Mejorado (Nuevo - Mar 2026)
-- ✅ **Dashboard de Ingresos Proyectados**
-  - Muestra ingreso mensual/anual basado en suscriptores
-  - Precios: Personal Básico $5, Premium $10 | Comercio Básico $15, Premium $20
-  - Desglose por tipo de usuario
-- ✅ **Gestión de Usuarios**
-  - Blanquear contraseñas (genera temporal)
-  - Habilitar/Deshabilitar cuentas
-  - Cambiar tipo (Personal ↔ Comercio)
-  - Cambiar plan (Básico ↔ Premium)
-- ✅ **Estadísticas Avanzadas**
-  - Usuarios totales, activos (30d), premium
-  - Por tipo: personales, comercios
-  - Deshabilitados
-- ✅ **Filtros y Búsqueda**
-  - Buscar por nombre, email, negocio
-  - Filtrar: Todos, Personal, Comercio, Premium, Deshabilitados
-
-### Notificaciones Push (Nuevo - Mar 2026)
-- ✅ **Service Worker** para PWA
-- ✅ **Banner de activación** diferenciado por tipo de usuario:
-  - Persona: "¡No te pierdas nada! 💅" - rosa/amigable
-  - Comercio: "¿Activar notificaciones?" - profesional/azul
-- ✅ **Tipos de notificaciones**:
-  - Persona: citas, metas, tips motivacionales
-  - Comercio: recordatorios de citas, stock bajo, facturas pendientes
-- ✅ **Hook useNotifications** para enviar notificaciones programáticas
-
-### Sistema de Autenticación
-- ✅ Registro con tipo de cuenta (Personal/Negocio)
-- ✅ Login con rate limiting (5 intentos, bloqueo 5 min)
-- ✅ **Verificación de cuenta deshabilitada** en login
-- ✅ Recuperación de contraseña con token
-- ✅ JWT con 30 días de expiración
-
-### Sistema de Facturación
-- ✅ Página `/facturacion` para usuarios Comercio
-- ✅ Métodos de pago Venezuela: Efectivo, Transferencia, Pago Móvil, Tarjeta, Zelle
-- ✅ Descuentos y notas
-- ✅ Imprimir/Descargar factura como HTML
-
-### Experiencia COMERCIO (Minimalista Profesional)
-- ✅ Dashboard con KPIs, meta mensual, agenda del día
-- ✅ Control de Inventario con movimientos
-- ✅ Navegación con dropdowns organizados
-
-### Experiencia PERSONA (Emprendedora)
-- ✅ Dashboard rosa con ganancias y progress ring
-- ✅ Gráfico "Tu semana", accesos rápidos
-- ✅ Alertas inteligentes amigables
-
-### Páginas Legales
-- ✅ /terminos - Términos y Condiciones
-- ✅ /privacidad - Política de Privacidad
-- ✅ /recuperar-contrasena - Flujo de reset
-
----
-
-## Configuración para Producción
-
-### MongoDB Atlas
-```
-# backend/.env para producción
-MONGO_URL="mongodb+srv://arenasdavid1_db_user:5iQXCEYpLSjHj5ov@cluster0.s2mz4tv.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
-DB_NAME="nailcost_pro"
-JWT_SECRET="[genera una clave segura de 64+ caracteres]"
-```
-
-> ⚠️ **IMPORTANTE**: En MongoDB Atlas, debes agregar la IP del servidor de producción a la whitelist:
-> 1. Ve a Network Access en Atlas
-> 2. Agrega la IP o usa 0.0.0.0/0 para permitir todas (menos seguro)
-
----
-
-## API Endpoints
-
-### Admin (Nuevo)
-```
-GET  /api/admin/stats              - Estadísticas completas
-GET  /api/admin/revenue            - Proyección de ingresos
-POST /api/admin/users/{id}/reset-password  - Blanquear contraseña
-POST /api/admin/users/{id}/toggle-status   - Habilitar/deshabilitar
-PUT  /api/admin/users/{id}/type    - Cambiar tipo (personal/business)
-PUT  /api/admin/users/{id}/plan    - Cambiar plan (free/premium)
-```
-
-### Facturación
-```
-GET  /api/facturas                 - Listar facturas
-POST /api/facturas                 - Crear factura
-PUT  /api/facturas/{id}/estado     - Cambiar estado
-DELETE /api/facturas/{id}          - Eliminar
-```
-
----
-
-## Stack Tecnológico
-- **Frontend:** React 19, Tailwind CSS, Shadcn/UI, Recharts
-- **Backend:** FastAPI, Motor (MongoDB async), python-jose, passlib
-- **Database:** MongoDB (local dev / Atlas producción)
-- **PWA:** Service Worker, Web Push API
-
----
-
-## Precios de Suscripción
-
+### Precios de Suscripción
 | Plan | Personal | Comercio |
 |------|----------|----------|
-| **Básico** | $5/mes | $15/mes |
-| **Premium** | $10/mes | $20/mes |
+| Básico | $5/mes | $15/mes |
+| Premium | $10/mes | $20/mes |
+
+### Trial: 15 días de prueba gratuita
+
+---
+
+## Funcionalidades Implementadas ✅
+
+### Sistema de Activación de Usuarios (NUEVO)
+- ✅ Registro con estado "pendiente" - requiere aprobación admin
+- ✅ Login bloqueado hasta que admin active la cuenta
+- ✅ Trial de 15 días automático al activar
+- ✅ Mensajes claros al usuario sobre estado de cuenta
+
+### Panel Admin Mejorado
+- ✅ **3 Tabs**: Usuarios, Suscripciones, Facturas
+- ✅ **Dashboard de ingresos** con proyección mensual/anual
+- ✅ **Stats**: Pendientes, En Prueba, Activos, Expirados
+- ✅ **Gestión de usuarios**:
+  - Activar cuenta (inicia trial 15 días)
+  - Configurar suscripción (meses + plan)
+  - Generar factura de suscripción
+  - Blanquear contraseña
+  - Habilitar/deshabilitar cuenta
+- ✅ **Control de suscripciones**:
+  - Fecha inicio/fin de suscripción
+  - Días restantes con alerta si < 5
+  - Renovar suscripción
+- ✅ **Facturas admin**:
+  - Número de factura automático
+  - Estados: Pendiente/Pagada/Cancelada
+  - Total pendiente/cobrado
+
+### Reportes Financieros (Comercio)
+- ✅ **Estado de Resultados**:
+  - Ingresos brutos, costos, utilidad bruta/neta
+  - Margen bruto y neto
+- ✅ **Dashboard de métricas**:
+  - Ingresos del mes con tendencia
+  - Servicios realizados
+  - Clientes activos
+  - Citas pendientes
+  - Alertas de stock bajo
+- ✅ **Ranking de servicios** por ganancia
+- ✅ **Desglose de gastos** con gráfico de pie
+- ✅ **Facturación por método de pago**
+
+### Navegación Mejorada (Comercio)
+- ✅ Header profesional estilo admin
+- ✅ Dropdowns: Dashboard, Agenda, Facturación
+- ✅ Grupos: Gestión, Servicios, Finanzas, Herramientas
+- ✅ Reportes Financieros en menú Herramientas
+
+### Notificaciones Push
+- ✅ Service Worker para PWA
+- ✅ Banner diferenciado (Persona rosa, Comercio azul)
+
+---
+
+## Base de Datos: MongoDB Atlas ✅
+```
+mongodb+srv://arenasdavid1_db_user:***@cluster0.s2mz4tv.mongodb.net/nailcost_pro
+```
+
+---
+
+## API Endpoints Nuevos
+
+### Suscripciones Admin
+```
+POST /api/admin/users/{id}/activate      - Activar cuenta + trial 15 días
+POST /api/admin/users/{id}/subscription  - Configurar suscripción
+GET  /api/admin/subscriptions            - Lista con días restantes
+POST /api/admin/users/{id}/generate-invoice
+GET  /api/admin/invoices
+PUT  /api/admin/invoices/{id}/status
+```
+
+### Reportes Financieros
+```
+GET /api/reportes/financiero      - Estado de resultados
+GET /api/reportes/estado-empresa  - Métricas generales
+```
 
 ---
 
 ## Backlog
 
-### P0 (Crítico para Lanzamiento)
-- [ ] **Configurar IP en MongoDB Atlas** para producción
-- [ ] **Integración Stripe** para cobro de suscripciones
-- [ ] Envío real de emails (Resend/SendGrid)
+### Para monetizar
+- [ ] Integrar Stripe para cobro automático de suscripciones
+- [ ] Envío de emails reales (recordatorios de vencimiento)
 
-### P1 (Alta Prioridad)
-- [ ] Sistema de notificaciones por email
-- [ ] Recordatorios automáticos de citas
-- [ ] Exportar datos a Excel
-
-### P2 (Media Prioridad)
-- [ ] Reportes por empleado
+### Mejoras UI/UX
 - [ ] Modo oscuro
-- [ ] Instalación PWA completa
-
-### P3 (Baja Prioridad)
-- [ ] Recordatorios SMS (Twilio)
-- [ ] Multi-moneda
-- [ ] Backup/restaurar datos
+- [ ] PWA completa (instalable)
 
 ---
 
 ## Changelog
 
 ### 8 Marzo 2026
-- ✅ **Panel Admin mejorado** con proyección de ingresos
-- ✅ **Gestión completa de usuarios**: blanquear contraseñas, habilitar/deshabilitar, cambiar tipo/plan
-- ✅ **Notificaciones Push** con Service Worker
-- ✅ Banner de notificaciones diferenciado (Persona vs Comercio)
-- ✅ Credenciales admin permanentes (se restauran automáticamente)
-- ✅ Verificación de cuenta deshabilitada en login
-- ✅ Configuración preparada para MongoDB Atlas
+- ✅ Sistema de activación de usuarios (pendiente → activo)
+- ✅ Trial de 15 días automático
+- ✅ Panel admin con tabs (Usuarios/Suscripciones/Facturas)
+- ✅ Control de fechas de suscripción
+- ✅ Generación de facturas de suscripción admin
+- ✅ Reportes financieros para comercio
+- ✅ Navegación mejorada estilo admin para comercio
+- ✅ MongoDB Atlas conectado en producción
 
 ### 7 Marzo 2026
 - ✅ Sistema de Facturación completo
 - ✅ Métodos de pago Venezuela
-
-### Diciembre 2025
-- ✅ Dual UX: Persona y Comercio
-- ✅ Control de Inventario
-- ✅ Sistema de seguridad completo

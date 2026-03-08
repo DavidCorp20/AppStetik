@@ -119,6 +119,11 @@ class UserResponse(BaseModel):
     role: str = "user"
     user_type: str = "personal"
     created_at: str
+    # New fields
+    account_status: str = "active"  # pending, active, suspended
+    trial_ends_at: Optional[str] = None
+    subscription_starts_at: Optional[str] = None
+    subscription_ends_at: Optional[str] = None
 
 class TokenResponse(BaseModel):
     access_token: str
@@ -512,9 +517,11 @@ async def register(user_data: UserRegister):
     if existing:
         raise HTTPException(status_code=400, detail="Este email ya está registrado")
     
-    # Create user
+    # Create user with pending status and 15-day trial
     user_id = str(uuid.uuid4())
     hashed_password = get_password_hash(user_data.password)
+    now = datetime.now(timezone.utc)
+    trial_end = now + timedelta(days=15)
     
     user_doc = {
         "id": user_id,
@@ -526,12 +533,16 @@ async def register(user_data: UserRegister):
         "plan": "free",
         "role": "user",
         "user_type": user_data.user_type,
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "account_status": "pending",  # New: requires admin approval
+        "trial_ends_at": trial_end.isoformat(),
+        "subscription_starts_at": None,
+        "subscription_ends_at": None,
+        "created_at": now.isoformat(),
     }
     
     await db.users.insert_one(user_doc)
     
-    # Create token
+    # Create token (limited access until approved)
     access_token = create_access_token(data={"sub": user_id})
     
     return TokenResponse(
@@ -545,7 +556,11 @@ async def register(user_data: UserRegister):
             plan=user_doc["plan"],
             role=user_doc["role"],
             user_type=user_doc.get("user_type", "personal"),
-            created_at=user_doc["created_at"]
+            created_at=user_doc["created_at"],
+            account_status=user_doc["account_status"],
+            trial_ends_at=user_doc["trial_ends_at"],
+            subscription_starts_at=None,
+            subscription_ends_at=None
         )
     )
 
@@ -569,6 +584,13 @@ async def login(credentials: UserLogin, request: Request):
     if user.get("is_disabled", False):
         raise HTTPException(status_code=403, detail="Tu cuenta ha sido deshabilitada. Contacta al administrador.")
     
+    # Check account status
+    account_status = user.get("account_status", "active")
+    if account_status == "pending":
+        raise HTTPException(status_code=403, detail="Tu cuenta está pendiente de activación. Contacta al administrador para activarla.")
+    if account_status == "suspended":
+        raise HTTPException(status_code=403, detail="Tu cuenta ha sido suspendida. Contacta al administrador.")
+    
     # Update last login
     await db.users.update_one(
         {"id": user["id"]},
@@ -588,7 +610,11 @@ async def login(credentials: UserLogin, request: Request):
             plan=user.get("plan", "free"),
             role=user.get("role", "user"),
             user_type=user.get("user_type", "personal"),
-            created_at=user["created_at"]
+            created_at=user["created_at"],
+            account_status=user.get("account_status", "active"),
+            trial_ends_at=user.get("trial_ends_at"),
+            subscription_starts_at=user.get("subscription_starts_at"),
+            subscription_ends_at=user.get("subscription_ends_at")
         )
     )
 
@@ -906,6 +932,209 @@ async def admin_update_user_type(user_id: str, user_type: str, admin: dict = Dep
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     
     return {"message": f"Tipo actualizado a {user_type}", "user_id": user_id, "user_type": user_type}
+
+@api_router.post("/admin/users/{user_id}/activate")
+async def admin_activate_user(user_id: str, admin: dict = Depends(get_admin_user)):
+    """Activate a pending user account - starts 15 day trial"""
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    now = datetime.now(timezone.utc)
+    trial_end = now + timedelta(days=15)
+    
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {
+            "account_status": "active",
+            "trial_ends_at": trial_end.isoformat(),
+            "activated_at": now.isoformat(),
+            "activated_by": admin["id"]
+        }}
+    )
+    
+    return {
+        "message": "Usuario activado. Inicia período de prueba de 15 días.",
+        "user_id": user_id,
+        "trial_ends_at": trial_end.isoformat()
+    }
+
+@api_router.post("/admin/users/{user_id}/subscription")
+async def admin_set_subscription(user_id: str, months: int = 1, plan: str = "free", admin: dict = Depends(get_admin_user)):
+    """Set subscription for a user"""
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    if plan not in ["free", "premium"]:
+        raise HTTPException(status_code=400, detail="Plan inválido")
+    
+    now = datetime.now(timezone.utc)
+    subscription_end = now + timedelta(days=30 * months)
+    
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {
+            "account_status": "active",
+            "plan": plan,
+            "subscription_starts_at": now.isoformat(),
+            "subscription_ends_at": subscription_end.isoformat(),
+            "subscription_months": months,
+            "last_payment_date": now.isoformat(),
+            "subscription_updated_by": admin["id"]
+        }}
+    )
+    
+    return {
+        "message": f"Suscripción {plan} activada por {months} mes(es)",
+        "user_id": user_id,
+        "plan": plan,
+        "subscription_ends_at": subscription_end.isoformat()
+    }
+
+@api_router.get("/admin/subscriptions")
+async def admin_get_subscriptions(admin: dict = Depends(get_admin_user)):
+    """Get all subscriptions with detailed info"""
+    users = await db.users.find(
+        {"role": {"$ne": "admin"}},
+        {"_id": 0, "password": 0}
+    ).to_list(500)
+    
+    now = datetime.now(timezone.utc)
+    subscriptions = []
+    
+    for u in users:
+        trial_ends = u.get("trial_ends_at")
+        sub_ends = u.get("subscription_ends_at")
+        
+        # Calculate days remaining
+        days_remaining = None
+        status = "inactive"
+        
+        if sub_ends:
+            sub_end_date = datetime.fromisoformat(sub_ends.replace('Z', '+00:00'))
+            days_remaining = (sub_end_date - now).days
+            status = "active" if days_remaining > 0 else "expired"
+        elif trial_ends:
+            trial_end_date = datetime.fromisoformat(trial_ends.replace('Z', '+00:00'))
+            days_remaining = (trial_end_date - now).days
+            status = "trial" if days_remaining > 0 else "trial_expired"
+        
+        subscriptions.append({
+            "user_id": u["id"],
+            "email": u["email"],
+            "nombre": u["nombre"],
+            "nombre_negocio": u.get("nombre_negocio", ""),
+            "user_type": u.get("user_type", "personal"),
+            "plan": u.get("plan", "free"),
+            "account_status": u.get("account_status", "pending"),
+            "subscription_status": status,
+            "days_remaining": days_remaining,
+            "trial_ends_at": trial_ends,
+            "subscription_starts_at": u.get("subscription_starts_at"),
+            "subscription_ends_at": sub_ends,
+            "last_payment_date": u.get("last_payment_date"),
+            "created_at": u.get("created_at"),
+        })
+    
+    # Sort by subscription status priority
+    status_priority = {"pending": 0, "trial": 1, "trial_expired": 2, "active": 3, "expired": 4, "inactive": 5}
+    subscriptions.sort(key=lambda x: (status_priority.get(x["subscription_status"], 99), x.get("days_remaining") or 999))
+    
+    # Calculate totals
+    pricing = {"personal": {"basic": 5, "premium": 10}, "business": {"basic": 15, "premium": 20}}
+    
+    active_subs = [s for s in subscriptions if s["subscription_status"] == "active"]
+    monthly_revenue = sum(
+        pricing[s["user_type"]]["premium" if s["plan"] == "premium" else "basic"] 
+        for s in active_subs
+    )
+    
+    return {
+        "subscriptions": subscriptions,
+        "summary": {
+            "total_users": len(subscriptions),
+            "pending_activation": len([s for s in subscriptions if s["account_status"] == "pending"]),
+            "in_trial": len([s for s in subscriptions if s["subscription_status"] == "trial"]),
+            "active_subscriptions": len(active_subs),
+            "expired": len([s for s in subscriptions if s["subscription_status"] in ["expired", "trial_expired"]]),
+            "monthly_revenue": monthly_revenue,
+            "annual_revenue": monthly_revenue * 12
+        }
+    }
+
+@api_router.post("/admin/users/{user_id}/generate-invoice")
+async def admin_generate_user_invoice(user_id: str, months: int = 1, admin: dict = Depends(get_admin_user)):
+    """Generate invoice for user subscription"""
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    pricing = {"personal": {"basic": 5, "premium": 10}, "business": {"basic": 15, "premium": 20}}
+    user_type = user.get("user_type", "personal")
+    plan = user.get("plan", "free")
+    price = pricing[user_type]["premium" if plan == "premium" else "basic"]
+    
+    now = datetime.now(timezone.utc)
+    invoice_number = f"INV-{now.strftime('%Y%m')}-{str(uuid.uuid4())[:8].upper()}"
+    
+    invoice_doc = {
+        "id": str(uuid.uuid4()),
+        "invoice_number": invoice_number,
+        "user_id": user_id,
+        "user_email": user["email"],
+        "user_nombre": user["nombre"],
+        "user_type": user_type,
+        "plan": plan,
+        "months": months,
+        "unit_price": price,
+        "total": price * months,
+        "status": "pending",
+        "created_at": now.isoformat(),
+        "created_by": admin["id"],
+        "paid_at": None,
+        "notes": f"Suscripción NailCost Pro - {plan.capitalize()} ({user_type.capitalize()}) x {months} mes(es)"
+    }
+    
+    await db.admin_invoices.insert_one(invoice_doc)
+    invoice_doc.pop("_id", None)
+    
+    return invoice_doc
+
+@api_router.get("/admin/invoices")
+async def admin_get_invoices(admin: dict = Depends(get_admin_user)):
+    """Get all admin-generated invoices"""
+    invoices = await db.admin_invoices.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
+    
+    total_pending = sum(i["total"] for i in invoices if i["status"] == "pending")
+    total_paid = sum(i["total"] for i in invoices if i["status"] == "paid")
+    
+    return {
+        "invoices": invoices,
+        "summary": {
+            "total_invoices": len(invoices),
+            "pending": len([i for i in invoices if i["status"] == "pending"]),
+            "paid": len([i for i in invoices if i["status"] == "paid"]),
+            "total_pending_amount": total_pending,
+            "total_paid_amount": total_paid
+        }
+    }
+
+@api_router.put("/admin/invoices/{invoice_id}/status")
+async def admin_update_invoice_status(invoice_id: str, status: str, admin: dict = Depends(get_admin_user)):
+    """Update invoice status"""
+    if status not in ["pending", "paid", "cancelled"]:
+        raise HTTPException(status_code=400, detail="Estado inválido")
+    
+    update_data = {"status": status}
+    if status == "paid":
+        update_data["paid_at"] = datetime.now(timezone.utc).isoformat()
+    
+    result = await db.admin_invoices.update_one({"id": invoice_id}, {"$set": update_data})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Factura no encontrada")
+    
+    return {"message": f"Factura actualizada a {status}"}
 
 # ======================
 # ENDPOINTS - Calculation History
@@ -2037,6 +2266,210 @@ async def get_comparativa_mensual(current_user: dict = Depends(get_current_user)
         })
     
     return {"meses": list(reversed(meses))}
+
+# ======================
+# BUSINESS FINANCIAL REPORTS (Comercio)
+# ======================
+@api_router.get("/reportes/financiero")
+async def get_reporte_financiero(current_user: dict = Depends(get_current_user)):
+    """Complete financial report for business users"""
+    user_id = current_user["id"]
+    now = datetime.now(timezone.utc)
+    current_month = now.strftime("%Y-%m")
+    
+    # Get all invoices for this month
+    facturas = await db.facturas.find(
+        {"user_id": user_id, "fecha": {"$regex": f"^{current_month}"}},
+        {"_id": 0}
+    ).to_list(1000)
+    
+    # Get all services for this month
+    servicios = await db.servicios_realizados.find(
+        {"user_id": user_id, "fecha": {"$regex": f"^{current_month}"}},
+        {"_id": 0}
+    ).to_list(1000)
+    
+    # Get operational expenses
+    gastos_doc = await db.gastos_operativos.find_one({"user_id": user_id}, {"_id": 0})
+    gastos = gastos_doc if gastos_doc else {}
+    
+    # Calculate totals
+    total_facturado = sum(f.get("total", 0) for f in facturas)
+    facturado_pagado = sum(f.get("total", 0) for f in facturas if f.get("estado") == "pagada")
+    facturado_pendiente = sum(f.get("total", 0) for f in facturas if f.get("estado") == "pendiente")
+    
+    total_ingresos_servicios = sum(s.get("precio_cobrado", 0) for s in servicios)
+    total_costos_servicios = sum(s.get("costo_total", 0) for s in servicios)
+    
+    # Calculate expenses
+    gastos_fijos = (
+        gastos.get("renta", 0) + gastos.get("luz", 0) + gastos.get("agua", 0) +
+        gastos.get("internet", 0) + gastos.get("telefono", 0)
+    )
+    gastos_variables = (
+        gastos.get("publicidad", 0) + gastos.get("mantenimiento", 0) +
+        gastos.get("material_limpieza", 0) + gastos.get("otros", 0)
+    )
+    gastos_impuestos = gastos.get("impuestos", 0) + gastos.get("plataformas_pago", 0)
+    total_gastos = gastos_fijos + gastos_variables + gastos_impuestos
+    
+    # Calculate profits
+    utilidad_bruta = total_ingresos_servicios - total_costos_servicios
+    utilidad_neta = utilidad_bruta - total_gastos
+    margen_bruto = (utilidad_bruta / total_ingresos_servicios * 100) if total_ingresos_servicios > 0 else 0
+    margen_neto = (utilidad_neta / total_ingresos_servicios * 100) if total_ingresos_servicios > 0 else 0
+    
+    # Group invoices by payment method
+    por_metodo_pago = {}
+    for f in facturas:
+        metodo = f.get("metodo_pago", "efectivo")
+        if metodo not in por_metodo_pago:
+            por_metodo_pago[metodo] = {"count": 0, "total": 0}
+        por_metodo_pago[metodo]["count"] += 1
+        por_metodo_pago[metodo]["total"] += f.get("total", 0)
+    
+    # Group by service/style
+    ingresos_por_servicio = {}
+    for s in servicios:
+        estilo = s.get("estilo_nombre", "Otro")
+        if estilo not in ingresos_por_servicio:
+            ingresos_por_servicio[estilo] = {"count": 0, "ingresos": 0, "ganancia": 0}
+        ingresos_por_servicio[estilo]["count"] += 1
+        ingresos_por_servicio[estilo]["ingresos"] += s.get("precio_cobrado", 0)
+        ingresos_por_servicio[estilo]["ganancia"] += s.get("ganancia", 0)
+    
+    # Top services
+    servicios_ranking = sorted(
+        [{"servicio": k, **v} for k, v in ingresos_por_servicio.items()],
+        key=lambda x: x["ganancia"],
+        reverse=True
+    )[:10]
+    
+    # Expense breakdown for chart
+    gastos_desglose = [
+        {"categoria": "Renta", "monto": gastos.get("renta", 0)},
+        {"categoria": "Luz", "monto": gastos.get("luz", 0)},
+        {"categoria": "Agua", "monto": gastos.get("agua", 0)},
+        {"categoria": "Internet", "monto": gastos.get("internet", 0)},
+        {"categoria": "Teléfono", "monto": gastos.get("telefono", 0)},
+        {"categoria": "Publicidad", "monto": gastos.get("publicidad", 0)},
+        {"categoria": "Mantenimiento", "monto": gastos.get("mantenimiento", 0)},
+        {"categoria": "Limpieza", "monto": gastos.get("material_limpieza", 0)},
+        {"categoria": "Impuestos", "monto": gastos.get("impuestos", 0)},
+        {"categoria": "Otros", "monto": gastos.get("otros", 0)},
+    ]
+    gastos_desglose = [g for g in gastos_desglose if g["monto"] > 0]
+    gastos_desglose.sort(key=lambda x: x["monto"], reverse=True)
+    
+    return {
+        "periodo": current_month,
+        "estado_resultados": {
+            "ingresos_brutos": round(total_ingresos_servicios, 2),
+            "costos_directos": round(total_costos_servicios, 2),
+            "utilidad_bruta": round(utilidad_bruta, 2),
+            "gastos_operativos": round(total_gastos, 2),
+            "utilidad_neta": round(utilidad_neta, 2),
+            "margen_bruto": round(margen_bruto, 1),
+            "margen_neto": round(margen_neto, 1)
+        },
+        "facturacion": {
+            "total_facturado": round(total_facturado, 2),
+            "cobrado": round(facturado_pagado, 2),
+            "pendiente": round(facturado_pendiente, 2),
+            "cantidad_facturas": len(facturas),
+            "por_metodo_pago": por_metodo_pago
+        },
+        "gastos": {
+            "fijos": round(gastos_fijos, 2),
+            "variables": round(gastos_variables, 2),
+            "impuestos": round(gastos_impuestos, 2),
+            "total": round(total_gastos, 2),
+            "desglose": gastos_desglose
+        },
+        "servicios": {
+            "cantidad": len(servicios),
+            "ranking": servicios_ranking
+        },
+        "indicadores": {
+            "ticket_promedio": round(total_ingresos_servicios / len(servicios), 2) if servicios else 0,
+            "margen_promedio": round(margen_bruto, 1),
+            "servicios_por_dia": round(len(servicios) / 30, 1),
+            "factura_promedio": round(total_facturado / len(facturas), 2) if facturas else 0
+        }
+    }
+
+@api_router.get("/reportes/estado-empresa")
+async def get_estado_empresa(current_user: dict = Depends(get_current_user)):
+    """Get overall business health metrics"""
+    user_id = current_user["id"]
+    now = datetime.now(timezone.utc)
+    
+    # Get data for last 3 months
+    months_data = []
+    for i in range(3):
+        month_date = now - timedelta(days=30 * i)
+        month_prefix = month_date.strftime("%Y-%m")
+        
+        facturas = await db.facturas.find(
+            {"user_id": user_id, "fecha": {"$regex": f"^{month_prefix}"}},
+            {"_id": 0}
+        ).to_list(1000)
+        
+        servicios = await db.servicios_realizados.find(
+            {"user_id": user_id, "fecha": {"$regex": f"^{month_prefix}"}},
+            {"_id": 0}
+        ).to_list(1000)
+        
+        months_data.append({
+            "periodo": month_prefix,
+            "facturado": sum(f.get("total", 0) for f in facturas),
+            "cobrado": sum(f.get("total", 0) for f in facturas if f.get("estado") == "pagada"),
+            "servicios": len(servicios),
+            "ingresos": sum(s.get("precio_cobrado", 0) for s in servicios)
+        })
+    
+    # Get clients count
+    clientes_count = await db.clientes.count_documents({"user_id": user_id})
+    
+    # Get inventory alerts
+    productos = await db.productos.find({"user_id": user_id}, {"_id": 0}).to_list(100)
+    stock_bajo = len([p for p in productos if p.get("cantidad_comprada", 0) <= p.get("stock_minimo", 5)])
+    
+    # Get pending appointments
+    hoy = now.strftime("%Y-%m-%d")
+    citas_pendientes = await db.citas.count_documents({
+        "user_id": user_id,
+        "fecha": {"$gte": hoy},
+        "estado": {"$in": ["pendiente", "confirmada"]}
+    })
+    
+    # Calculate trends
+    if len(months_data) >= 2:
+        trend_ingresos = ((months_data[0]["ingresos"] - months_data[1]["ingresos"]) / months_data[1]["ingresos"] * 100) if months_data[1]["ingresos"] > 0 else 0
+        trend_servicios = ((months_data[0]["servicios"] - months_data[1]["servicios"]) / months_data[1]["servicios"] * 100) if months_data[1]["servicios"] > 0 else 0
+    else:
+        trend_ingresos = 0
+        trend_servicios = 0
+    
+    return {
+        "resumen": {
+            "ingresos_mes": round(months_data[0]["ingresos"], 2) if months_data else 0,
+            "facturado_mes": round(months_data[0]["facturado"], 2) if months_data else 0,
+            "servicios_mes": months_data[0]["servicios"] if months_data else 0,
+            "clientes_total": clientes_count,
+            "citas_pendientes": citas_pendientes,
+            "productos_stock_bajo": stock_bajo
+        },
+        "tendencias": {
+            "ingresos": round(trend_ingresos, 1),
+            "servicios": round(trend_servicios, 1)
+        },
+        "historico": list(reversed(months_data)),
+        "alertas": {
+            "stock_bajo": stock_bajo > 0,
+            "facturas_pendientes": months_data[0]["facturado"] - months_data[0]["cobrado"] if months_data else 0
+        }
+    }
 
 # ======================
 # ENDPOINTS - Simulación (Protected)

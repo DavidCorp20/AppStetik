@@ -32,6 +32,7 @@ import { FacturacionPage } from "@/pages/FacturacionPage";
 import { ForgotPasswordPage } from "@/pages/ForgotPasswordPage";
 import { TerminosPage } from "@/pages/TerminosPage";
 import { PrivacidadPage } from "@/pages/PrivacidadPage";
+import { ReportesFinancierosPage } from "@/pages/ReportesFinancierosPage";
 import { Loader2 } from "lucide-react";
 
 // Dashboard Router - selects based on user type
@@ -127,6 +128,7 @@ function AppRoutes() {
           <Route path="empleados" element={<EmpleadosPage />} />
           <Route path="inventario" element={<InventarioPage />} />
           <Route path="facturacion" element={<FacturacionPage />} />
+          <Route path="reportes-financieros" element={<ReportesFinancierosPage />} />
         </Route>
       </Route>
 

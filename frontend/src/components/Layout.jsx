@@ -240,7 +240,8 @@ const comercioHerramientasGroup = {
   icon: Calculator,
   items: [
     { to: "/calculadora", icon: Calculator, label: "Cotizador" },
-    { to: "/reportes-mensuales", icon: BarChart3, label: "Reportes" },
+    { to: "/reportes-financieros", icon: BarChart3, label: "Reportes Financieros" },
+    { to: "/reportes-mensuales", icon: BarChart3, label: "Reportes Mensuales" },
     { to: "/simulacion", icon: Target, label: "Simulación" },
   ]
 };
