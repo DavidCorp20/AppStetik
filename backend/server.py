@@ -2589,6 +2589,10 @@ async def simular_ingresos_mensual(servicios_por_dia: int = 3, dias_trabajo: int
     """Simulación de ingresos mensuales"""
     user_id = current_user["id"]
     estilos = await db.estilos.find({"user_id": user_id}, {"_id": 0}).to_list(100)
+    
+    if not estilos:
+        raise HTTPException(status_code=400, detail="Necesitas registrar al menos un estilo para simular. Ve a Estilos y crea tus servicios.")
+    
     config = await db.config_ganancias.find_one({"user_id": user_id}, {"_id": 0})
     if not config:
         config = ConfigGanancias().model_dump()

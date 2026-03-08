@@ -52,9 +52,12 @@ export default function AdminPage() {
   const [invoices, setInvoices] = useState({ invoices: [], summary: {} });
   const [stats, setStats] = useState({});
   const [activityLogs, setActivityLogs] = useState([]);
+  const [userMetrics, setUserMetrics] = useState(null);
   
   const [paymentDialog, setPaymentDialog] = useState({ open: false, user: null, months: 1, plan: "free", amount: 0 });
   const [passwordDialog, setPasswordDialog] = useState({ open: false, user: null, tempPassword: null });
+  const [planDialog, setPlanDialog] = useState({ open: false, user: null, newPlan: "free" });
+  const [metricsDialog, setMetricsDialog] = useState({ open: false, user: null });
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -149,6 +152,32 @@ export default function AdminPage() {
       toast.error("Error");
     } finally {
       setUpdating(null);
+    }
+  };
+
+  const handleChangePlan = async () => {
+    const { user: u, newPlan } = planDialog;
+    setUpdating(u.user_id);
+    try {
+      await authAxios.post(`${API}/admin/users/${u.user_id}/subscription?months=1&plan=${newPlan}`);
+      toast.success(`Plan cambiado a ${newPlan === 'premium' ? 'Premium' : 'Básico'}`);
+      setPlanDialog({ open: false, user: null, newPlan: "free" });
+      fetchData();
+    } catch (err) {
+      toast.error("Error al cambiar plan");
+    } finally {
+      setUpdating(null);
+    }
+  };
+
+  const handleViewMetrics = async (targetUser) => {
+    setMetricsDialog({ open: true, user: targetUser });
+    try {
+      const res = await authAxios.get(`${API}/admin/users/${targetUser.user_id}/metrics`);
+      setUserMetrics(res.data);
+    } catch (err) {
+      toast.error("Error al cargar métricas");
+      setUserMetrics(null);
     }
   };
 
@@ -604,10 +633,16 @@ export default function AdminPage() {
                         </td>
                         <td className="p-4">
                           <div className="flex items-center gap-1">
+                            <Button size="sm" variant="ghost" onClick={() => handleViewMetrics(u)} className="text-slate-400 hover:text-cyan-400 hover:bg-slate-700" title="Ver Métricas">
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={() => setPlanDialog({ open: true, user: u, newPlan: u.plan === 'premium' ? 'free' : 'premium' })} className="text-slate-400 hover:text-amber-400 hover:bg-slate-700" title="Cambiar Plan">
+                              <Settings className="w-4 h-4" />
+                            </Button>
                             <Button size="sm" variant="ghost" onClick={() => handleResetPassword(u)} className="text-slate-400 hover:text-white hover:bg-slate-700" title="Reset Password">
                               <Key className="w-4 h-4" />
                             </Button>
-                            <Button size="sm" variant="ghost" onClick={() => setPaymentDialog({ open: true, user: u, months: 1, plan: u.plan, amount: getPricing(u.user_type, u.plan) })} className="text-slate-400 hover:text-white hover:bg-slate-700" title="Registrar Pago">
+                            <Button size="sm" variant="ghost" onClick={() => setPaymentDialog({ open: true, user: u, months: 1, plan: u.plan, amount: getPricing(u.user_type, u.plan) })} className="text-slate-400 hover:text-emerald-400 hover:bg-slate-700" title="Registrar Pago">
                               <CreditCard className="w-4 h-4" />
                             </Button>
                             <Button size="sm" variant="ghost" onClick={() => handleSuspendUser(u.user_id)} className="text-slate-400 hover:text-red-400 hover:bg-slate-700" title="Suspender">
@@ -946,6 +981,102 @@ export default function AdminPage() {
             </div>
           </div>
           <DialogFooter><Button onClick={() => setPasswordDialog({open: false, user: null, tempPassword: null})} className="bg-blue-600 hover:bg-blue-700">Cerrar</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Change Plan Dialog */}
+      <Dialog open={planDialog.open} onOpenChange={(o) => setPlanDialog({...planDialog, open: o})}>
+        <DialogContent className="bg-slate-800 border-slate-700 text-white">
+          <DialogHeader><DialogTitle className="flex items-center gap-2"><Settings className="w-5 h-5" />Cambiar Plan</DialogTitle></DialogHeader>
+          <div className="space-y-4 py-4">
+            <p className="text-slate-400">Usuario: <strong className="text-white">{planDialog.user?.nombre}</strong></p>
+            <p className="text-slate-400">Email: <span className="text-white">{planDialog.user?.email}</span></p>
+            <div className="grid grid-cols-2 gap-4">
+              <div className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${planDialog.newPlan === 'free' ? 'border-blue-500 bg-blue-500/20' : 'border-slate-600 hover:border-slate-500'}`}
+                onClick={() => setPlanDialog({...planDialog, newPlan: 'free'})}>
+                <p className="font-bold text-lg">Básico</p>
+                <p className="text-sm text-slate-400">${planDialog.user?.user_type === 'business' ? '15' : '5'}/mes</p>
+              </div>
+              <div className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${planDialog.newPlan === 'premium' ? 'border-amber-500 bg-amber-500/20' : 'border-slate-600 hover:border-slate-500'}`}
+                onClick={() => setPlanDialog({...planDialog, newPlan: 'premium'})}>
+                <p className="font-bold text-lg text-amber-400">Premium</p>
+                <p className="text-sm text-slate-400">${planDialog.user?.user_type === 'business' ? '20' : '10'}/mes</p>
+              </div>
+            </div>
+            <div className="p-3 bg-slate-700/50 rounded-lg text-center">
+              <p className="text-sm text-slate-400">Plan actual: <span className={planDialog.user?.plan === 'premium' ? 'text-amber-400' : 'text-slate-300'}>{planDialog.user?.plan === 'premium' ? 'Premium' : 'Básico'}</span></p>
+              <p className="text-sm text-slate-400 mt-1">Nuevo plan: <span className={planDialog.newPlan === 'premium' ? 'text-amber-400' : 'text-blue-400'}>{planDialog.newPlan === 'premium' ? 'Premium' : 'Básico'}</span></p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPlanDialog({open: false, user: null, newPlan: 'free'})} className="border-slate-600 text-slate-300">Cancelar</Button>
+            <Button onClick={handleChangePlan} disabled={updating} className="bg-blue-600 hover:bg-blue-700">
+              {updating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Cambiar Plan'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* User Metrics Dialog */}
+      <Dialog open={metricsDialog.open} onOpenChange={(o) => { setMetricsDialog({...metricsDialog, open: o}); if (!o) setUserMetrics(null); }}>
+        <DialogContent className="bg-slate-800 border-slate-700 text-white max-w-2xl">
+          <DialogHeader><DialogTitle className="flex items-center gap-2"><BarChart3 className="w-5 h-5" />Métricas del Usuario</DialogTitle></DialogHeader>
+          {userMetrics ? (
+            <div className="space-y-4 py-4">
+              <div className="flex items-center gap-4 p-4 bg-slate-700/30 rounded-xl">
+                <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${userMetrics.user?.user_type === 'business' ? 'bg-blue-500' : 'bg-violet-500'}`}>
+                  {userMetrics.user?.user_type === 'business' ? <Building2 className="w-7 h-7 text-white" /> : <User className="w-7 h-7 text-white" />}
+                </div>
+                <div>
+                  <p className="font-bold text-lg">{userMetrics.user?.nombre}</p>
+                  <p className="text-sm text-slate-400">{userMetrics.user?.email}</p>
+                  {userMetrics.user?.nombre_negocio && <p className="text-sm text-blue-400">{userMetrics.user?.nombre_negocio}</p>}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-3">
+                <div className="p-3 bg-slate-700/30 rounded-lg text-center">
+                  <p className="text-2xl font-bold text-cyan-400">{userMetrics.metrics?.clientes || 0}</p>
+                  <p className="text-xs text-slate-400">Clientes</p>
+                </div>
+                <div className="p-3 bg-slate-700/30 rounded-lg text-center">
+                  <p className="text-2xl font-bold text-violet-400">{userMetrics.metrics?.estilos || 0}</p>
+                  <p className="text-xs text-slate-400">Estilos</p>
+                </div>
+                <div className="p-3 bg-slate-700/30 rounded-lg text-center">
+                  <p className="text-2xl font-bold text-blue-400">{userMetrics.metrics?.productos || 0}</p>
+                  <p className="text-xs text-slate-400">Productos</p>
+                </div>
+                <div className="p-3 bg-slate-700/30 rounded-lg text-center">
+                  <p className="text-2xl font-bold text-amber-400">{userMetrics.metrics?.facturas || 0}</p>
+                  <p className="text-xs text-slate-400">Facturas</p>
+                </div>
+                <div className="p-3 bg-slate-700/30 rounded-lg text-center">
+                  <p className="text-2xl font-bold text-emerald-400">${userMetrics.financials?.total_revenue?.toFixed(2) || '0.00'}</p>
+                  <p className="text-xs text-slate-400">Ingresos</p>
+                </div>
+                <div className="p-3 bg-slate-700/30 rounded-lg text-center">
+                  <p className="text-2xl font-bold text-red-400">${userMetrics.financials?.total_gastos?.toFixed(2) || '0.00'}</p>
+                  <p className="text-xs text-slate-400">Gastos</p>
+                </div>
+              </div>
+
+              <div className="p-4 bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 rounded-xl">
+                <p className="text-sm text-slate-300">Rentabilidad Estimada</p>
+                <p className="text-3xl font-bold text-emerald-400">${userMetrics.financials?.rentabilidad_estimada?.toFixed(2) || '0.00'}</p>
+              </div>
+
+              <div className="text-xs text-slate-500 space-y-1">
+                <p>Registro: {userMetrics.created_at ? new Date(userMetrics.created_at).toLocaleDateString() : 'N/A'}</p>
+                <p>Último acceso: {userMetrics.last_login ? new Date(userMetrics.last_login).toLocaleString() : 'N/A'}</p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+            </div>
+          )}
+          <DialogFooter><Button onClick={() => { setMetricsDialog({open: false, user: null}); setUserMetrics(null); }} className="bg-blue-600 hover:bg-blue-700">Cerrar</Button></DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
