@@ -565,6 +565,16 @@ async def login(credentials: UserLogin, request: Request):
         rate_limiter.add_request(client_ip)
         raise HTTPException(status_code=401, detail="Email o contraseña incorrectos")
     
+    # Check if user is disabled
+    if user.get("is_disabled", False):
+        raise HTTPException(status_code=403, detail="Tu cuenta ha sido deshabilitada. Contacta al administrador.")
+    
+    # Update last login
+    await db.users.update_one(
+        {"id": user["id"]},
+        {"$set": {"last_login": datetime.now(timezone.utc).isoformat()}}
+    )
+    
     access_token = create_access_token(data={"sub": user["id"]})
     
     return TokenResponse(
@@ -757,15 +767,145 @@ async def admin_get_stats(admin: dict = Depends(get_admin_user)):
     premium_users = await db.users.count_documents({"plan": "premium"})
     free_users = await db.users.count_documents({"plan": "free"})
     
+    # Count by user type and plan
+    personal_basic = await db.users.count_documents({"user_type": "personal", "plan": "free"})
+    personal_premium = await db.users.count_documents({"user_type": "personal", "plan": "premium"})
+    business_basic = await db.users.count_documents({"user_type": "business", "plan": "free"})
+    business_premium = await db.users.count_documents({"user_type": "business", "plan": "premium"})
+    
+    # Count active users (logged in last 30 days)
+    thirty_days_ago = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
+    active_users = await db.users.count_documents({"last_login": {"$gte": thirty_days_ago}})
+    
+    # Count disabled users
+    disabled_users = await db.users.count_documents({"is_disabled": True})
+    
     return {
         "total_users": total_users,
         "premium_users": premium_users,
         "free_users": free_users,
+        "active_users": active_users,
+        "disabled_users": disabled_users,
+        "by_type": {
+            "personal_basic": personal_basic,
+            "personal_premium": personal_premium,
+            "business_basic": business_basic,
+            "business_premium": business_premium,
+        },
         "total_productos": await db.productos.count_documents({}),
         "total_estilos": await db.estilos.count_documents({}),
         "total_clientes": await db.clientes.count_documents({}),
         "total_citas": await db.citas.count_documents({}),
+        "total_facturas": await db.facturas.count_documents({}),
     }
+
+# Pricing configuration
+PRICING = {
+    "personal": {"basic": 5, "premium": 10},
+    "business": {"basic": 15, "premium": 20}
+}
+
+@api_router.get("/admin/revenue")
+async def admin_get_revenue(admin: dict = Depends(get_admin_user)):
+    """Get revenue projections based on pricing tiers"""
+    
+    # Count users by type and plan
+    personal_basic = await db.users.count_documents({"user_type": "personal", "plan": "free", "is_disabled": {"$ne": True}})
+    personal_premium = await db.users.count_documents({"user_type": "personal", "plan": "premium", "is_disabled": {"$ne": True}})
+    business_basic = await db.users.count_documents({"user_type": "business", "plan": "free", "is_disabled": {"$ne": True}})
+    business_premium = await db.users.count_documents({"user_type": "business", "plan": "premium", "is_disabled": {"$ne": True}})
+    
+    # Calculate revenue
+    monthly_revenue = (
+        (personal_basic * PRICING["personal"]["basic"]) +
+        (personal_premium * PRICING["personal"]["premium"]) +
+        (business_basic * PRICING["business"]["basic"]) +
+        (business_premium * PRICING["business"]["premium"])
+    )
+    
+    annual_revenue = monthly_revenue * 12
+    
+    return {
+        "pricing": PRICING,
+        "subscribers": {
+            "personal_basic": personal_basic,
+            "personal_premium": personal_premium,
+            "business_basic": business_basic,
+            "business_premium": business_premium,
+            "total_paying": personal_basic + personal_premium + business_basic + business_premium
+        },
+        "revenue": {
+            "monthly": monthly_revenue,
+            "annual": annual_revenue,
+            "breakdown": {
+                "personal_basic": personal_basic * PRICING["personal"]["basic"],
+                "personal_premium": personal_premium * PRICING["personal"]["premium"],
+                "business_basic": business_basic * PRICING["business"]["basic"],
+                "business_premium": business_premium * PRICING["business"]["premium"],
+            }
+        }
+    }
+
+@api_router.post("/admin/users/{user_id}/reset-password")
+async def admin_reset_password(user_id: str, admin: dict = Depends(get_admin_user)):
+    """Reset user password to a temporary one (admin only)"""
+    # Generate temporary password
+    temp_password = secrets.token_urlsafe(12)
+    hashed = get_password_hash(temp_password)
+    
+    result = await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"password": hashed, "password_reset_required": True}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    user = await db.users.find_one({"id": user_id}, {"_id": 0, "email": 1, "nombre": 1})
+    
+    return {
+        "message": "Contraseña blanqueada exitosamente",
+        "user_email": user["email"],
+        "temp_password": temp_password,
+        "note": "El usuario deberá cambiar esta contraseña al iniciar sesión"
+    }
+
+@api_router.post("/admin/users/{user_id}/toggle-status")
+async def admin_toggle_user_status(user_id: str, admin: dict = Depends(get_admin_user)):
+    """Enable/disable a user account (admin only)"""
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    if user.get("role") == "admin":
+        raise HTTPException(status_code=400, detail="No se puede deshabilitar una cuenta de administrador")
+    
+    new_status = not user.get("is_disabled", False)
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"is_disabled": new_status}}
+    )
+    
+    return {
+        "message": f"Usuario {'deshabilitado' if new_status else 'habilitado'}",
+        "is_disabled": new_status
+    }
+
+@api_router.put("/admin/users/{user_id}/type")
+async def admin_update_user_type(user_id: str, user_type: str, admin: dict = Depends(get_admin_user)):
+    """Change user type (personal/business) - admin only"""
+    if user_type not in ["personal", "business"]:
+        raise HTTPException(status_code=400, detail="Tipo inválido. Usa 'personal' o 'business'.")
+    
+    result = await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"user_type": user_type}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    return {"message": f"Tipo actualizado a {user_type}", "user_id": user_id, "user_type": user_type}
 
 # ======================
 # ENDPOINTS - Calculation History
@@ -2039,6 +2179,45 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# Admin credentials - PERMANENT
+ADMIN_EMAIL = "admin@nailcost.pro"
+ADMIN_PASSWORD = "NailCost@Adm1n#2024Secure"
+
+@app.on_event("startup")
+async def startup_event():
+    """Create or update permanent admin user on startup"""
+    admin_user = await db.users.find_one({"email": ADMIN_EMAIL})
+    
+    if not admin_user:
+        # Create admin
+        admin_doc = {
+            "id": str(uuid.uuid4()),
+            "email": ADMIN_EMAIL,
+            "password": get_password_hash(ADMIN_PASSWORD),
+            "nombre": "Administrador",
+            "nombre_negocio": "NailCost Pro",
+            "telefono": "",
+            "plan": "premium",
+            "role": "admin",
+            "user_type": "business",
+            "is_disabled": False,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+        await db.users.insert_one(admin_doc)
+        logger.info(f"✅ Admin user created: {ADMIN_EMAIL}")
+    else:
+        # Update admin password to ensure it's always correct
+        await db.users.update_one(
+            {"email": ADMIN_EMAIL},
+            {"$set": {
+                "password": get_password_hash(ADMIN_PASSWORD),
+                "role": "admin",
+                "plan": "premium",
+                "is_disabled": False
+            }}
+        )
+        logger.info(f"✅ Admin user verified: {ADMIN_EMAIL}")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():

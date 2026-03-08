@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { AppProvider } from "@/context/AppContext";
 import { Toaster } from "@/components/ui/sonner";
 import { Layout } from "@/components/Layout";
+import { NotificationManager } from "@/components/NotificationManager";
 
 // Dashboards
 import { PersonaDashboard } from "@/pages/PersonaDashboard";
@@ -141,6 +142,7 @@ function App() {
       <AppProvider>
         <BrowserRouter>
           <AppRoutes />
+          <NotificationManager />
         </BrowserRouter>
         <Toaster position="top-right" richColors />
       </AppProvider>

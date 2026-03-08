@@ -1,0 +1,34 @@
+{
+  "short_name": "NailCost",
+  "name": "NailCost Pro - Calculadora de Costos para Uñas",
+  "description": "Sistema profesional de cálculo de costos y precios para servicios de uñas",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "logo192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#E84A8A",
+  "background_color": "#ffffff",
+  "orientation": "portrait",
+  "scope": "/",
+  "categories": ["business", "productivity", "finance"],
+  "lang": "es",
+  "dir": "ltr",
+  "prefer_related_applications": false
+}
