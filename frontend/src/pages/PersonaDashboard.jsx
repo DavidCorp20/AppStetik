@@ -548,6 +548,50 @@ export default function PersonaDashboard() {
         </CardContent>
       </Card>
 
+      {/* Quick Tutorial - Show only if new user */}
+      {(estilos.length === 0 || clientes.length === 0) && (
+        <Card className="border-blue-200 bg-blue-50/50">
+          <CardContent className="p-4">
+            <h3 className="font-semibold text-[#1A1A2E] mb-3 flex items-center gap-2">
+              <Star className="w-5 h-5 text-blue-600" />
+              Tutorial Rápido
+            </h3>
+            <div className="space-y-2">
+              <div className={`flex items-center gap-3 p-2 rounded-lg ${estilos.length > 0 ? 'bg-emerald-100' : 'bg-white'}`}>
+                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${estilos.length > 0 ? 'bg-emerald-500 text-white' : 'bg-blue-100 text-blue-600'}`}>
+                  {estilos.length > 0 ? '✓' : '1'}
+                </span>
+                <Link to="/estilos" className="text-sm text-[#1A1A2E]">
+                  <strong>Crear estilos:</strong> Define tus servicios y tiempos
+                </Link>
+              </div>
+              <div className={`flex items-center gap-3 p-2 rounded-lg ${productos.length > 0 ? 'bg-emerald-100' : 'bg-white'}`}>
+                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${productos.length > 0 ? 'bg-emerald-500 text-white' : 'bg-blue-100 text-blue-600'}`}>
+                  {productos.length > 0 ? '✓' : '2'}
+                </span>
+                <Link to="/productos" className="text-sm text-[#1A1A2E]">
+                  <strong>Agregar productos:</strong> Registra tus materiales y costos
+                </Link>
+              </div>
+              <div className={`flex items-center gap-3 p-2 rounded-lg ${clientes.length > 0 ? 'bg-emerald-100' : 'bg-white'}`}>
+                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${clientes.length > 0 ? 'bg-emerald-500 text-white' : 'bg-blue-100 text-blue-600'}`}>
+                  {clientes.length > 0 ? '✓' : '3'}
+                </span>
+                <Link to="/clientes" className="text-sm text-[#1A1A2E]">
+                  <strong>Registrar clientes:</strong> Guarda los datos de tus clientas
+                </Link>
+              </div>
+              <div className={`flex items-center gap-3 p-2 rounded-lg bg-white`}>
+                <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold bg-blue-100 text-blue-600">4</span>
+                <Link to="/calculadora" className="text-sm text-[#1A1A2E]">
+                  <strong>Calcular precios:</strong> Obtén precios justos basados en tus costos
+                </Link>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Premium Upsell */}
       {!isPremium && (
         <Card className="border-none bg-gradient-to-r from-amber-500 to-orange-500 text-white">

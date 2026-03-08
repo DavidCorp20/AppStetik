@@ -25,6 +25,7 @@ import {
   ChevronRight
 } from "lucide-react";
 import { toast } from "sonner";
+import { formatCurrency } from "@/lib/utils";
 
 export default function CalculadoraPage() {
   const { estilos, disenos, calcularPrecio, loading } = useApp();
@@ -157,7 +158,7 @@ export default function CalculadoraPage() {
                             <p className="text-xs text-stone-500">+{diseno.tiempo_adicional_minutos} min</p>
                           </div>
                         </div>
-                        <span className="font-semibold text-emerald-700">+${diseno.costo_adicional.toFixed(2)}</span>
+                        <span className="font-semibold text-emerald-700">+{formatCurrency(diseno.costo_adicional)}</span>
                       </div>
                     ))}
                   </div>
@@ -223,20 +224,20 @@ export default function CalculadoraPage() {
                   <div className="space-y-3 border-b border-dashed border-stone-200 pb-4">
                     <div className="flex justify-between text-sm">
                       <span className="text-stone-600">Costo de Productos</span>
-                      <span className="font-medium" data-testid="costo-productos">${resultado.costo_productos.toFixed(2)}</span>
+                      <span className="font-medium" data-testid="costo-productos">{formatCurrency(resultado.costo_productos)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-stone-600">Gasto Operativo</span>
-                      <span className="font-medium" data-testid="costo-operativo">${resultado.costo_operativo_prorrateado.toFixed(2)}</span>
+                      <span className="font-medium" data-testid="costo-operativo">{formatCurrency(resultado.costo_operativo_prorrateado)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-stone-600">Costo de Tiempo</span>
-                      <span className="font-medium" data-testid="costo-tiempo">${resultado.costo_tiempo_trabajo.toFixed(2)}</span>
+                      <span className="font-medium" data-testid="costo-tiempo">{formatCurrency(resultado.costo_tiempo_trabajo)}</span>
                     </div>
                     {resultado.costo_disenos > 0 && (
                       <div className="flex justify-between text-sm">
                         <span className="text-stone-600">Diseños</span>
-                        <span className="font-medium" data-testid="costo-disenos">${resultado.costo_disenos.toFixed(2)}</span>
+                        <span className="font-medium" data-testid="costo-disenos">{formatCurrency(resultado.costo_disenos)}</span>
                       </div>
                     )}
                   </div>
@@ -245,11 +246,11 @@ export default function CalculadoraPage() {
                   <div className="py-4 border-b border-dashed border-stone-200">
                     <div className="flex justify-between">
                       <span className="text-stone-700 font-medium">Costo Total</span>
-                      <span className="font-semibold text-stone-800" data-testid="costo-total">${resultado.costo_total.toFixed(2)}</span>
+                      <span className="font-semibold text-stone-800" data-testid="costo-total">{formatCurrency(resultado.costo_total)}</span>
                     </div>
                     <div className="flex justify-between mt-2 text-emerald-700">
                       <span className="font-medium">+ Margen de Ganancia</span>
-                      <span className="font-semibold" data-testid="margen-ganancia">${resultado.margen_ganancia.toFixed(2)}</span>
+                      <span className="font-semibold" data-testid="margen-ganancia">{formatCurrency(resultado.margen_ganancia)}</span>
                     </div>
                   </div>
 
@@ -258,12 +259,12 @@ export default function CalculadoraPage() {
                     <div className="flex justify-between items-center">
                       <span className="text-lg font-semibold text-stone-800">Precio Recomendado</span>
                       <span className="text-3xl font-bold text-stone-800" data-testid="precio-recomendado">
-                        ${resultado.precio_recomendado.toFixed(2)}
+                        {formatCurrency(resultado.precio_recomendado)}
                       </span>
                     </div>
                     <div className="flex justify-between items-center mt-2 text-sm text-stone-500">
                       <span>Precio Mínimo Rentable</span>
-                      <span data-testid="precio-minimo">${resultado.precio_minimo_rentable.toFixed(2)}</span>
+                      <span data-testid="precio-minimo">{formatCurrency(resultado.precio_minimo_rentable)}</span>
                     </div>
                   </div>
 
@@ -272,7 +273,7 @@ export default function CalculadoraPage() {
                     <div className="text-center p-3 bg-stone-50 rounded-xl">
                       <DollarSign className="w-5 h-5 mx-auto text-emerald-600 mb-1" />
                       <p className="text-xs text-stone-500">Ganancia</p>
-                      <p className="font-semibold text-stone-800" data-testid="ganancia-real">${resultado.ganancia_real.toFixed(2)}</p>
+                      <p className="font-semibold text-stone-800" data-testid="ganancia-real">{formatCurrency(resultado.ganancia_real)}</p>
                     </div>
                     <div className="text-center p-3 bg-stone-50 rounded-xl">
                       <Clock className="w-5 h-5 mx-auto text-blue-600 mb-1" />
@@ -282,7 +283,7 @@ export default function CalculadoraPage() {
                     <div className="text-center p-3 bg-stone-50 rounded-xl">
                       <TrendingUp className="w-5 h-5 mx-auto text-violet-600 mb-1" />
                       <p className="text-xs text-stone-500">$/Hora</p>
-                      <p className="font-semibold text-stone-800" data-testid="rentabilidad-hora">${resultado.rentabilidad_hora.toFixed(2)}</p>
+                      <p className="font-semibold text-stone-800" data-testid="rentabilidad-hora">{formatCurrency(resultado.rentabilidad_hora)}</p>
                     </div>
                   </div>
                 </CardContent>

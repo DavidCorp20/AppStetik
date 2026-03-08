@@ -25,6 +25,7 @@ import {
   Check
 } from "lucide-react";
 import { toast } from "sonner";
+import { formatCurrency, exportToExcel } from "@/lib/utils";
 
 export default function ReportePage() {
   const { getReporte, loading: appLoading } = useApp();
@@ -122,6 +123,27 @@ export default function ReportePage() {
   const topService = reporte.servicios_ranking[0];
   const bottomService = reporte.servicios_ranking[reporte.servicios_ranking.length - 1];
 
+  const handleExportExcel = () => {
+    if (!reporte?.servicios_ranking?.length) {
+      toast.error("No hay datos para exportar");
+      return;
+    }
+    
+    const columns = [
+      { header: 'Servicio', key: 'nombre' },
+      { header: 'Tiempo (min)', key: 'tiempo_minutos' },
+      { header: 'Costo ($)', accessor: (r) => r.costo_total },
+      { header: 'Precio ($)', accessor: (r) => r.precio_servicio },
+      { header: 'Ganancia ($)', accessor: (r) => r.ganancia },
+      { header: '$/Hora', accessor: (r) => r.rentabilidad_hora },
+    ];
+    
+    const success = exportToExcel(reporte.servicios_ranking, 'reporte_rentabilidad', columns);
+    if (success) {
+      toast.success("Reporte exportado exitosamente");
+    }
+  };
+
   return (
     <div className="space-y-6 animate-fade-in" data-testid="reporte-page">
       {/* Header */}
@@ -134,18 +156,29 @@ export default function ReportePage() {
             Análisis completo de tu negocio
           </p>
         </div>
-        <Button
-          onClick={handleShare}
-          className="bg-stone-800 hover:bg-stone-900 text-white rounded-full"
-          data-testid="share-report-btn"
-        >
-          {copied ? (
-            <Check className="w-4 h-4 mr-2" />
-          ) : (
-            <Share2 className="w-4 h-4 mr-2" />
-          )}
-          Compartir Reporte
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={handleExportExcel}
+            variant="outline"
+            className="rounded-full"
+            data-testid="export-excel-btn"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Exportar Excel
+          </Button>
+          <Button
+            onClick={handleShare}
+            className="bg-stone-800 hover:bg-stone-900 text-white rounded-full"
+            data-testid="share-report-btn"
+          >
+            {copied ? (
+              <Check className="w-4 h-4 mr-2" />
+            ) : (
+              <Share2 className="w-4 h-4 mr-2" />
+            )}
+            Compartir
+          </Button>
+        </div>
       </div>
 
       {/* Summary Cards */}

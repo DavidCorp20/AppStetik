@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { formatCurrency } from "@/lib/utils";
 
 export function FloatingCalculator() {
   const { estilos, calcularPrecio } = useApp();
@@ -154,7 +155,7 @@ export function FloatingCalculator() {
                   <div className="bg-gradient-to-br from-[#FDF2F7] to-[#FFE4EE] rounded-2xl p-5 text-center">
                     <p className="text-sm text-[#64748B] mb-1">Precio Recomendado</p>
                     <p className="text-4xl font-bold text-[#E84A8A]">
-                      ${resultado.precio_recomendado.toFixed(2)}
+                      {formatCurrency(resultado.precio_recomendado)}
                     </p>
                     <p className="text-sm text-[#1A1A2E] mt-2">{resultado.estilo_nombre}</p>
                   </div>
@@ -163,11 +164,11 @@ export function FloatingCalculator() {
                   <div className="grid grid-cols-2 gap-3">
                     <div className="bg-[#F8FAFC] rounded-xl p-3 text-center">
                       <p className="text-xs text-[#64748B]">Costo</p>
-                      <p className="text-lg font-semibold text-[#1A1A2E]">${resultado.costo_total.toFixed(2)}</p>
+                      <p className="text-lg font-semibold text-[#1A1A2E]">{formatCurrency(resultado.costo_total)}</p>
                     </div>
                     <div className="bg-[#F8FAFC] rounded-xl p-3 text-center">
                       <p className="text-xs text-[#64748B]">Ganancia</p>
-                      <p className="text-lg font-semibold text-[#10B981]">${resultado.ganancia.toFixed(2)}</p>
+                      <p className="text-lg font-semibold text-[#10B981]">{formatCurrency(resultado.ganancia)}</p>
                     </div>
                   </div>
 

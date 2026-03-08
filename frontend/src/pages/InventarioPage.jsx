@@ -42,6 +42,7 @@ import {
   RefreshCw
 } from "lucide-react";
 import { toast } from "sonner";
+import { formatCurrency, exportToExcel } from "@/lib/utils";
 
 // Movement Type Badge
 const MovementBadge = ({ type }) => {
@@ -200,6 +201,23 @@ export default function InventarioPage() {
     );
   }
 
+  const handleExportInventory = () => {
+    if (!productos.length) {
+      toast.error("No hay productos para exportar");
+      return;
+    }
+    const columns = [
+      { header: 'Producto', key: 'nombre' },
+      { header: 'Tipo', key: 'tipo' },
+      { header: 'Stock Actual', accessor: (r) => r.cantidad_disponible || 0 },
+      { header: 'Stock Mínimo', accessor: (r) => r.stock_minimo || 5 },
+      { header: 'Precio Compra ($)', accessor: (r) => r.precio_compra || 0 },
+      { header: 'Unidad', key: 'unidad' },
+    ];
+    exportToExcel(productos, 'inventario', columns);
+    toast.success("Inventario exportado");
+  };
+
   return (
     <div className="space-y-6" data-testid="inventario-page">
       {/* Header */}
@@ -209,7 +227,7 @@ export default function InventarioPage() {
           <p className="text-sm text-gray-500">Gestiona el stock de tus productos</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="border-gray-200">
+          <Button variant="outline" className="border-gray-200" onClick={handleExportInventory}>
             <Download className="w-4 h-4 mr-2" />
             Exportar
           </Button>
@@ -338,7 +356,7 @@ export default function InventarioPage() {
                         <StockLevel current={stockActual} minimum={stockMinimo} />
                       </td>
                       <td className="py-3 px-4 text-sm text-gray-900">
-                        ${product.costo_unitario?.toFixed(2) || '0.00'}
+                        {formatCurrency(product.costo_unitario)}
                       </td>
                       <td className="py-3 px-4 text-right">
                         <div className="flex items-center justify-end gap-1">

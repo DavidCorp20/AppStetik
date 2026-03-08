@@ -19,55 +19,86 @@
 
 ## Última Actualización: 08 Marzo 2025
 
-### ✅ COMPLETADO HOY
+### ✅ MEJORAS DE SISTEMA HOY
 
-#### 1. Admin Panel Mejorado
-- Dashboard con MRR, usuarios, activos, vencidos, por cobrar
-- Tabs: Overview, Usuarios, Pendientes, Facturación, Reportes
-- Gráficos: Crecimiento usuarios/ingresos, Estado suscripciones, Ingresos por plan
-- Estadísticas del sistema en tiempo real
-- Exportación CSV
-- Paleta profesional azul/violeta (sin rosado)
+#### 1. Formato de Decimales Estandarizado
+- Helper `formatCurrency()` creado en `/lib/utils.js`
+- Todos los valores financieros muestran máximo 2 decimales
+- Aplicado a: Calculadora, Reportes, Simulación, Dashboard, Inventario
 
-#### 2. Datos de Prueba Creados
-- 6 usuarios de prueba (mix Personal/Comercio)
-- 60 productos, 44 estilos, 39 diseños
-- 37 clientes, 34 citas, 54 facturas
-- 8 empleados para cuentas comercio
-- Colecciones: activity_logs, user_settings
+#### 2. Exportación a Excel Mejorada
+- Helper `exportToExcel()` para exportar datos CSV
+- Aplicado a: Reportes de Rentabilidad, Inventario
+- Formato limpio con headers y valores formateados
 
-#### 3. Login/Registro Profesional
-- Paleta azul oscuro + cyan + violeta
-- Sin colores rosados
-- Badges de confianza (Trial 15 días, Datos seguros)
-- Testimonial en registro
+#### 3. Tutorial para Usuarios Nuevos
+- Dashboard Persona muestra tutorial interactivo
+- 4 pasos: Crear estilos → Agregar productos → Registrar clientes → Calcular precios
+- Se oculta automáticamente cuando el usuario completa pasos
 
-### ✅ COMPLETADO ANTERIORMENTE
-- Sistema de autenticación JWT
-- Dual UX (Persona/Comercio)
-- Trial 15 días + Activación por admin
-- Facturación venezolana (IVA 16%, SENIAT)
-- AdminLayout dedicado
-- Push notifications (Service Worker)
-- MongoDB Atlas conectado
+#### 4. Mejoras de Usabilidad
+- FloatingCalculator usa formatCurrency
+- Valores en Dashboard Comercio formateados
+- Indicadores de progreso más claros
 
 ---
 
-## Precios de Suscripción
-| Plan | Personal | Comercio |
-|------|----------|----------|
-| Básico | $5/mes | $15/mes |
-| Premium | $10/mes | $20/mes |
+### ✅ COMPLETADO ANTERIORMENTE
+
+#### Admin Panel Avanzado
+- Dashboard con MRR, usuarios, gráficos interactivos
+- Tabs: Overview, Usuarios, Pendientes, Facturación, Reportes
+- Reportes: MRR/ARR, Retención, Distribución usuarios
+- Paleta profesional azul/violeta
+
+#### Login/Registro Profesional
+- Paleta azul oscuro + cyan (sin rosado)
+- Features destacadas en panel izquierdo
+- Badges de confianza
+
+#### Datos de Prueba
+- 6 usuarios test con datos completos
+- 60+ productos, 44 estilos, 37 clientes, 54 facturas
+- Colecciones: activity_logs, user_settings
+
+#### Sistema de Autenticación
+- JWT con trial 15 días
+- Activación por admin
+- Estados: pending, trial, active, expired
+
+#### Facturación SENIAT
+- IVA 16% configurable
+- Campos: RIF, número de control
+- Reportes fiscales mensuales
+
+---
+
+## ESTADO DEL SISTEMA
+
+### ✅ Funcionando
+- Login/Registro
+- Dashboard Persona/Comercio
+- Calculadora de precios
+- Floating Calculator
+- Inventario con alertas
+- Facturación con IVA
+- Admin Panel completo
+- Exportación Excel
+
+### ⚠️ Requiere Datos
+- Simulación (necesita estilos registrados)
+- Reportes (necesita historial de cálculos)
 
 ---
 
 ## PRÓXIMAS TAREAS
 
 ### P1 - Alta Prioridad
-- [ ] Mejorar gestión de empleados (contabilidad avanzada)
+- [ ] Comparación de precios de compra en inventario (precio anterior vs nuevo)
+- [ ] Recomendaciones de negocio basadas en datos financieros
 
 ### P2 - Media Prioridad  
-- [ ] Integración Stripe (pagos automáticos)
+- [ ] Integración Stripe para pagos automáticos
 - [ ] Email real (SendGrid/Resend)
 - [ ] Modo oscuro
 

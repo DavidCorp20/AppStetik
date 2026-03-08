@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { PremiumGate } from "@/components/PremiumGate";
+import { formatCurrency } from "@/lib/utils";
 
 export default function SimulacionPage() {
   return (
@@ -241,15 +242,15 @@ function SimulacionContent() {
                         <div className="grid grid-cols-3 gap-4 mt-4">
                           <div>
                             <p className="text-xs text-stone-300">Precio</p>
-                            <p className="text-lg font-semibold">${bestService.precio_servicio}</p>
+                            <p className="text-lg font-semibold">{formatCurrency(bestService.precio_servicio)}</p>
                           </div>
                           <div>
                             <p className="text-xs text-stone-300">Ganancia/Hora</p>
-                            <p className="text-lg font-semibold">${bestService.rentabilidad_hora}</p>
+                            <p className="text-lg font-semibold">{formatCurrency(bestService.rentabilidad_hora)}</p>
                           </div>
                           <div>
                             <p className="text-xs text-stone-300">Ganancia/Mes</p>
-                            <p className="text-lg font-semibold">${bestService.ganancia_estimada}</p>
+                            <p className="text-lg font-semibold">{formatCurrency(bestService.ganancia_estimada)}</p>
                           </div>
                         </div>
                       </div>

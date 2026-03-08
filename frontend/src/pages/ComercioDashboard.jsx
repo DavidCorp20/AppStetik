@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { formatCurrency } from "@/lib/utils";
 import { 
   Package, 
   Users, 
@@ -227,13 +228,13 @@ export default function ComercioDashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard 
           label="Ingresos Est." 
-          value={`$${reporte?.rentabilidad_mensual_estimada?.toFixed(0) || '0'}`}
+          value={formatCurrency(reporte?.rentabilidad_mensual_estimada, 0)}
           subvalue="Este mes"
           icon={CircleDollarSign}
         />
         <StatCard 
           label="Gastos" 
-          value={`$${gastosTotal.mes.toFixed(0)}`}
+          value={formatCurrency(gastosTotal.mes, 0)}
           subvalue="Operativos"
           icon={Wallet}
         />
@@ -270,8 +271,8 @@ export default function ComercioDashboard() {
               color={metaProgress() >= 100 ? 'emerald' : metaProgress() >= 70 ? 'amber' : 'gray'}
             />
             <div className="flex justify-between mt-2 text-xs text-gray-500">
-              <span>${reporte?.rentabilidad_mensual_estimada?.toFixed(0) || '0'}</span>
-              <span>Meta: ${configGanancias.meta_ingreso_mensual}</span>
+              <span>{formatCurrency(reporte?.rentabilidad_mensual_estimada, 0)}</span>
+              <span>Meta: {formatCurrency(configGanancias.meta_ingreso_mensual, 0)}</span>
             </div>
           </CardContent>
         </Card>
