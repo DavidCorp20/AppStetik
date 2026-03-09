@@ -1,497 +1,533 @@
 """
-Seed Data Script for NailCost Pro
-Creates test users with complete data for testing purposes
+Seed data script with REAL Venezuelan market prices (2024-2025)
+Prices in USD at official exchange rate
 """
 import asyncio
-import uuid
-from datetime import datetime, timezone, timedelta
+import os
 from motor.motor_asyncio import AsyncIOMotorClient
 from passlib.context import CryptContext
-import os
-from dotenv import load_dotenv
-from pathlib import Path
+from datetime import datetime, timezone, timedelta
+import uuid
 import random
 
-ROOT_DIR = Path(__file__).parent
-load_dotenv(ROOT_DIR / '.env')
+# Load environment
+from dotenv import load_dotenv
+from pathlib import Path
+load_dotenv(Path(__file__).parent / '.env')
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# Test Users Configuration
-TEST_USERS = [
-    {
-        "email": "maria.personal@test.com",
-        "password": "Test123!",
-        "nombre": "María García",
-        "nombre_negocio": "",
-        "telefono": "0412-1234567",
-        "user_type": "personal",
-        "plan": "free",
-    },
-    {
-        "email": "laura.premium@test.com",
-        "password": "Test123!",
-        "nombre": "Laura Rodríguez",
-        "nombre_negocio": "",
-        "telefono": "0414-2345678",
-        "user_type": "personal",
-        "plan": "premium",
-    },
-    {
-        "email": "glamour.salon@test.com",
-        "password": "Test123!",
-        "nombre": "Ana Martínez",
-        "nombre_negocio": "Glamour Nails Spa",
-        "telefono": "0212-5551234",
-        "user_type": "business",
-        "plan": "free",
-    },
-    {
-        "email": "elite.nails@test.com",
-        "password": "Test123!",
-        "nombre": "Carmen López",
-        "nombre_negocio": "Elite Nails Studio",
-        "telefono": "0212-5559876",
-        "user_type": "business",
-        "plan": "premium",
-    },
-    {
-        "email": "bella.unas@test.com",
-        "password": "Test123!",
-        "nombre": "Sofia Hernández",
-        "nombre_negocio": "Bella Uñas",
-        "telefono": "0424-3456789",
-        "user_type": "business",
-        "plan": "premium",
-    },
-    {
-        "email": "patricia.indie@test.com",
-        "password": "Test123!",
-        "nombre": "Patricia Díaz",
-        "nombre_negocio": "",
-        "telefono": "0416-4567890",
-        "user_type": "personal",
-        "plan": "free",
-    },
-]
+def get_password_hash(password: str) -> str:
+    return pwd_context.hash(password)
 
-# Sample Products
-SAMPLE_PRODUCTOS = [
-    {"nombre": "Esmalte Gel Base", "tipo": "insumo", "precio_compra": 15.0, "cantidad_comprada": 30, "unidad": "ml", "uso_por_servicio": 2},
-    {"nombre": "Esmalte Gel Color Rojo", "tipo": "insumo", "precio_compra": 12.0, "cantidad_comprada": 15, "unidad": "ml", "uso_por_servicio": 1.5},
-    {"nombre": "Esmalte Gel Color Rosa", "tipo": "insumo", "precio_compra": 12.0, "cantidad_comprada": 15, "unidad": "ml", "uso_por_servicio": 1.5},
-    {"nombre": "Esmalte Gel Color Nude", "tipo": "insumo", "precio_compra": 12.0, "cantidad_comprada": 15, "unidad": "ml", "uso_por_servicio": 1.5},
-    {"nombre": "Top Coat Brillante", "tipo": "insumo", "precio_compra": 18.0, "cantidad_comprada": 30, "unidad": "ml", "uso_por_servicio": 2},
-    {"nombre": "Acetona Pura", "tipo": "insumo", "precio_compra": 8.0, "cantidad_comprada": 500, "unidad": "ml", "uso_por_servicio": 10},
-    {"nombre": "Primer Ácido", "tipo": "insumo", "precio_compra": 10.0, "cantidad_comprada": 30, "unidad": "ml", "uso_por_servicio": 1},
-    {"nombre": "Acrílico Polvo Blanco", "tipo": "insumo", "precio_compra": 25.0, "cantidad_comprada": 100, "unidad": "gr", "uso_por_servicio": 5},
-    {"nombre": "Acrílico Polvo Rosa", "tipo": "insumo", "precio_compra": 25.0, "cantidad_comprada": 100, "unidad": "gr", "uso_por_servicio": 5},
-    {"nombre": "Monómero Líquido", "tipo": "insumo", "precio_compra": 20.0, "cantidad_comprada": 120, "unidad": "ml", "uso_por_servicio": 8},
-    {"nombre": "Lima 100/180", "tipo": "herramienta", "precio_compra": 2.0, "cantidad_comprada": 50, "unidad": "unidades", "uso_por_servicio": 0.1},
-    {"nombre": "Buffer Pulidor", "tipo": "herramienta", "precio_compra": 3.0, "cantidad_comprada": 30, "unidad": "unidades", "uso_por_servicio": 0.1},
-    {"nombre": "Pincel Acrílico #8", "tipo": "herramienta", "precio_compra": 15.0, "cantidad_comprada": 1, "unidad": "unidades", "uso_por_servicio": 0.01},
-    {"nombre": "Decoraciones Strass", "tipo": "insumo", "precio_compra": 5.0, "cantidad_comprada": 500, "unidad": "unidades", "uso_por_servicio": 10},
-    {"nombre": "Foil Dorado", "tipo": "insumo", "precio_compra": 8.0, "cantidad_comprada": 100, "unidad": "cm", "uso_por_servicio": 5},
-]
+# ================================
+# REAL VENEZUELAN MARKET PRICES
+# ================================
 
-# Sample Styles
-SAMPLE_ESTILOS = [
-    {"nombre": "Manicure Básico", "descripcion": "Limpieza, corte y esmaltado tradicional", "tiempo_trabajo_minutos": 45, "nivel_dificultad": "bajo"},
-    {"nombre": "Manicure Gel", "descripcion": "Esmaltado semipermanente con lámpara UV", "tiempo_trabajo_minutos": 60, "nivel_dificultad": "medio"},
-    {"nombre": "Uñas Acrílicas Básicas", "descripcion": "Extensión con acrílico, largo natural", "tiempo_trabajo_minutos": 90, "nivel_dificultad": "medio"},
-    {"nombre": "Uñas Acrílicas Esculpidas", "descripcion": "Esculpido con tips o molde, acabado perfecto", "tiempo_trabajo_minutos": 120, "nivel_dificultad": "alto"},
-    {"nombre": "Uñas de Gel Builder", "descripcion": "Construcción con gel, naturales", "tiempo_trabajo_minutos": 90, "nivel_dificultad": "medio"},
-    {"nombre": "Press On Personalizadas", "descripcion": "Uñas prefabricadas personalizadas", "tiempo_trabajo_minutos": 30, "nivel_dificultad": "bajo"},
-    {"nombre": "Pedicure Spa", "descripcion": "Tratamiento completo de pies", "tiempo_trabajo_minutos": 75, "nivel_dificultad": "bajo"},
-    {"nombre": "Retoque Acrílico", "descripcion": "Relleno de crecimiento", "tiempo_trabajo_minutos": 60, "nivel_dificultad": "medio"},
-]
-
-# Sample Designs
-SAMPLE_DISENOS = [
-    {"nombre": "Francés Clásico", "costo_adicional": 5.0, "tiempo_adicional_minutos": 15, "nivel_complejidad": "bajo"},
-    {"nombre": "Francés Invertido", "costo_adicional": 7.0, "tiempo_adicional_minutos": 20, "nivel_complejidad": "medio"},
-    {"nombre": "Degradado Ombré", "costo_adicional": 10.0, "tiempo_adicional_minutos": 25, "nivel_complejidad": "medio"},
-    {"nombre": "Nail Art Flores", "costo_adicional": 15.0, "tiempo_adicional_minutos": 40, "nivel_complejidad": "alto"},
-    {"nombre": "Strass y Piedras", "costo_adicional": 8.0, "tiempo_adicional_minutos": 15, "nivel_complejidad": "bajo"},
-    {"nombre": "Efecto Mármol", "costo_adicional": 12.0, "tiempo_adicional_minutos": 30, "nivel_complejidad": "medio"},
-    {"nombre": "Stamping", "costo_adicional": 5.0, "tiempo_adicional_minutos": 10, "nivel_complejidad": "bajo"},
-    {"nombre": "Encapsulado Glitter", "costo_adicional": 10.0, "tiempo_adicional_minutos": 20, "nivel_complejidad": "medio"},
-    {"nombre": "Chrome/Espejo", "costo_adicional": 12.0, "tiempo_adicional_minutos": 15, "nivel_complejidad": "medio"},
-    {"nombre": "Diseño 3D", "costo_adicional": 20.0, "tiempo_adicional_minutos": 45, "nivel_complejidad": "alto"},
-]
-
-# Sample Clients
-SAMPLE_CLIENTES = [
-    {"nombre": "Andrea Pérez", "telefono": "0412-1111111", "email": "andrea@email.com", "notas": "Prefiere tonos nude"},
-    {"nombre": "Beatriz Gómez", "telefono": "0414-2222222", "email": "beatriz@email.com", "notas": "Alérgica al acrílico"},
-    {"nombre": "Carolina Silva", "telefono": "0424-3333333", "email": "carolina@email.com", "notas": "Cliente VIP"},
-    {"nombre": "Diana Torres", "telefono": "0416-4444444", "email": "diana@email.com", "notas": "Siempre pide diseños elaborados"},
-    {"nombre": "Elena Ruiz", "telefono": "0426-5555555", "email": "elena@email.com", "notas": "Prefiere citas los sábados"},
-    {"nombre": "Fernanda Castro", "telefono": "0412-6666666", "email": "fernanda@email.com", "notas": "Pago siempre en efectivo"},
-    {"nombre": "Gabriela Mendez", "telefono": "0414-7777777", "email": "gabriela@email.com", "notas": "Refiere muchas clientas"},
-    {"nombre": "Helena Vargas", "telefono": "0424-8888888", "email": "helena@email.com", "notas": "Trabaja cerca, viene en horario de almuerzo"},
-]
-
-# Sample Employees (for business users)
-SAMPLE_EMPLEADOS = [
-    {"nombre": "Jessica Morales", "email": "jessica@salon.com", "telefono": "0412-9991111", "especialidad": "Acrílico", "comision_porcentaje": 40, "salario_base": 150, "tipo_contrato": "mixto"},
-    {"nombre": "Karla Suárez", "email": "karla@salon.com", "telefono": "0414-9992222", "especialidad": "Gel", "comision_porcentaje": 35, "salario_base": 0, "tipo_contrato": "comision"},
-    {"nombre": "Lucia Romero", "email": "lucia@salon.com", "telefono": "0424-9993333", "especialidad": "Nail Art", "comision_porcentaje": 45, "salario_base": 100, "tipo_contrato": "mixto"},
-    {"nombre": "Monica Blanco", "email": "monica@salon.com", "telefono": "0416-9994444", "especialidad": "Pedicure", "comision_porcentaje": 30, "salario_base": 200, "tipo_contrato": "fijo"},
-]
-
-
-async def seed_database():
-    """Main function to seed the database with test data"""
-    print("=" * 60)
-    print("🌱 SEEDING NAILCOST PRO DATABASE")
-    print("=" * 60)
+# Products with real Venezuelan prices in USD
+PRODUCTOS_REALES = [
+    # Esmaltes y Geles
+    {"nombre": "Esmalte Semipermanente Masglo", "tipo": "insumo", "precio_compra": 8.50, "cantidad_comprada": 12, "unidad": "unidades", "uso_por_servicio": 0.5},
+    {"nombre": "Esmalte Gel Vogue", "tipo": "insumo", "precio_compra": 6.00, "cantidad_comprada": 15, "unidad": "unidades", "uso_por_servicio": 0.5},
+    {"nombre": "Base Coat UV/LED", "tipo": "insumo", "precio_compra": 12.00, "cantidad_comprada": 8, "unidad": "unidades", "uso_por_servicio": 0.3},
+    {"nombre": "Top Coat Brillo Espejo", "tipo": "insumo", "precio_compra": 14.00, "cantidad_comprada": 8, "unidad": "unidades", "uso_por_servicio": 0.3},
+    {"nombre": "Esmalte Tradicional Revlon", "tipo": "insumo", "precio_compra": 4.50, "cantidad_comprada": 20, "unidad": "unidades", "uso_por_servicio": 0.4},
     
-    # Connect to MongoDB
-    mongo_url = os.environ['MONGO_URL']
-    db_name = os.environ['DB_NAME']
+    # Acrílicos y Polvos
+    {"nombre": "Polvo Acrílico Rosado 56g", "tipo": "insumo", "precio_compra": 18.00, "cantidad_comprada": 5, "unidad": "unidades", "uso_por_servicio": 2.0},
+    {"nombre": "Polvo Acrílico Transparente 56g", "tipo": "insumo", "precio_compra": 16.00, "cantidad_comprada": 5, "unidad": "unidades", "uso_por_servicio": 2.0},
+    {"nombre": "Monómero Acrílico 120ml", "tipo": "insumo", "precio_compra": 12.00, "cantidad_comprada": 8, "unidad": "unidades", "uso_por_servicio": 5.0},
+    {"nombre": "Polvo Cover Pink 28g", "tipo": "insumo", "precio_compra": 15.00, "cantidad_comprada": 6, "unidad": "unidades", "uso_por_servicio": 1.5},
+    
+    # Gel y Polygel
+    {"nombre": "Gel Constructor UV 30g", "tipo": "insumo", "precio_compra": 22.00, "cantidad_comprada": 4, "unidad": "unidades", "uso_por_servicio": 3.0},
+    {"nombre": "Polygel Tubo 30g", "tipo": "insumo", "precio_compra": 15.00, "cantidad_comprada": 6, "unidad": "unidades", "uso_por_servicio": 2.5},
+    {"nombre": "Gel Spider Negro", "tipo": "insumo", "precio_compra": 8.00, "cantidad_comprada": 3, "unidad": "unidades", "uso_por_servicio": 0.2},
+    
+    # Tips y Moldes
+    {"nombre": "Tips Almendra 500pcs", "tipo": "insumo", "precio_compra": 8.00, "cantidad_comprada": 3, "unidad": "cajas", "uso_por_servicio": 10.0},
+    {"nombre": "Tips Coffin/Bailarina 500pcs", "tipo": "insumo", "precio_compra": 9.00, "cantidad_comprada": 3, "unidad": "cajas", "uso_por_servicio": 10.0},
+    {"nombre": "Moldes Dual System 100pcs", "tipo": "insumo", "precio_compra": 12.00, "cantidad_comprada": 2, "unidad": "cajas", "uso_por_servicio": 10.0},
+    {"nombre": "Formas de Papel 500pcs", "tipo": "insumo", "precio_compra": 6.00, "cantidad_comprada": 4, "unidad": "rollos", "uso_por_servicio": 10.0},
+    
+    # Decoración
+    {"nombre": "Piedras Swarovski Mix 1440pcs", "tipo": "insumo", "precio_compra": 25.00, "cantidad_comprada": 2, "unidad": "cajas", "uso_por_servicio": 5.0},
+    {"nombre": "Foil Dorado/Plata 10pcs", "tipo": "insumo", "precio_compra": 4.00, "cantidad_comprada": 10, "unidad": "paquetes", "uso_por_servicio": 1.0},
+    {"nombre": "Glitter Holográfico Set 12", "tipo": "insumo", "precio_compra": 8.00, "cantidad_comprada": 3, "unidad": "sets", "uso_por_servicio": 0.3},
+    {"nombre": "Stickers Uñas 3D Mix", "tipo": "insumo", "precio_compra": 3.00, "cantidad_comprada": 15, "unidad": "hojas", "uso_por_servicio": 1.0},
+    {"nombre": "Cinta Striping Tape 10 colores", "tipo": "insumo", "precio_compra": 2.50, "cantidad_comprada": 5, "unidad": "sets", "uso_por_servicio": 0.2},
+    
+    # Herramientas
+    {"nombre": "Lámpara UV/LED 120W", "tipo": "herramienta", "precio_compra": 45.00, "cantidad_comprada": 1, "unidad": "unidades", "uso_por_servicio": 0.01},
+    {"nombre": "Torno Profesional 35000 RPM", "tipo": "herramienta", "precio_compra": 65.00, "cantidad_comprada": 1, "unidad": "unidades", "uso_por_servicio": 0.01},
+    {"nombre": "Pincel Acrílico Kolinsky #8", "tipo": "herramienta", "precio_compra": 18.00, "cantidad_comprada": 2, "unidad": "unidades", "uso_por_servicio": 0.02},
+    {"nombre": "Set Pinceles Nail Art 15pcs", "tipo": "herramienta", "precio_compra": 12.00, "cantidad_comprada": 2, "unidad": "sets", "uso_por_servicio": 0.01},
+    {"nombre": "Lima 100/180 Recta 10pcs", "tipo": "insumo", "precio_compra": 4.00, "cantidad_comprada": 10, "unidad": "paquetes", "uso_por_servicio": 0.5},
+    {"nombre": "Lima Banana 100/100 10pcs", "tipo": "insumo", "precio_compra": 5.00, "cantidad_comprada": 8, "unidad": "paquetes", "uso_por_servicio": 0.5},
+    {"nombre": "Buffer Pulidor 4 caras", "tipo": "insumo", "precio_compra": 1.50, "cantidad_comprada": 20, "unidad": "unidades", "uso_por_servicio": 0.3},
+    {"nombre": "Cortauñas Profesional", "tipo": "herramienta", "precio_compra": 8.00, "cantidad_comprada": 2, "unidad": "unidades", "uso_por_servicio": 0.01},
+    {"nombre": "Alicate Cutícula Inox", "tipo": "herramienta", "precio_compra": 15.00, "cantidad_comprada": 2, "unidad": "unidades", "uso_por_servicio": 0.01},
+    {"nombre": "Empujador Cutícula Doble", "tipo": "herramienta", "precio_compra": 3.00, "cantidad_comprada": 5, "unidad": "unidades", "uso_por_servicio": 0.02},
+    
+    # Preparación y Limpieza
+    {"nombre": "Acetona 100% Pura 1L", "tipo": "insumo", "precio_compra": 5.00, "cantidad_comprada": 6, "unidad": "litros", "uso_por_servicio": 15.0},
+    {"nombre": "Alcohol Isopropílico 1L", "tipo": "insumo", "precio_compra": 4.00, "cantidad_comprada": 6, "unidad": "litros", "uso_por_servicio": 10.0},
+    {"nombre": "Primer Sin Ácido 15ml", "tipo": "insumo", "precio_compra": 8.00, "cantidad_comprada": 5, "unidad": "unidades", "uso_por_servicio": 0.5},
+    {"nombre": "Deshidratador 15ml", "tipo": "insumo", "precio_compra": 6.00, "cantidad_comprada": 5, "unidad": "unidades", "uso_por_servicio": 0.5},
+    {"nombre": "Removedor Gel/Semipermanente 500ml", "tipo": "insumo", "precio_compra": 7.00, "cantidad_comprada": 4, "unidad": "unidades", "uso_por_servicio": 20.0},
+    {"nombre": "Algodón 500g", "tipo": "insumo", "precio_compra": 3.00, "cantidad_comprada": 10, "unidad": "paquetes", "uso_por_servicio": 5.0},
+    {"nombre": "Toallas Desechables 100pcs", "tipo": "insumo", "precio_compra": 4.00, "cantidad_comprada": 5, "unidad": "paquetes", "uso_por_servicio": 2.0},
+    
+    # Cuidado
+    {"nombre": "Aceite Cutícula 15ml", "tipo": "insumo", "precio_compra": 4.00, "cantidad_comprada": 10, "unidad": "unidades", "uso_por_servicio": 0.3},
+    {"nombre": "Crema Hidratante Manos 250ml", "tipo": "insumo", "precio_compra": 6.00, "cantidad_comprada": 5, "unidad": "unidades", "uso_por_servicio": 2.0},
+]
+
+# Styles with real Venezuelan market prices
+ESTILOS_REALES = [
+    {"nombre": "Manicure Tradicional", "descripcion": "Limado, cutícula y esmaltado tradicional", "tiempo_trabajo_minutos": 30, "nivel_dificultad": "bajo", "precio_sugerido": 8.00},
+    {"nombre": "Manicure Rusa", "descripcion": "Técnica rusa con torno, cutícula perfecta", "tiempo_trabajo_minutos": 45, "nivel_dificultad": "medio", "precio_sugerido": 12.00},
+    {"nombre": "Semipermanente Básico", "descripcion": "Esmaltado semipermanente un color", "tiempo_trabajo_minutos": 45, "nivel_dificultad": "bajo", "precio_sugerido": 12.00},
+    {"nombre": "Semipermanente con Diseño", "descripcion": "Semipermanente + nail art sencillo", "tiempo_trabajo_minutos": 60, "nivel_dificultad": "medio", "precio_sugerido": 18.00},
+    {"nombre": "Esmaltado Gel Básico", "descripcion": "Gel polish un solo color", "tiempo_trabajo_minutos": 50, "nivel_dificultad": "bajo", "precio_sugerido": 15.00},
+    {"nombre": "Uñas Acrílicas Naturales", "descripcion": "Extensión acrílica look natural", "tiempo_trabajo_minutos": 90, "nivel_dificultad": "medio", "precio_sugerido": 25.00},
+    {"nombre": "Acrílico con Diseño Básico", "descripcion": "Extensión + diseño francés o degradado", "tiempo_trabajo_minutos": 120, "nivel_dificultad": "medio", "precio_sugerido": 35.00},
+    {"nombre": "Acrílico Diseño Elaborado", "descripcion": "Acrílico con nail art avanzado", "tiempo_trabajo_minutos": 150, "nivel_dificultad": "alto", "precio_sugerido": 50.00},
+    {"nombre": "Uñas Polygel", "descripcion": "Extensión con polygel natural", "tiempo_trabajo_minutos": 80, "nivel_dificultad": "medio", "precio_sugerido": 22.00},
+    {"nombre": "Gel Esculpido", "descripcion": "Uñas esculpidas en gel puro", "tiempo_trabajo_minutos": 100, "nivel_dificultad": "alto", "precio_sugerido": 30.00},
+    {"nombre": "Press-On Personalizadas", "descripcion": "Set de uñas postizas personalizadas", "tiempo_trabajo_minutos": 120, "nivel_dificultad": "medio", "precio_sugerido": 40.00},
+    {"nombre": "Retoque Acrílico/Gel", "descripcion": "Mantenimiento de extensiones", "tiempo_trabajo_minutos": 60, "nivel_dificultad": "medio", "precio_sugerido": 18.00},
+    {"nombre": "Retiro Completo", "descripcion": "Remoción de extensiones o semipermanente", "tiempo_trabajo_minutos": 30, "nivel_dificultad": "bajo", "precio_sugerido": 8.00},
+    {"nombre": "Spa de Manos", "descripcion": "Tratamiento hidratante completo", "tiempo_trabajo_minutos": 40, "nivel_dificultad": "bajo", "precio_sugerido": 15.00},
+    {"nombre": "Nail Art Premium", "descripcion": "Diseños elaborados 3D, encapsulado", "tiempo_trabajo_minutos": 180, "nivel_dificultad": "alto", "precio_sugerido": 60.00},
+]
+
+# Client names (Venezuelan)
+CLIENTES_NOMBRES = [
+    ("María", "González"), ("Ana", "Rodríguez"), ("Carmen", "Martínez"), ("Rosa", "Hernández"),
+    ("Patricia", "López"), ("Luisa", "García"), ("Elena", "Pérez"), ("Sofía", "Díaz"),
+    ("Isabella", "Morales"), ("Valentina", "Ramírez"), ("Gabriela", "Torres"), ("Daniela", "Flores"),
+    ("Andrea", "Rivera"), ("Mariana", "Sánchez"), ("Victoria", "Vargas"), ("Carolina", "Castro"),
+    ("Alejandra", "Mendoza"), ("Paula", "Gutiérrez"), ("Laura", "Rojas"), ("Camila", "Ortiz"),
+]
+
+# Employee names and specialties
+EMPLEADOS_DATA = [
+    {"nombre": "Adriana Paredes", "especialidad": "Acrílico y Diseño", "telefono": "0414-1234567", "porcentaje_comision": 40},
+    {"nombre": "Karla Méndez", "especialidad": "Semipermanente", "telefono": "0424-2345678", "porcentaje_comision": 35},
+    {"nombre": "Yessica Rondón", "especialidad": "Nail Art", "telefono": "0412-3456789", "porcentaje_comision": 45},
+    {"nombre": "Mariangel Torres", "especialidad": "Manicure Rusa", "telefono": "0416-4567890", "porcentaje_comision": 35},
+]
+
+# Gastos operativos reales para negocio venezolano
+GASTOS_NEGOCIO = [
+    {"concepto": "Alquiler Local", "monto": 150.00, "tipo": "fijo", "frecuencia": "mensual"},
+    {"concepto": "Electricidad", "monto": 25.00, "tipo": "fijo", "frecuencia": "mensual"},
+    {"concepto": "Internet Fibra Óptica", "monto": 30.00, "tipo": "fijo", "frecuencia": "mensual"},
+    {"concepto": "Agua", "monto": 10.00, "tipo": "fijo", "frecuencia": "mensual"},
+    {"concepto": "Productos de Limpieza", "monto": 15.00, "tipo": "variable", "frecuencia": "mensual"},
+    {"concepto": "Instagram Ads", "monto": 20.00, "tipo": "variable", "frecuencia": "mensual"},
+]
+
+GASTOS_PERSONA = [
+    {"concepto": "Internet", "monto": 25.00, "tipo": "fijo", "frecuencia": "mensual"},
+    {"concepto": "Transporte a domicilios", "monto": 30.00, "tipo": "variable", "frecuencia": "mensual"},
+    {"concepto": "Publicidad Instagram", "monto": 10.00, "tipo": "variable", "frecuencia": "mensual"},
+]
+
+async def clear_database(db):
+    """Clear all collections except admin user"""
+    collections = ['productos', 'estilos', 'clientes', 'gastos', 'config_ganancias', 
+                   'empleados', 'citas', 'facturas', 'movimientos_inventario', 
+                   'operational_costs', 'platform_config']
+    
+    for col in collections:
+        await db[col].delete_many({})
+    
+    # Delete non-admin users
+    await db.users.delete_many({"role": {"$ne": "admin"}})
+    print("✅ Base de datos limpiada")
+
+async def create_users(db):
+    """Create test users"""
+    users = []
+    
+    # Business user - Elite Nails Studio
+    business_user = {
+        "id": str(uuid.uuid4()),
+        "email": "elite.nails@test.com",
+        "password": get_password_hash("Test123!"),
+        "nombre": "Adriana Paredes",
+        "nombre_negocio": "Elite Nails Studio",
+        "telefono": "0414-8523697",
+        "plan": "premium",
+        "role": "user",
+        "user_type": "business",
+        "is_disabled": False,
+        "subscription_status": "active",
+        "subscription_start": (datetime.now(timezone.utc) - timedelta(days=45)).isoformat(),
+        "subscription_end": (datetime.now(timezone.utc) + timedelta(days=320)).isoformat(),
+        "created_at": (datetime.now(timezone.utc) - timedelta(days=60)).isoformat(),
+    }
+    users.append(business_user)
+    
+    # Personal user - Independent nail artist
+    personal_user = {
+        "id": str(uuid.uuid4()),
+        "email": "maria.nails@test.com",
+        "password": get_password_hash("Test123!"),
+        "nombre": "María Fernanda López",
+        "nombre_negocio": "Nails by María",
+        "telefono": "0424-7891234",
+        "plan": "free",
+        "role": "user", 
+        "user_type": "personal",
+        "is_disabled": False,
+        "subscription_status": "active",
+        "subscription_start": (datetime.now(timezone.utc) - timedelta(days=10)).isoformat(),
+        "subscription_end": (datetime.now(timezone.utc) + timedelta(days=5)).isoformat(),  # Trial ending soon
+        "created_at": (datetime.now(timezone.utc) - timedelta(days=10)).isoformat(),
+    }
+    users.append(personal_user)
+    
+    # Second business - smaller salon
+    business_user2 = {
+        "id": str(uuid.uuid4()),
+        "email": "glamour.spa@test.com",
+        "password": get_password_hash("Test123!"),
+        "nombre": "Rosa Martínez",
+        "nombre_negocio": "Glamour Spa & Nails",
+        "telefono": "0412-5556789",
+        "plan": "free",
+        "role": "user",
+        "user_type": "business",
+        "is_disabled": False,
+        "subscription_status": "trial",
+        "subscription_start": datetime.now(timezone.utc).isoformat(),
+        "subscription_end": (datetime.now(timezone.utc) + timedelta(days=15)).isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    users.append(business_user2)
+    
+    await db.users.insert_many(users)
+    print(f"✅ {len(users)} usuarios creados")
+    return users
+
+async def create_products(db, user_id, is_business=True):
+    """Create products for a user with real Venezuelan prices"""
+    products = []
+    # Select a subset for personal user
+    product_list = PRODUCTOS_REALES if is_business else PRODUCTOS_REALES[:20]
+    
+    for p in product_list:
+        producto = {
+            **p,
+            "id": str(uuid.uuid4()),
+            "user_id": user_id,
+            "costo_unitario": round(p["precio_compra"] / p["cantidad_comprada"], 2),
+            "cantidad_disponible": p["cantidad_comprada"],  # Stock = cantidad comprada inicialmente
+            "stock_minimo": max(2, int(p["cantidad_comprada"] * 0.2)),
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        products.append(producto)
+    
+    if products:
+        await db.productos.insert_many(products)
+    print(f"  📦 {len(products)} productos creados")
+    return products
+
+async def create_styles(db, user_id, products, is_business=True):
+    """Create styles with product associations"""
+    styles = []
+    style_list = ESTILOS_REALES if is_business else ESTILOS_REALES[:8]
+    
+    for s in style_list:
+        # Associate random products with each style
+        productos_usados = []
+        num_products = random.randint(2, 5)
+        selected_products = random.sample(products, min(num_products, len(products)))
+        
+        costo_productos = 0
+        for prod in selected_products:
+            cantidad = round(random.uniform(0.5, 2.0), 2)
+            productos_usados.append({
+                "producto_id": prod["id"],
+                "cantidad": cantidad
+            })
+            costo_productos += prod["costo_unitario"] * cantidad
+        
+        estilo = {
+            **s,
+            "id": str(uuid.uuid4()),
+            "user_id": user_id,
+            "productos_usados": productos_usados,
+            "costo_productos": round(costo_productos, 2),
+            "precio_sugerido": s["precio_sugerido"],
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        styles.append(estilo)
+    
+    if styles:
+        await db.estilos.insert_many(styles)
+    print(f"  💅 {len(styles)} estilos creados")
+    return styles
+
+async def create_clients(db, user_id, is_business=True):
+    """Create clients with Venezuelan data"""
+    clients = []
+    num_clients = 15 if is_business else 8
+    
+    for i in range(num_clients):
+        nombre, apellido = random.choice(CLIENTES_NOMBRES)
+        cliente = {
+            "id": str(uuid.uuid4()),
+            "user_id": user_id,
+            "nombre": f"{nombre} {apellido}",
+            "telefono": f"04{random.choice(['12','14','16','24'])}-{random.randint(1000000, 9999999)}",
+            "email": f"{nombre.lower()}.{apellido.lower()}{random.randint(1,99)}@gmail.com",
+            "notas": random.choice(["", "Prefiere tonos nude", "Alérgica al acrílico", "Cliente VIP", "Pide muchos diseños"]),
+            "ultima_visita": (datetime.now(timezone.utc) - timedelta(days=random.randint(1, 30))).isoformat(),
+            "total_visitas": random.randint(1, 20),
+            "created_at": (datetime.now(timezone.utc) - timedelta(days=random.randint(30, 180))).isoformat()
+        }
+        clients.append(cliente)
+    
+    if clients:
+        await db.clientes.insert_many(clients)
+    print(f"  👥 {len(clients)} clientes creados")
+    return clients
+
+async def create_expenses(db, user_id, is_business=True):
+    """Create realistic expenses"""
+    expenses = []
+    gastos_list = GASTOS_NEGOCIO if is_business else GASTOS_PERSONA
+    
+    for g in gastos_list:
+        gasto = {
+            **g,
+            "id": str(uuid.uuid4()),
+            "user_id": user_id,
+            "fecha": datetime.now(timezone.utc).isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        expenses.append(gasto)
+    
+    if expenses:
+        await db.gastos.insert_many(expenses)
+    print(f"  💰 {len(expenses)} gastos creados")
+    return expenses
+
+async def create_employees(db, user_id):
+    """Create employees for business user"""
+    employees = []
+    for emp in EMPLEADOS_DATA:
+        empleado = {
+            **emp,
+            "id": str(uuid.uuid4()),
+            "user_id": user_id,
+            "activo": True,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        employees.append(empleado)
+    
+    if employees:
+        await db.empleados.insert_many(employees)
+    print(f"  👩‍💼 {len(employees)} empleados creados")
+    return employees
+
+async def create_appointments(db, user_id, clients, styles, employees=None):
+    """Create realistic appointments"""
+    appointments = []
+    
+    # Create appointments for the past week and next week
+    for day_offset in range(-7, 8):
+        date = datetime.now(timezone.utc) + timedelta(days=day_offset)
+        num_appointments = random.randint(2, 6) if day_offset >= 0 else random.randint(1, 4)
+        
+        for _ in range(num_appointments):
+            hora = f"{random.randint(9, 17):02d}:{random.choice(['00', '30'])}"
+            cliente = random.choice(clients)
+            estilo = random.choice(styles)
+            
+            cita = {
+                "id": str(uuid.uuid4()),
+                "user_id": user_id,
+                "cliente_id": cliente["id"],
+                "cliente_nombre": cliente["nombre"],
+                "estilo_id": estilo["id"],
+                "estilo_nombre": estilo["nombre"],
+                "fecha": date.strftime("%Y-%m-%d"),
+                "hora": hora,
+                "duracion_minutos": estilo["tiempo_trabajo_minutos"],
+                "precio": estilo["precio_sugerido"],
+                "estado": "completada" if day_offset < 0 else random.choice(["confirmada", "pendiente"]),
+                "empleado_id": employees[random.randint(0, len(employees)-1)]["id"] if employees else None,
+                "notas": "",
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            appointments.append(cita)
+    
+    if appointments:
+        await db.citas.insert_many(appointments)
+    print(f"  📅 {len(appointments)} citas creadas")
+    return appointments
+
+async def create_invoices(db, user_id, clients, styles):
+    """Create realistic invoices"""
+    invoices = []
+    
+    for i in range(random.randint(8, 15)):
+        cliente = random.choice(clients)
+        num_items = random.randint(1, 3)
+        items = []
+        subtotal = 0
+        
+        for _ in range(num_items):
+            estilo = random.choice(styles)
+            cantidad = 1
+            items.append({
+                "descripcion": estilo["nombre"],
+                "cantidad": cantidad,
+                "precio_unitario": estilo["precio_sugerido"],
+                "total": estilo["precio_sugerido"] * cantidad
+            })
+            subtotal += estilo["precio_sugerido"] * cantidad
+        
+        iva = round(subtotal * 0.16, 2)
+        total = round(subtotal + iva, 2)
+        
+        factura = {
+            "id": str(uuid.uuid4()),
+            "user_id": user_id,
+            "invoice_number": f"FAC-{datetime.now().year}-{1000 + i}",
+            "cliente_id": cliente["id"],
+            "cliente_nombre": cliente["nombre"],
+            "cliente_rif": f"V-{random.randint(10000000, 30000000)}",
+            "items": items,
+            "subtotal": subtotal,
+            "iva_porcentaje": 16,
+            "iva": iva,
+            "total": total,
+            "status": random.choice(["paid", "paid", "paid", "pending"]),
+            "metodo_pago": random.choice(["efectivo", "pago_movil", "transferencia", "zelle"]),
+            "created_at": (datetime.now(timezone.utc) - timedelta(days=random.randint(1, 30))).isoformat()
+        }
+        invoices.append(factura)
+    
+    if invoices:
+        await db.facturas.insert_many(invoices)
+    print(f"  🧾 {len(invoices)} facturas creadas")
+    return invoices
+
+async def create_config(db, user_id, is_business=True):
+    """Create profit configuration"""
+    config = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "costo_hora_trabajo": 8.0 if is_business else 5.0,  # USD/hora
+        "margen_ganancia_deseado": 40,
+        "meta_ingreso_mensual": 800 if is_business else 400,
+        "moneda": "USD",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.config_ganancias.insert_one(config)
+    print("  ⚙️ Configuración creada")
+    return config
+
+async def create_operational_costs(db):
+    """Create operational costs for the platform"""
+    costs = [
+        {"nombre": "MongoDB Atlas M10", "categoria": "database", "costo_mensual": 57.00, "proveedor": "MongoDB", "notas": "Cluster compartido"},
+        {"nombre": "Servidor DigitalOcean", "categoria": "hosting", "costo_mensual": 24.00, "proveedor": "DigitalOcean", "notas": "Droplet 4GB RAM"},
+        {"nombre": "Dominio .com", "categoria": "domain", "costo_mensual": 1.50, "proveedor": "Namecheap", "notas": "$18/año"},
+        {"nombre": "SSL Certificado", "categoria": "domain", "costo_mensual": 0.00, "proveedor": "Let's Encrypt", "notas": "Gratuito"},
+        {"nombre": "Cloudflare Pro", "categoria": "hosting", "costo_mensual": 20.00, "proveedor": "Cloudflare", "notas": "CDN y protección"},
+        {"nombre": "SendGrid Email", "categoria": "api", "costo_mensual": 15.00, "proveedor": "SendGrid", "notas": "50k emails/mes"},
+        {"nombre": "Backup Storage", "categoria": "hosting", "costo_mensual": 5.00, "proveedor": "Backblaze B2", "notas": "Backups diarios"},
+    ]
+    
+    for cost in costs:
+        cost["id"] = str(uuid.uuid4())
+        cost["created_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.operational_costs.insert_many(costs)
+    print("✅ Costos operativos de plataforma creados")
+
+async def create_platform_pricing(db):
+    """Create platform pricing configuration"""
+    pricing = {
+        "type": "pricing",
+        "personal_basic": 5.00,
+        "personal_premium": 12.00,
+        "business_basic": 15.00,
+        "business_premium": 30.00,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.platform_config.insert_one(pricing)
+    print("✅ Precios de plataforma configurados")
+
+async def main():
+    mongo_url = os.environ.get('MONGO_URL')
+    db_name = os.environ.get('DB_NAME', 'nailcost_pro')
+    
+    print(f"\n🔌 Conectando a MongoDB...")
     client = AsyncIOMotorClient(mongo_url)
     db = client[db_name]
     
-    now = datetime.now(timezone.utc)
+    print(f"📂 Base de datos: {db_name}")
+    print("=" * 50)
     
-    # Create activity_logs and user_settings collections indexes
-    print("\n📊 Creating indexes for tracking collections...")
-    await db.activity_logs.create_index([("user_id", 1), ("created_at", -1)])
-    await db.activity_logs.create_index([("action", 1)])
-    await db.user_settings.create_index([("user_id", 1)], unique=True)
-    print("✅ Indexes created")
+    # Clear existing data
+    await clear_database(db)
     
-    created_users = []
+    # Create platform configuration
+    await create_operational_costs(db)
+    await create_platform_pricing(db)
     
-    for user_data in TEST_USERS:
-        print(f"\n👤 Processing user: {user_data['email']}")
-        
-        # Check if user exists
-        existing = await db.users.find_one({"email": user_data["email"]})
-        if existing:
-            print(f"   ⏭️  User already exists, updating data...")
-            user_id = existing["id"]
-        else:
-            # Create user
-            user_id = str(uuid.uuid4())
-            trial_end = now + timedelta(days=15)
-            
-            user_doc = {
-                "id": user_id,
-                "email": user_data["email"],
-                "password": pwd_context.hash(user_data["password"]),
-                "nombre": user_data["nombre"],
-                "nombre_negocio": user_data["nombre_negocio"],
-                "telefono": user_data["telefono"],
-                "plan": user_data["plan"],
-                "role": "user",
-                "user_type": user_data["user_type"],
-                "account_status": "active",
-                "trial_ends_at": trial_end.isoformat(),
-                "subscription_starts_at": now.isoformat() if user_data["plan"] == "premium" else None,
-                "subscription_ends_at": (now + timedelta(days=30)).isoformat() if user_data["plan"] == "premium" else None,
-                "created_at": (now - timedelta(days=random.randint(5, 30))).isoformat(),
-                "last_login": (now - timedelta(hours=random.randint(1, 72))).isoformat(),
-            }
-            await db.users.insert_one(user_doc)
-            print(f"   ✅ User created: {user_id}")
-        
-        created_users.append({"id": user_id, **user_data})
-        
-        # Create user_settings
-        await db.user_settings.update_one(
-            {"user_id": user_id},
-            {"$set": {
-                "user_id": user_id,
-                "theme": "light",
-                "currency": "USD",
-                "timezone": "America/Caracas",
-                "notifications_enabled": True,
-                "email_notifications": True,
-                "default_profit_margin": random.randint(25, 45),
-                "fiscal_config": {
-                    "rif": f"V-{random.randint(10000000, 30000000)}-{random.randint(0,9)}" if user_data["user_type"] == "business" else "",
-                    "aplica_iva": user_data["user_type"] == "business",
-                    "nombre_fiscal": user_data["nombre_negocio"] or user_data["nombre"],
-                },
-                "updated_at": now.isoformat(),
-            }},
-            upsert=True
-        )
-        print(f"   ✅ User settings created")
-        
-        # Clear existing data for this user
-        await db.productos.delete_many({"user_id": user_id})
-        await db.estilos.delete_many({"user_id": user_id})
-        await db.disenos.delete_many({"user_id": user_id})
-        await db.clientes.delete_many({"user_id": user_id})
-        await db.citas.delete_many({"user_id": user_id})
-        await db.facturas.delete_many({"user_id": user_id})
-        await db.historial_calculos.delete_many({"user_id": user_id})
-        if user_data["user_type"] == "business":
-            await db.empleados.delete_many({"user_id": user_id})
-        
-        # Create Products (random selection)
-        num_productos = random.randint(6, len(SAMPLE_PRODUCTOS))
-        productos = random.sample(SAMPLE_PRODUCTOS, num_productos)
-        producto_ids = []
-        for p in productos:
-            prod_id = str(uuid.uuid4())
-            costo_unitario = p["precio_compra"] / p["cantidad_comprada"] * p["uso_por_servicio"] if p["cantidad_comprada"] > 0 else 0
-            await db.productos.insert_one({
-                "id": prod_id,
-                "user_id": user_id,
-                **p,
-                "costo_unitario": costo_unitario,
-                "cantidad_disponible": p["cantidad_comprada"],
-                "stock_minimo": random.randint(3, 10),
-                "created_at": (now - timedelta(days=random.randint(1, 20))).isoformat(),
-            })
-            producto_ids.append(prod_id)
-        print(f"   ✅ Created {len(productos)} products")
-        
-        # Create Styles
-        num_estilos = random.randint(4, len(SAMPLE_ESTILOS))
-        estilos = random.sample(SAMPLE_ESTILOS, num_estilos)
-        estilo_ids = []
-        for e in estilos:
-            est_id = str(uuid.uuid4())
-            costo_productos = random.uniform(5, 25)
-            await db.estilos.insert_one({
-                "id": est_id,
-                "user_id": user_id,
-                **e,
-                "productos_usados": [{"producto_id": random.choice(producto_ids), "cantidad": random.uniform(0.5, 2)} for _ in range(random.randint(2, 4))],
-                "costo_productos": costo_productos,
-                "precio_sugerido": costo_productos * random.uniform(2.5, 4),
-                "created_at": (now - timedelta(days=random.randint(1, 15))).isoformat(),
-            })
-            estilo_ids.append(est_id)
-        print(f"   ✅ Created {len(estilos)} styles")
-        
-        # Create Designs
-        num_disenos = random.randint(5, len(SAMPLE_DISENOS))
-        disenos = random.sample(SAMPLE_DISENOS, num_disenos)
-        diseno_ids = []
-        for d in disenos:
-            dis_id = str(uuid.uuid4())
-            await db.disenos.insert_one({
-                "id": dis_id,
-                "user_id": user_id,
-                **d,
-                "created_at": (now - timedelta(days=random.randint(1, 15))).isoformat(),
-            })
-            diseno_ids.append(dis_id)
-        print(f"   ✅ Created {len(disenos)} designs")
-        
-        # Create Clients
-        num_clientes = random.randint(4, len(SAMPLE_CLIENTES))
-        clientes = random.sample(SAMPLE_CLIENTES, num_clientes)
-        cliente_ids = []
-        for c in clientes:
-            cli_id = str(uuid.uuid4())
-            await db.clientes.insert_one({
-                "id": cli_id,
-                "user_id": user_id,
-                **c,
-                "total_visitas": random.randint(1, 15),
-                "ultima_visita": (now - timedelta(days=random.randint(1, 30))).isoformat(),
-                "created_at": (now - timedelta(days=random.randint(10, 60))).isoformat(),
-            })
-            cliente_ids.append(cli_id)
-        print(f"   ✅ Created {len(clientes)} clients")
-        
-        # Create Appointments
-        for i in range(random.randint(3, 8)):
-            cita_fecha = now + timedelta(days=random.randint(-7, 14))
-            estados = ["pendiente", "confirmada", "completada", "cancelada"]
-            estado = random.choice(estados[:3]) if cita_fecha > now else random.choice(estados[2:])
-            
-            await db.citas.insert_one({
-                "id": str(uuid.uuid4()),
-                "user_id": user_id,
-                "cliente_id": random.choice(cliente_ids),
-                "fecha": cita_fecha.strftime("%Y-%m-%d"),
-                "hora": f"{random.randint(9, 18):02d}:{random.choice(['00', '30'])}",
-                "estilo_id": random.choice(estilo_ids),
-                "disenos_ids": random.sample(diseno_ids, random.randint(0, 2)),
-                "precio_estimado": random.uniform(25, 80),
-                "estado": estado,
-                "notas": random.choice(["", "Cliente frecuente", "Primera vez", "Referida por amiga"]),
-                "created_at": (cita_fecha - timedelta(days=random.randint(1, 7))).isoformat(),
-            })
-        print(f"   ✅ Created appointments")
-        
-        # Create Invoices
-        for i in range(random.randint(5, 15)):
-            factura_fecha = now - timedelta(days=random.randint(0, 45))
-            cliente = random.choice(clientes)
-            subtotal = random.uniform(20, 100)
-            descuento = random.choice([0, 0, 0, 5, 10])
-            iva = (subtotal - descuento) * 0.16 if user_data["user_type"] == "business" else 0
-            total = subtotal - descuento + iva
-            
-            await db.facturas.insert_one({
-                "id": str(uuid.uuid4()),
-                "user_id": user_id,
-                "numero": 1000 + i,
-                "numero_control": f"00-{1000 + i:06d}",
-                "cliente_id": random.choice(cliente_ids),
-                "cliente_nombre": cliente["nombre"],
-                "cliente_telefono": cliente["telefono"],
-                "cliente_email": cliente["email"],
-                "cliente_rif": f"V-{random.randint(10000000, 30000000)}",
-                "items": [
-                    {"descripcion": random.choice(estilos)["nombre"], "cantidad": 1, "precio_unitario": subtotal * 0.7},
-                    {"descripcion": random.choice(disenos)["nombre"], "cantidad": 1, "precio_unitario": subtotal * 0.3},
-                ],
-                "subtotal": subtotal,
-                "descuento": descuento,
-                "iva_monto": iva,
-                "total": total,
-                "metodo_pago": random.choice(["efectivo", "transferencia", "pago_movil", "zelle"]),
-                "estado": random.choice(["pagada", "pagada", "pagada", "pendiente"]),
-                "notas": "",
-                "fecha": factura_fecha.isoformat(),
-            })
-        print(f"   ✅ Created invoices")
-        
-        # Create Calculation History
-        for i in range(random.randint(8, 20)):
-            estilo = random.choice(estilos)
-            costo = random.uniform(15, 40)
-            precio = costo * random.uniform(2, 3.5)
-            
-            await db.historial_calculos.insert_one({
-                "id": str(uuid.uuid4()),
-                "user_id": user_id,
-                "estilo_id": random.choice(estilo_ids),
-                "estilo_nombre": estilo["nombre"],
-                "disenos_ids": random.sample(diseno_ids, random.randint(0, 2)),
-                "disenos_nombres": [random.choice(disenos)["nombre"] for _ in range(random.randint(0, 2))],
-                "precio_recomendado": precio,
-                "costo_total": costo,
-                "ganancia": precio - costo,
-                "cliente_nombre": random.choice(["", random.choice(clientes)["nombre"]]),
-                "notas": "",
-                "created_at": (now - timedelta(days=random.randint(0, 30))).isoformat(),
-            })
-        print(f"   ✅ Created calculation history")
-        
-        # Create Employees (for business users only)
-        if user_data["user_type"] == "business":
-            num_empleados = random.randint(2, len(SAMPLE_EMPLEADOS))
-            empleados = random.sample(SAMPLE_EMPLEADOS, num_empleados)
-            for emp in empleados:
-                await db.empleados.insert_one({
-                    "id": str(uuid.uuid4()),
-                    "user_id": user_id,
-                    **emp,
-                    "activo": True,
-                    "fecha_ingreso": (now - timedelta(days=random.randint(30, 365))).isoformat(),
-                    "servicios_mes": random.randint(20, 80),
-                    "ingresos_mes": random.uniform(300, 1200),
-                    "created_at": (now - timedelta(days=random.randint(30, 180))).isoformat(),
-                })
-            print(f"   ✅ Created {len(empleados)} employees")
-        
-        # Create Activity Logs
-        actions = [
-            "login", "create_product", "create_style", "create_client", 
-            "create_appointment", "create_invoice", "calculate_price",
-            "update_settings", "view_report"
-        ]
-        for _ in range(random.randint(15, 40)):
-            log_date = now - timedelta(days=random.randint(0, 30), hours=random.randint(0, 23))
-            await db.activity_logs.insert_one({
-                "id": str(uuid.uuid4()),
-                "user_id": user_id,
-                "action": random.choice(actions),
-                "details": {},
-                "ip_address": f"190.{random.randint(1,255)}.{random.randint(1,255)}.{random.randint(1,255)}",
-                "user_agent": "Mozilla/5.0",
-                "created_at": log_date.isoformat(),
-            })
-        print(f"   ✅ Created activity logs")
+    # Create users
+    users = await create_users(db)
     
-    # Create Gastos Operativos for each user
-    print("\n💰 Creating gastos operativos...")
-    for user in created_users:
-        await db.gastos_operativos.update_one(
-            {"user_id": user["id"]},
-            {"$set": {
-                "user_id": user["id"],
-                "renta": random.uniform(100, 400) if user["user_type"] == "business" else random.uniform(0, 100),
-                "luz": random.uniform(20, 60),
-                "agua": random.uniform(10, 30),
-                "internet": random.uniform(20, 50),
-                "telefono": random.uniform(15, 40),
-                "publicidad": random.uniform(0, 100),
-                "mantenimiento": random.uniform(20, 80),
-                "material_limpieza": random.uniform(10, 30),
-                "plataformas_pago": random.uniform(5, 20),
-                "impuestos": random.uniform(0, 50),
-                "otros": random.uniform(10, 50),
-                "clientes_mes": random.randint(15, 60),
-                "servicios_mes": random.randint(30, 120),
-                "dias_trabajo": random.randint(20, 26),
-            }},
-            upsert=True
-        )
-    print("✅ Gastos operativos created")
+    # Setup each user
+    for user in users:
+        print(f"\n🔧 Configurando: {user['nombre_negocio']}")
+        is_business = user['user_type'] == 'business'
+        
+        products = await create_products(db, user['id'], is_business)
+        styles = await create_styles(db, user['id'], products, is_business)
+        clients = await create_clients(db, user['id'], is_business)
+        await create_expenses(db, user['id'], is_business)
+        await create_config(db, user['id'], is_business)
+        
+        employees = None
+        if is_business:
+            employees = await create_employees(db, user['id'])
+        
+        await create_appointments(db, user['id'], clients, styles, employees)
+        await create_invoices(db, user['id'], clients, styles)
     
-    # Create Config Ganancias for each user
-    print("\n📈 Creating config ganancias...")
-    for user in created_users:
-        await db.config_ganancias.update_one(
-            {"user_id": user["id"]},
-            {"$set": {
-                "user_id": user["id"],
-                "porcentaje_ganancia": random.uniform(25, 50),
-                "meta_ingreso_mensual": random.uniform(800, 3000),
-                "meta_diaria": random.uniform(40, 150),
-                "sueldo_objetivo": random.uniform(500, 2000),
-                "costo_hora_trabajo": random.uniform(8, 25),
-            }},
-            upsert=True
-        )
-    print("✅ Config ganancias created")
-    
-    # Summary
-    print("\n" + "=" * 60)
-    print("✅ DATABASE SEEDING COMPLETE!")
-    print("=" * 60)
-    print("\n📊 SUMMARY:")
-    print(f"   Users created/updated: {len(TEST_USERS)}")
-    
-    # Count totals
-    total_productos = await db.productos.count_documents({})
-    total_estilos = await db.estilos.count_documents({})
-    total_disenos = await db.disenos.count_documents({})
-    total_clientes = await db.clientes.count_documents({})
-    total_citas = await db.citas.count_documents({})
-    total_facturas = await db.facturas.count_documents({})
-    total_empleados = await db.empleados.count_documents({})
-    total_logs = await db.activity_logs.count_documents({})
-    
-    print(f"   Products: {total_productos}")
-    print(f"   Styles: {total_estilos}")
-    print(f"   Designs: {total_disenos}")
-    print(f"   Clients: {total_clientes}")
-    print(f"   Appointments: {total_citas}")
-    print(f"   Invoices: {total_facturas}")
-    print(f"   Employees: {total_empleados}")
-    print(f"   Activity Logs: {total_logs}")
-    
-    print("\n🔑 TEST CREDENTIALS:")
-    for user in TEST_USERS:
-        print(f"   {user['email']} / Test123! ({user['user_type']}/{user['plan']})")
-    
-    print("\n" + "=" * 60)
+    print("\n" + "=" * 50)
+    print("✅ SEED DATA COMPLETADO")
+    print("=" * 50)
+    print("\n📋 CREDENCIALES DE PRUEBA:")
+    print("─" * 40)
+    print("👑 ADMIN:")
+    print("   Email: admin@nailcost.pro")
+    print("   Pass:  NailCost@Adm1n#2024Secure")
+    print("")
+    print("🏢 NEGOCIO (Elite Nails Studio):")
+    print("   Email: elite.nails@test.com")
+    print("   Pass:  Test123!")
+    print("")
+    print("👩 PERSONAL (Nails by María):")
+    print("   Email: maria.nails@test.com")
+    print("   Pass:  Test123!")
+    print("")
+    print("🏪 NEGOCIO 2 (Glamour Spa - Trial):")
+    print("   Email: glamour.spa@test.com")
+    print("   Pass:  Test123!")
+    print("─" * 40)
     
     client.close()
 
-
 if __name__ == "__main__":
-    asyncio.run(seed_database())
+    asyncio.run(main())

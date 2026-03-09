@@ -20,12 +20,12 @@ export const AppProvider = ({ children }) => {
   const [productos, setProductos] = useState([]);
   const [estilos, setEstilos] = useState([]);
   const [disenos, setDisenos] = useState([]);
-  const [gastos, setGastos] = useState(null);
+  const [gastos, setGastos] = useState([]);
   const [configGanancias, setConfigGanancias] = useState(null);
   const [clientes, setClientes] = useState([]);
   const [citas, setCitas] = useState([]);
   const [alertas, setAlertas] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   // Fetch all data when authenticated
@@ -49,14 +49,14 @@ export const AppProvider = ({ children }) => {
         authAxios.get(`${API}/alertas`),
       ]);
       
-      setProductos(prodRes.data);
-      setEstilos(estilosRes.data);
-      setDisenos(disenosRes.data);
-      setGastos(gastosRes.data);
+      setProductos(prodRes.data || []);
+      setEstilos(estilosRes.data || []);
+      setDisenos(disenosRes.data || []);
+      setGastos(Array.isArray(gastosRes.data) ? gastosRes.data : []);
       setConfigGanancias(ganRes.data);
-      setClientes(clientesRes.data);
-      setCitas(citasRes.data);
-      setAlertas(alertasRes.data);
+      setClientes(clientesRes.data || []);
+      setCitas(citasRes.data || []);
+      setAlertas(alertasRes.data || []);
     } catch (err) {
       console.error('Error fetching data:', err);
       if (err.response?.status !== 401) {

@@ -2717,6 +2717,118 @@ async def get_alertas(current_user: dict = Depends(get_current_user)):
     
     return alertas
 
+# ===============================
+# ADMIN: Platform Pricing Control
+# ===============================
+class PlatformPricing(BaseModel):
+    personal_basic: float = 5.0
+    personal_premium: float = 12.0
+    business_basic: float = 15.0
+    business_premium: float = 30.0
+
+class OperationalCost(BaseModel):
+    nombre: str
+    categoria: str  # hosting, database, domain, api, other
+    costo_mensual: float
+    proveedor: str = ""
+    notas: str = ""
+
+@api_router.get("/admin/platform-pricing")
+async def get_platform_pricing(current_user: dict = Depends(get_current_user)):
+    if current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="No autorizado")
+    
+    pricing = await db.platform_config.find_one({"type": "pricing"}, {"_id": 0})
+    if not pricing:
+        pricing = PlatformPricing().model_dump()
+    return pricing
+
+@api_router.put("/admin/platform-pricing")
+async def update_platform_pricing(pricing: PlatformPricing, current_user: dict = Depends(get_current_user)):
+    if current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="No autorizado")
+    
+    await db.platform_config.update_one(
+        {"type": "pricing"},
+        {"$set": {**pricing.model_dump(), "type": "pricing", "updated_at": datetime.now(timezone.utc).isoformat()}},
+        upsert=True
+    )
+    return {"message": "Precios actualizados"}
+
+@api_router.get("/admin/operational-costs")
+async def get_operational_costs(current_user: dict = Depends(get_current_user)):
+    if current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="No autorizado")
+    
+    costs = await db.operational_costs.find({}, {"_id": 0}).to_list(100)
+    
+    # Calculate totals and advisory
+    total_mensual = sum(c.get('costo_mensual', 0) for c in costs)
+    
+    # Get user counts
+    total_users = await db.users.count_documents({"role": {"$ne": "admin"}})
+    active_users = await db.users.count_documents({"role": {"$ne": "admin"}, "subscription_status": "active"})
+    
+    # Get pricing
+    pricing = await db.platform_config.find_one({"type": "pricing"}, {"_id": 0})
+    if not pricing:
+        pricing = PlatformPricing().model_dump()
+    
+    # Calculate minimum price recommendation
+    if active_users > 0:
+        precio_minimo_usuario = total_mensual / active_users
+    else:
+        precio_minimo_usuario = total_mensual / max(total_users, 1)
+    
+    # Calculate current estimated revenue
+    subs = await db.users.find({"role": {"$ne": "admin"}, "subscription_status": "active"}).to_list(1000)
+    ingresos_estimados = 0
+    for s in subs:
+        user_type = s.get('user_type', 'personal')
+        plan = s.get('plan', 'free')
+        if user_type == 'business':
+            ingresos_estimados += pricing.get('business_premium', 30) if plan == 'premium' else pricing.get('business_basic', 15)
+        else:
+            ingresos_estimados += pricing.get('personal_premium', 12) if plan == 'premium' else pricing.get('personal_basic', 5)
+    
+    rentabilidad = ingresos_estimados - total_mensual
+    
+    return {
+        "costs": costs,
+        "summary": {
+            "total_mensual": round(total_mensual, 2),
+            "total_users": total_users,
+            "active_users": active_users,
+            "ingresos_estimados": round(ingresos_estimados, 2),
+            "rentabilidad": round(rentabilidad, 2),
+            "precio_minimo_recomendado": round(precio_minimo_usuario * 1.3, 2),  # 30% margen
+            "break_even_users": int(total_mensual / pricing.get('personal_basic', 5)) if pricing.get('personal_basic', 5) > 0 else 0
+        }
+    }
+
+@api_router.post("/admin/operational-costs")
+async def add_operational_cost(cost: OperationalCost, current_user: dict = Depends(get_current_user)):
+    if current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="No autorizado")
+    
+    doc = {
+        **cost.model_dump(),
+        "id": str(uuid.uuid4()),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.operational_costs.insert_one(doc)
+    return {"message": "Costo agregado", "id": doc["id"]}
+
+@api_router.delete("/admin/operational-costs/{cost_id}")
+async def delete_operational_cost(cost_id: str, current_user: dict = Depends(get_current_user)):
+    if current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="No autorizado")
+    
+    result = await db.operational_costs.delete_one({"id": cost_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Costo no encontrado")
+    return {"message": "Costo eliminado"}
+
 # Include the router
 app.include_router(api_router)
 

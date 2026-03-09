@@ -347,7 +347,7 @@ export default function AdminPage() {
 
       {/* Main Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="bg-slate-800 border border-slate-700 p-1">
+        <TabsList className="bg-slate-800 border border-slate-700 p-1 flex-wrap">
           <TabsTrigger value="overview" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
             <BarChart3 className="w-4 h-4 mr-2" />Overview
           </TabsTrigger>
@@ -360,6 +360,12 @@ export default function AdminPage() {
           </TabsTrigger>
           <TabsTrigger value="invoices" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
             <FileText className="w-4 h-4 mr-2" />Facturación
+          </TabsTrigger>
+          <TabsTrigger value="pricing" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white">
+            <DollarSign className="w-4 h-4 mr-2" />Precios
+          </TabsTrigger>
+          <TabsTrigger value="costs" className="data-[state=active]:bg-amber-600 data-[state=active]:text-white">
+            <Server className="w-4 h-4 mr-2" />Costos
           </TabsTrigger>
           <TabsTrigger value="reports" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
             <TrendingUp className="w-4 h-4 mr-2" />Reportes
@@ -933,6 +939,16 @@ export default function AdminPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Pricing Tab - Control de Precios de Servicios */}
+        <TabsContent value="pricing" className="space-y-4">
+          <PricingPanel />
+        </TabsContent>
+
+        {/* Costs Tab - Control de Costos Operativos */}
+        <TabsContent value="costs" className="space-y-4">
+          <CostsPanel />
+        </TabsContent>
       </Tabs>
 
       {/* Payment Dialog */}
@@ -1077,6 +1093,415 @@ export default function AdminPage() {
             </div>
           )}
           <DialogFooter><Button onClick={() => { setMetricsDialog({open: false, user: null}); setUserMetrics(null); }} className="bg-blue-600 hover:bg-blue-700">Cerrar</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+// Pricing Panel Component
+function PricingPanel() {
+  const [pricing, setPricing] = useState({
+    personal_basic: 5,
+    personal_premium: 12,
+    business_basic: 15,
+    business_premium: 30
+  });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetchPricing();
+  }, []);
+
+  const fetchPricing = async () => {
+    try {
+      const token = localStorage.getItem('nailcost_token');
+      const res = await fetch(`${API}/admin/platform-pricing`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPricing(data);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('nailcost_token');
+      const res = await fetch(`${API}/admin/platform-pricing`, {
+        method: 'PUT',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(pricing)
+      });
+      if (res.ok) {
+        toast.success("Precios actualizados");
+      } else {
+        toast.error("Error al guardar");
+      }
+    } catch (err) {
+      toast.error("Error de conexión");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) return <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-blue-500" /></div>;
+
+  return (
+    <div className="space-y-6">
+      <Card className="bg-slate-800/50 border-slate-700">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <DollarSign className="w-5 h-5 text-emerald-400" />
+            Control de Precios de Suscripción
+          </CardTitle>
+          <p className="text-slate-400 text-sm">Modifica los precios mensuales de cada plan</p>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Personal Plans */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                <User className="w-5 h-5 text-violet-400" />
+                Plan Personal
+              </h3>
+              <div className="space-y-3">
+                <div className="p-4 bg-slate-700/50 rounded-xl">
+                  <label className="text-sm text-slate-400">Básico (USD/mes)</label>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-slate-400">$</span>
+                    <Input 
+                      type="number" 
+                      value={pricing.personal_basic}
+                      onChange={(e) => setPricing({...pricing, personal_basic: parseFloat(e.target.value) || 0})}
+                      className="bg-slate-600 border-slate-500 text-white"
+                    />
+                  </div>
+                </div>
+                <div className="p-4 bg-gradient-to-r from-violet-500/20 to-purple-500/20 rounded-xl border border-violet-500/30">
+                  <label className="text-sm text-violet-300">Premium (USD/mes)</label>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-slate-400">$</span>
+                    <Input 
+                      type="number" 
+                      value={pricing.personal_premium}
+                      onChange={(e) => setPricing({...pricing, personal_premium: parseFloat(e.target.value) || 0})}
+                      className="bg-slate-600 border-slate-500 text-white"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Business Plans */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-blue-400" />
+                Plan Negocio
+              </h3>
+              <div className="space-y-3">
+                <div className="p-4 bg-slate-700/50 rounded-xl">
+                  <label className="text-sm text-slate-400">Básico (USD/mes)</label>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-slate-400">$</span>
+                    <Input 
+                      type="number" 
+                      value={pricing.business_basic}
+                      onChange={(e) => setPricing({...pricing, business_basic: parseFloat(e.target.value) || 0})}
+                      className="bg-slate-600 border-slate-500 text-white"
+                    />
+                  </div>
+                </div>
+                <div className="p-4 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-xl border border-blue-500/30">
+                  <label className="text-sm text-blue-300">Premium (USD/mes)</label>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-slate-400">$</span>
+                    <Input 
+                      type="number" 
+                      value={pricing.business_premium}
+                      onChange={(e) => setPricing({...pricing, business_premium: parseFloat(e.target.value) || 0})}
+                      className="bg-slate-600 border-slate-500 text-white"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-4 border-t border-slate-700">
+            <Button onClick={handleSave} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700">
+              {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <CheckCircle className="w-4 h-4 mr-2" />}
+              Guardar Precios
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// Costs Panel Component
+function CostsPanel() {
+  const [costs, setCosts] = useState([]);
+  const [summary, setSummary] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [newCost, setNewCost] = useState({ nombre: '', categoria: 'hosting', costo_mensual: 0, proveedor: '', notas: '' });
+
+  useEffect(() => {
+    fetchCosts();
+  }, []);
+
+  const fetchCosts = async () => {
+    try {
+      const token = localStorage.getItem('nailcost_token');
+      const res = await fetch(`${API}/admin/operational-costs`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setCosts(data.costs || []);
+        setSummary(data.summary || {});
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddCost = async () => {
+    try {
+      const token = localStorage.getItem('nailcost_token');
+      const res = await fetch(`${API}/admin/operational-costs`, {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(newCost)
+      });
+      if (res.ok) {
+        toast.success("Costo agregado");
+        setShowAddDialog(false);
+        setNewCost({ nombre: '', categoria: 'hosting', costo_mensual: 0, proveedor: '', notas: '' });
+        fetchCosts();
+      }
+    } catch (err) {
+      toast.error("Error al agregar");
+    }
+  };
+
+  const handleDeleteCost = async (costId) => {
+    if (!confirm("¿Eliminar este costo?")) return;
+    try {
+      const token = localStorage.getItem('nailcost_token');
+      await fetch(`${API}/admin/operational-costs/${costId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      toast.success("Costo eliminado");
+      fetchCosts();
+    } catch (err) {
+      toast.error("Error al eliminar");
+    }
+  };
+
+  const categoryIcons = {
+    hosting: Server,
+    database: Database,
+    domain: Globe,
+    api: Zap,
+    other: Settings
+  };
+
+  const categoryColors = {
+    hosting: 'text-blue-400 bg-blue-500/20',
+    database: 'text-emerald-400 bg-emerald-500/20',
+    domain: 'text-violet-400 bg-violet-500/20',
+    api: 'text-amber-400 bg-amber-500/20',
+    other: 'text-slate-400 bg-slate-500/20'
+  };
+
+  if (loading) return <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-blue-500" /></div>;
+
+  const isRentable = summary.rentabilidad >= 0;
+
+  return (
+    <div className="space-y-6">
+      {/* Summary Cards */}
+      <div className="grid md:grid-cols-4 gap-4">
+        <Card className="bg-gradient-to-br from-red-500/20 to-orange-500/20 border-red-500/30">
+          <CardContent className="p-4">
+            <p className="text-sm text-slate-400">Costos Mensuales</p>
+            <p className="text-2xl font-bold text-white">${summary.total_mensual || 0}</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 border-emerald-500/30">
+          <CardContent className="p-4">
+            <p className="text-sm text-slate-400">Ingresos Estimados</p>
+            <p className="text-2xl font-bold text-emerald-400">${summary.ingresos_estimados || 0}</p>
+          </CardContent>
+        </Card>
+        <Card className={`bg-gradient-to-br ${isRentable ? 'from-emerald-500/20 to-green-500/20 border-emerald-500/30' : 'from-red-500/20 to-pink-500/20 border-red-500/30'}`}>
+          <CardContent className="p-4">
+            <p className="text-sm text-slate-400">Rentabilidad</p>
+            <p className={`text-2xl font-bold ${isRentable ? 'text-emerald-400' : 'text-red-400'}`}>
+              {isRentable ? '+' : ''}${summary.rentabilidad || 0}
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-amber-500/20 to-yellow-500/20 border-amber-500/30">
+          <CardContent className="p-4">
+            <p className="text-sm text-slate-400">Precio Mín. Recomendado</p>
+            <p className="text-2xl font-bold text-amber-400">${summary.precio_minimo_recomendado || 0}</p>
+            <p className="text-xs text-slate-500">por usuario/mes</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Advisory Card */}
+      <Card className="bg-slate-800/50 border-slate-700">
+        <CardContent className="p-5">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+              <TrendingUp className="w-6 h-6 text-blue-400" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-white">Análisis de Rentabilidad</h3>
+              <p className="text-slate-400 text-sm mt-1">
+                Con <strong className="text-white">{summary.active_users || 0}</strong> usuarios activos de <strong className="text-white">{summary.total_users || 0}</strong> totales, 
+                {isRentable 
+                  ? <span className="text-emerald-400"> tu plataforma es rentable con un margen de ${summary.rentabilidad}.</span>
+                  : <span className="text-red-400"> necesitas {summary.break_even_users || '?'} usuarios al precio mínimo para alcanzar el punto de equilibrio.</span>
+                }
+              </p>
+              {!isRentable && (
+                <div className="mt-3 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                  <p className="text-amber-300 text-sm">
+                    💡 <strong>Recomendación:</strong> Considera subir el precio base a ${summary.precio_minimo_recomendado} USD o conseguir al menos {summary.break_even_users} usuarios activos.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Costs List */}
+      <Card className="bg-slate-800/50 border-slate-700">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-white flex items-center gap-2">
+            <Server className="w-5 h-5 text-amber-400" />
+            Costos Operativos
+          </CardTitle>
+          <Button size="sm" onClick={() => setShowAddDialog(true)} className="bg-emerald-600 hover:bg-emerald-700">
+            <Play className="w-4 h-4 mr-2" />Agregar Costo
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {costs.length === 0 ? (
+            <p className="text-center text-slate-500 py-8">No hay costos registrados</p>
+          ) : (
+            <div className="space-y-3">
+              {costs.map(cost => {
+                const Icon = categoryIcons[cost.categoria] || Settings;
+                const colorClass = categoryColors[cost.categoria] || categoryColors.other;
+                return (
+                  <div key={cost.id} className="flex items-center justify-between p-4 bg-slate-700/30 rounded-xl hover:bg-slate-700/50 transition-colors">
+                    <div className="flex items-center gap-4">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${colorClass}`}>
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-white">{cost.nombre}</p>
+                        <p className="text-xs text-slate-400">{cost.proveedor} • {cost.categoria}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <p className="text-lg font-bold text-white">${cost.costo_mensual}/mes</p>
+                      <Button size="sm" variant="ghost" onClick={() => handleDeleteCost(cost.id)} className="text-red-400 hover:bg-red-500/20">
+                        <XCircle className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Add Cost Dialog */}
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent className="bg-slate-800 border-slate-700 text-white">
+          <DialogHeader><DialogTitle>Agregar Costo Operativo</DialogTitle></DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <label className="text-sm text-slate-400">Nombre</label>
+              <Input 
+                value={newCost.nombre} 
+                onChange={(e) => setNewCost({...newCost, nombre: e.target.value})}
+                className="bg-slate-700 border-slate-600 text-white mt-1"
+                placeholder="Ej: Servidor DigitalOcean"
+              />
+            </div>
+            <div>
+              <label className="text-sm text-slate-400">Categoría</label>
+              <select 
+                value={newCost.categoria}
+                onChange={(e) => setNewCost({...newCost, categoria: e.target.value})}
+                className="w-full p-2 bg-slate-700 border border-slate-600 rounded-lg mt-1 text-white"
+              >
+                <option value="hosting">Hosting</option>
+                <option value="database">Base de Datos</option>
+                <option value="domain">Dominio</option>
+                <option value="api">API / Servicio</option>
+                <option value="other">Otro</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-sm text-slate-400">Costo Mensual (USD)</label>
+              <Input 
+                type="number"
+                value={newCost.costo_mensual} 
+                onChange={(e) => setNewCost({...newCost, costo_mensual: parseFloat(e.target.value) || 0})}
+                className="bg-slate-700 border-slate-600 text-white mt-1"
+              />
+            </div>
+            <div>
+              <label className="text-sm text-slate-400">Proveedor</label>
+              <Input 
+                value={newCost.proveedor} 
+                onChange={(e) => setNewCost({...newCost, proveedor: e.target.value})}
+                className="bg-slate-700 border-slate-600 text-white mt-1"
+                placeholder="Ej: DigitalOcean, AWS, etc."
+              />
+            </div>
+            <div>
+              <label className="text-sm text-slate-400">Notas</label>
+              <Input 
+                value={newCost.notas} 
+                onChange={(e) => setNewCost({...newCost, notas: e.target.value})}
+                className="bg-slate-700 border-slate-600 text-white mt-1"
+                placeholder="Opcional"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAddDialog(false)} className="border-slate-600 text-slate-300">Cancelar</Button>
+            <Button onClick={handleAddCost} className="bg-emerald-600 hover:bg-emerald-700">Agregar</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
