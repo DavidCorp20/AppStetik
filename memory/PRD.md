@@ -39,6 +39,25 @@
 5. Admin revisa en tab "Pagos" y aprueba/rechaza
 6. Al aprobar, suscripción del usuario se activa automáticamente
 
+#### 2. Sistema de Catálogos Pre-definidos ✅ (NUEVO)
+**Archivo de catálogos (`/app/frontend/src/data/catalogos.js`):**
+- `CATALOGO_PRODUCTOS`: +150 productos organizados por categoría
+  - Manicure/Pedicure, Pestañas, Cejas, Peluquería, General
+- `CATALOGO_ESTILOS`: +70 servicios con precios sugeridos
+  - Manicure, Acrílico, Gel/Polygel, Nail Art, Pedicure, Pestañas, Cejas, Peluquería
+
+**ProductosPage actualizada:**
+- Botón "Catálogo" para explorar productos pre-definidos
+- Selección múltiple para agregar varios productos a la vez
+- Filtros por categoría y búsqueda
+- Precios sugeridos editables
+
+**EstilosPage actualizada:**
+- Botón "Catálogo" para explorar servicios pre-definidos
+- Selección múltiple para agregar varios servicios a la vez
+- Muestra tiempo, dificultad y precio sugerido
+- Filtros por categoría
+
 #### 2. Tutoriales en Todas las Páginas ✅
 - Productos, Estilos, Clientes, Gastos
 - Calculadora, Inventario, Simulación
@@ -82,6 +101,8 @@
 | Alertas Pop | ✅ |
 | Presentación Ventas | ✅ |
 | **Sistema de Pagos** | ✅ |
+| **Catálogo Productos** | ✅ |
+| **Catálogo Servicios** | ✅ |
 
 ---
 
