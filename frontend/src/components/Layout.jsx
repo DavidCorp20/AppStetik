@@ -28,7 +28,8 @@ import {
   Settings,
   HelpCircle,
   Bell,
-  Clock
+  Clock,
+  CreditCard
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -61,6 +62,7 @@ const PersonaLayout = () => {
     { to: "/inventario", icon: Box, label: "Inventario" },
     { to: "/gastos", icon: Receipt, label: "Gastos" },
     { to: "/ganancias", icon: TrendingUp, label: "Ganancias" },
+    { to: "/pagos", icon: CreditCard, label: "Mi Suscripción" },
   ];
 
   useEffect(() => {
@@ -235,6 +237,7 @@ const comercioFinanzasGroup = {
     { to: "/gastos", icon: Receipt, label: "Gastos" },
     { to: "/ganancias", icon: TrendingUp, label: "Ganancias" },
     { to: "/reportes-financieros", icon: BarChart3, label: "Reportes" },
+    { to: "/pagos", icon: CreditCard, label: "Suscripción" },
   ]
 };
 

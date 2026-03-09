@@ -1,5 +1,7 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, Request
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, Request, UploadFile, File, Form
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.staticfiles import StaticFiles
+import base64
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -2828,6 +2830,314 @@ async def delete_operational_cost(cost_id: str, current_user: dict = Depends(get
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Costo no encontrado")
     return {"message": "Costo eliminado"}
+
+# ======================
+# PAYMENT REGISTRATION SYSTEM
+# ======================
+
+# Payment methods available
+PAYMENT_METHODS = {
+    "pago_movil": {
+        "nombre": "Pago Móvil",
+        "campos": ["banco", "telefono", "cedula", "referencia"],
+        "icono": "smartphone"
+    },
+    "transferencia": {
+        "nombre": "Transferencia Bancaria",
+        "campos": ["banco_origen", "banco_destino", "referencia", "cuenta"],
+        "icono": "building"
+    },
+    "binance": {
+        "nombre": "Binance Pay / USDT",
+        "campos": ["id_transaccion", "monto_usdt"],
+        "icono": "bitcoin"
+    },
+    "efectivo": {
+        "nombre": "Efectivo",
+        "campos": ["monto", "moneda"],
+        "icono": "banknote"
+    },
+    "zelle": {
+        "nombre": "Zelle",
+        "campos": ["email_zelle", "referencia"],
+        "icono": "mail"
+    }
+}
+
+class PaymentCreate(BaseModel):
+    metodo_pago: str
+    monto: float
+    moneda: str = "USD"
+    monto_bs: float = 0
+    tasa_cambio: float = 0
+    referencia: str = ""
+    datos_pago: dict = {}
+    notas: str = ""
+    plan_solicitado: str = "premium"
+    meses: int = 1
+
+@api_router.get("/payment-methods")
+async def get_payment_methods():
+    """Get available payment methods and platform payment info"""
+    return {
+        "methods": PAYMENT_METHODS,
+        "platform_info": {
+            "pago_movil": {
+                "banco": "Banesco",
+                "telefono": "0412-1234567",
+                "cedula": "V-12345678",
+                "titular": "NailCost Pro C.A."
+            },
+            "transferencia": {
+                "banco": "Banesco",
+                "cuenta": "0134-0000-00-0000000000",
+                "rif": "J-12345678-9",
+                "titular": "NailCost Pro C.A."
+            },
+            "binance": {
+                "binance_id": "nailcostpro",
+                "wallet_usdt": "TRC20: TNailCostProWallet123"
+            },
+            "zelle": {
+                "email": "pagos@nailcost.pro"
+            }
+        }
+    }
+
+@api_router.post("/pagos/registrar")
+async def register_payment(
+    metodo_pago: str = Form(...),
+    monto: float = Form(...),
+    moneda: str = Form("USD"),
+    monto_bs: float = Form(0),
+    tasa_cambio: float = Form(0),
+    referencia: str = Form(""),
+    plan_solicitado: str = Form("premium"),
+    meses: int = Form(1),
+    notas: str = Form(""),
+    datos_pago: str = Form("{}"),
+    comprobante: UploadFile = File(None),
+    current_user: dict = Depends(get_current_user)
+):
+    """Register a payment with optional proof image"""
+    import json
+    
+    # Parse datos_pago
+    try:
+        datos = json.loads(datos_pago) if datos_pago else {}
+    except:
+        datos = {}
+    
+    # Process image if provided
+    comprobante_base64 = None
+    comprobante_filename = None
+    if comprobante and comprobante.filename:
+        # Read file content
+        content = await comprobante.read()
+        # Convert to base64 (limit 5MB)
+        if len(content) > 5 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="El archivo es demasiado grande. Máximo 5MB.")
+        comprobante_base64 = base64.b64encode(content).decode('utf-8')
+        comprobante_filename = comprobante.filename
+    
+    # Calculate pricing
+    pricing = {"personal": {"basic": 5, "premium": 10}, "business": {"basic": 15, "premium": 20}}
+    user_type = current_user.get("user_type", "personal")
+    plan_price = pricing.get(user_type, pricing["personal"]).get(plan_solicitado, 10)
+    total_esperado = plan_price * meses
+    
+    # Create payment record
+    pago_doc = {
+        "id": str(uuid.uuid4()),
+        "user_id": current_user["id"],
+        "user_email": current_user["email"],
+        "user_nombre": current_user["nombre"],
+        "user_type": user_type,
+        "metodo_pago": metodo_pago,
+        "monto": monto,
+        "moneda": moneda,
+        "monto_bs": monto_bs,
+        "tasa_cambio": tasa_cambio,
+        "referencia": referencia,
+        "datos_pago": datos,
+        "plan_solicitado": plan_solicitado,
+        "meses": meses,
+        "total_esperado": total_esperado,
+        "comprobante_base64": comprobante_base64,
+        "comprobante_filename": comprobante_filename,
+        "notas": notas,
+        "estado": "pendiente",  # pendiente, aprobado, rechazado
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "reviewed_at": None,
+        "reviewed_by": None,
+        "admin_notas": ""
+    }
+    
+    await db.pagos.insert_one(pago_doc)
+    pago_doc.pop("_id", None)
+    # Don't return the base64 image to save bandwidth
+    pago_doc.pop("comprobante_base64", None)
+    
+    return {
+        "message": "Pago registrado exitosamente. El administrador revisará tu comprobante.",
+        "pago": pago_doc
+    }
+
+@api_router.get("/pagos/mis-pagos")
+async def get_my_payments(current_user: dict = Depends(get_current_user)):
+    """Get user's payment history"""
+    pagos = await db.pagos.find(
+        {"user_id": current_user["id"]},
+        {"_id": 0, "comprobante_base64": 0}  # Exclude image to save bandwidth
+    ).sort("created_at", -1).to_list(100)
+    return pagos
+
+@api_router.get("/pagos/{pago_id}")
+async def get_payment_detail(pago_id: str, current_user: dict = Depends(get_current_user)):
+    """Get payment detail including comprobante"""
+    query = {"id": pago_id}
+    # Non-admin users can only see their own payments
+    if current_user.get("role") != "admin":
+        query["user_id"] = current_user["id"]
+    
+    pago = await db.pagos.find_one(query, {"_id": 0})
+    if not pago:
+        raise HTTPException(status_code=404, detail="Pago no encontrado")
+    return pago
+
+@api_router.get("/admin/pagos")
+async def admin_get_all_payments(
+    estado: str = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Admin: Get all payments"""
+    if current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="No autorizado")
+    
+    query = {}
+    if estado:
+        query["estado"] = estado
+    
+    pagos = await db.pagos.find(
+        query,
+        {"_id": 0, "comprobante_base64": 0}
+    ).sort("created_at", -1).to_list(500)
+    
+    # Summary
+    total_pendientes = await db.pagos.count_documents({"estado": "pendiente"})
+    total_aprobados = await db.pagos.count_documents({"estado": "aprobado"})
+    total_rechazados = await db.pagos.count_documents({"estado": "rechazado"})
+    
+    monto_aprobado = 0
+    aprobados = await db.pagos.find({"estado": "aprobado"}, {"_id": 0, "monto": 1}).to_list(1000)
+    monto_aprobado = sum(p.get("monto", 0) for p in aprobados)
+    
+    return {
+        "pagos": pagos,
+        "summary": {
+            "pendientes": total_pendientes,
+            "aprobados": total_aprobados,
+            "rechazados": total_rechazados,
+            "monto_total_aprobado": round(monto_aprobado, 2)
+        }
+    }
+
+@api_router.get("/admin/pagos/{pago_id}/comprobante")
+async def admin_get_payment_comprobante(pago_id: str, current_user: dict = Depends(get_current_user)):
+    """Admin: Get payment proof image"""
+    if current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="No autorizado")
+    
+    pago = await db.pagos.find_one({"id": pago_id}, {"_id": 0, "comprobante_base64": 1, "comprobante_filename": 1})
+    if not pago:
+        raise HTTPException(status_code=404, detail="Pago no encontrado")
+    
+    return {
+        "comprobante_base64": pago.get("comprobante_base64"),
+        "comprobante_filename": pago.get("comprobante_filename")
+    }
+
+@api_router.put("/admin/pagos/{pago_id}/aprobar")
+async def admin_approve_payment(
+    pago_id: str,
+    notas: str = "",
+    current_user: dict = Depends(get_current_user)
+):
+    """Admin: Approve payment and activate subscription"""
+    if current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="No autorizado")
+    
+    pago = await db.pagos.find_one({"id": pago_id})
+    if not pago:
+        raise HTTPException(status_code=404, detail="Pago no encontrado")
+    
+    if pago.get("estado") == "aprobado":
+        raise HTTPException(status_code=400, detail="Este pago ya fue aprobado")
+    
+    now = datetime.now(timezone.utc)
+    meses = pago.get("meses", 1)
+    subscription_end = now + timedelta(days=30 * meses)
+    
+    # Update payment status
+    await db.pagos.update_one(
+        {"id": pago_id},
+        {"$set": {
+            "estado": "aprobado",
+            "reviewed_at": now.isoformat(),
+            "reviewed_by": current_user["id"],
+            "admin_notas": notas
+        }}
+    )
+    
+    # Activate user subscription
+    user_id = pago.get("user_id")
+    plan = pago.get("plan_solicitado", "premium")
+    
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {
+            "account_status": "active",
+            "plan": plan,
+            "subscription_starts_at": now.isoformat(),
+            "subscription_ends_at": subscription_end.isoformat(),
+            "subscription_months": meses,
+            "last_payment_date": now.isoformat(),
+            "last_payment_id": pago_id
+        }}
+    )
+    
+    return {
+        "message": f"Pago aprobado. Suscripción {plan} activada por {meses} mes(es).",
+        "subscription_ends_at": subscription_end.isoformat()
+    }
+
+@api_router.put("/admin/pagos/{pago_id}/rechazar")
+async def admin_reject_payment(
+    pago_id: str,
+    motivo: str = "",
+    current_user: dict = Depends(get_current_user)
+):
+    """Admin: Reject payment"""
+    if current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="No autorizado")
+    
+    pago = await db.pagos.find_one({"id": pago_id})
+    if not pago:
+        raise HTTPException(status_code=404, detail="Pago no encontrado")
+    
+    now = datetime.now(timezone.utc)
+    
+    await db.pagos.update_one(
+        {"id": pago_id},
+        {"$set": {
+            "estado": "rechazado",
+            "reviewed_at": now.isoformat(),
+            "reviewed_by": current_user["id"],
+            "admin_notas": motivo
+        }}
+    )
+    
+    return {"message": "Pago rechazado", "motivo": motivo}
 
 # Include the router
 app.include_router(api_router)

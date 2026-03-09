@@ -10,39 +10,52 @@
 
 ---
 
-## Última Actualización: 09 Marzo 2025
+## Última Actualización: 09 Marzo 2026
 
 ### IMPLEMENTADO EN ESTA SESIÓN
 
-#### 1. Tutoriales en Todas las Páginas ✅
+#### 1. Sistema de Pagos Tradicionales ✅ (NUEVO)
+**Backend (`/app/backend/server.py`):**
+- `GET /api/payment-methods` - Lista métodos de pago disponibles
+- `POST /api/pagos/registrar` - Registrar pago con comprobante (FormData + imagen)
+- `GET /api/pagos/mis-pagos` - Historial de pagos del usuario
+- `GET /api/admin/pagos` - Admin: ver todos los pagos
+- `GET /api/admin/pagos/{id}/comprobante` - Admin: ver imagen de comprobante
+- `PUT /api/admin/pagos/{id}/aprobar` - Admin: aprobar pago y activar suscripción
+- `PUT /api/admin/pagos/{id}/rechazar` - Admin: rechazar pago
+
+**Frontend:**
+- Nueva página `/pagos` (`PagosPage.jsx`) para usuarios Persona y Empresa
+- Nuevo tab "Pagos" en AdminPage con panel completo de gestión
+- Métodos soportados: Pago Móvil, Transferencia, Binance/USDT, Efectivo, Zelle
+- Subida de comprobante de pago como imagen (base64)
+- Aprobación automática activa la suscripción del usuario
+
+**Flujo:**
+1. Usuario navega a `/pagos`
+2. Selecciona plan (Básico/Premium) y duración (1-12 meses)
+3. Ve datos de pago de la plataforma (banco, teléfono, etc.)
+4. Realiza el pago y sube comprobante
+5. Admin revisa en tab "Pagos" y aprueba/rechaza
+6. Al aprobar, suscripción del usuario se activa automáticamente
+
+#### 2. Tutoriales en Todas las Páginas ✅
 - Productos, Estilos, Clientes, Gastos
 - Calculadora, Inventario, Simulación
 - Reportes Financieros
 - Cada página muestra tutorial automático en primera visita
 - Botón "Ayuda" disponible siempre
 
-#### 2. Presentación de Ventas ✅
+#### 3. Presentación de Ventas ✅
 - Ubicación: `/presentacion.html`
-- 7 slides profesionales:
-  1. Portada con estadísticas
-  2. El Problema (¿Te identificas?)
-  3. La Solución (Todo en un lugar)
-  4. Funcionalidades (9 features)
-  5. Planes y Precios
-  6. Testimonio
-  7. Llamada a la acción
+- 7 slides profesionales
 
-#### 3. Roadmap de Lanzamiento ✅
-- Ver: `/app/memory/ROADMAP.md`
-- Fases: Estabilización → Pre-Lanzamiento → Beta → Público
-- Costos detallados
-- Punto de equilibrio calculado
-
-#### 4. Panel Admin Completo
+#### 4. Panel Admin Completo ✅
 - Control de precios de suscripción
 - Control de costos operativos con análisis de rentabilidad
+- **NUEVO:** Panel de gestión de pagos de usuarios
 
-#### 5. Dashboard Comercio Mejorado
+#### 5. Dashboard Comercio Mejorado ✅
 - Top Servicios con ranking visual
 - Meta mensual con progreso
 - Sistema de alertas pop
@@ -68,12 +81,14 @@
 | Facturación | ✅ |
 | Alertas Pop | ✅ |
 | Presentación Ventas | ✅ |
+| **Sistema de Pagos** | ✅ |
 
 ---
 
 ## URLS IMPORTANTES
 
 - **App**: https://salon-margin-tool.preview.emergentagent.com
+- **Página de Pagos**: https://salon-margin-tool.preview.emergentagent.com/pagos
 - **Presentación**: https://salon-margin-tool.preview.emergentagent.com/presentacion.html
 - **Roadmap**: /app/memory/ROADMAP.md
 
@@ -90,7 +105,7 @@
 - [ ] Dominio producción
 - [ ] Servidor DigitalOcean
 - [ ] Email transaccional (SendGrid)
-- [ ] Pasarela de pagos (Stripe)
+- [ ] Pasarela de pagos automática (Stripe) - opcional
 
 ### Fase 3: Beta
 - [ ] 10-20 usuarios reales

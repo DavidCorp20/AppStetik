@@ -33,6 +33,7 @@ import { ForgotPasswordPage } from "@/pages/ForgotPasswordPage";
 import { TerminosPage } from "@/pages/TerminosPage";
 import { PrivacidadPage } from "@/pages/PrivacidadPage";
 import { ReportesFinancierosPage } from "@/pages/ReportesFinancierosPage";
+import { PagosPage } from "@/pages/PagosPage";
 import { Loader2 } from "lucide-react";
 
 // Dashboard Router - selects based on user type and redirects admin
@@ -134,6 +135,7 @@ function AppRoutes() {
           <Route path="inventario" element={<InventarioPage />} />
           <Route path="facturacion" element={<FacturacionPage />} />
           <Route path="reportes-financieros" element={<ReportesFinancierosPage />} />
+          <Route path="pagos" element={<PagosPage />} />
         </Route>
       </Route>
 

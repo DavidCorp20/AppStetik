@@ -370,6 +370,9 @@ export default function AdminPage() {
           <TabsTrigger value="reports" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
             <TrendingUp className="w-4 h-4 mr-2" />Reportes
           </TabsTrigger>
+          <TabsTrigger value="payments" className="data-[state=active]:bg-pink-600 data-[state=active]:text-white">
+            <CreditCard className="w-4 h-4 mr-2" />Pagos
+          </TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
@@ -949,6 +952,11 @@ export default function AdminPage() {
         <TabsContent value="costs" className="space-y-4">
           <CostsPanel />
         </TabsContent>
+
+        {/* Payments Tab - Gestión de Pagos de Usuarios */}
+        <TabsContent value="payments" className="space-y-4">
+          <PaymentsPanel />
+        </TabsContent>
       </Tabs>
 
       {/* Payment Dialog */}
@@ -1509,3 +1517,368 @@ function CostsPanel() {
 }
 
 export { AdminPage };
+
+// Payments Management Panel
+function PaymentsPanel() {
+  const [pagos, setPagos] = useState({ pagos: [], summary: {} });
+  const [loading, setLoading] = useState(true);
+  const [filterEstado, setFilterEstado] = useState('all');
+  const [selectedPago, setSelectedPago] = useState(null);
+  const [comprobante, setComprobante] = useState(null);
+  const [loadingComprobante, setLoadingComprobante] = useState(false);
+  const [showComprobanteDialog, setShowComprobanteDialog] = useState(false);
+  const [actionLoading, setActionLoading] = useState(null);
+  const [motivoRechazo, setMotivoRechazo] = useState('');
+
+  useEffect(() => {
+    fetchPagos();
+  }, []);
+
+  const fetchPagos = async () => {
+    try {
+      const res = await authAxios.get(`${API}/admin/pagos`);
+      setPagos(res.data);
+    } catch (err) {
+      toast.error('Error al cargar pagos');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const viewComprobante = async (pagoId) => {
+    setLoadingComprobante(true);
+    setShowComprobanteDialog(true);
+    try {
+      const res = await authAxios.get(`${API}/admin/pagos/${pagoId}/comprobante`);
+      setComprobante(res.data);
+    } catch (err) {
+      toast.error('Error al cargar comprobante');
+      setComprobante(null);
+    } finally {
+      setLoadingComprobante(false);
+    }
+  };
+
+  const handleAprobar = async (pagoId) => {
+    setActionLoading(pagoId);
+    try {
+      await authAxios.put(`${API}/admin/pagos/${pagoId}/aprobar`);
+      toast.success('Pago aprobado y suscripción activada');
+      fetchPagos();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Error al aprobar');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleRechazar = async (pagoId) => {
+    setActionLoading(pagoId);
+    try {
+      await authAxios.put(`${API}/admin/pagos/${pagoId}/rechazar?motivo=${encodeURIComponent(motivoRechazo)}`);
+      toast.success('Pago rechazado');
+      setMotivoRechazo('');
+      fetchPagos();
+    } catch (err) {
+      toast.error('Error al rechazar');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '-';
+    return new Date(dateStr).toLocaleDateString('es-VE', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const filteredPagos = filterEstado === 'all' 
+    ? pagos.pagos 
+    : pagos.pagos.filter(p => p.estado === filterEstado);
+
+  const PAYMENT_METHODS = {
+    pago_movil: 'Pago Móvil',
+    transferencia: 'Transferencia',
+    binance: 'Binance/USDT',
+    efectivo: 'Efectivo',
+    zelle: 'Zelle'
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-pink-500" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6" data-testid="payments-panel">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card className="bg-gradient-to-br from-amber-500 to-amber-600 border-0 text-white">
+          <CardContent className="p-4">
+            <Clock className="w-6 h-6 mb-2 opacity-80" />
+            <p className="text-3xl font-bold">{pagos.summary.pendientes || 0}</p>
+            <p className="text-sm opacity-80">Pendientes</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 border-0 text-white">
+          <CardContent className="p-4">
+            <CheckCircle className="w-6 h-6 mb-2 opacity-80" />
+            <p className="text-3xl font-bold">{pagos.summary.aprobados || 0}</p>
+            <p className="text-sm opacity-80">Aprobados</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-red-500 to-red-600 border-0 text-white">
+          <CardContent className="p-4">
+            <XCircle className="w-6 h-6 mb-2 opacity-80" />
+            <p className="text-3xl font-bold">{pagos.summary.rechazados || 0}</p>
+            <p className="text-sm opacity-80">Rechazados</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 border-0 text-white">
+          <CardContent className="p-4">
+            <DollarSign className="w-6 h-6 mb-2 opacity-80" />
+            <p className="text-3xl font-bold">${pagos.summary.monto_total_aprobado || 0}</p>
+            <p className="text-sm opacity-80">Total Recaudado</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Filter */}
+      <div className="flex items-center gap-4">
+        <Select value={filterEstado} onValueChange={setFilterEstado}>
+          <SelectTrigger className="w-48 bg-slate-700 border-slate-600 text-white">
+            <Filter className="w-4 h-4 mr-2" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="bg-slate-800 border-slate-700">
+            <SelectItem value="all">Todos los pagos</SelectItem>
+            <SelectItem value="pendiente">Pendientes</SelectItem>
+            <SelectItem value="aprobado">Aprobados</SelectItem>
+            <SelectItem value="rechazado">Rechazados</SelectItem>
+          </SelectContent>
+        </Select>
+        <Button variant="outline" onClick={fetchPagos} className="border-slate-600 text-slate-300">
+          <RefreshCw className="w-4 h-4 mr-2" />Actualizar
+        </Button>
+      </div>
+
+      {/* Payments List */}
+      <Card className="bg-slate-800/50 border-slate-700">
+        <CardHeader>
+          <CardTitle className="text-white">Comprobantes de Pago</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {filteredPagos.length === 0 ? (
+            <div className="text-center py-12 text-slate-400">
+              <CreditCard className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p>No hay pagos {filterEstado !== 'all' ? filterEstado + 's' : ''}</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredPagos.map((pago) => (
+                <div 
+                  key={pago.id}
+                  className={`p-4 rounded-lg border ${
+                    pago.estado === 'pendiente' ? 'border-amber-500/30 bg-amber-500/5' :
+                    pago.estado === 'aprobado' ? 'border-emerald-500/30 bg-emerald-500/5' :
+                    'border-red-500/30 bg-red-500/5'
+                  }`}
+                >
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    {/* User Info */}
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-full ${
+                          pago.user_type === 'business' ? 'bg-violet-500/20' : 'bg-blue-500/20'
+                        }`}>
+                          {pago.user_type === 'business' ? 
+                            <Building2 className="w-5 h-5 text-violet-400" /> : 
+                            <User className="w-5 h-5 text-blue-400" />
+                          }
+                        </div>
+                        <div>
+                          <p className="font-medium text-white">{pago.user_nombre}</p>
+                          <p className="text-sm text-slate-400">{pago.user_email}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Payment Info */}
+                    <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div>
+                        <p className="text-slate-400">Monto</p>
+                        <p className="font-bold text-white text-lg">${pago.monto} {pago.moneda}</p>
+                      </div>
+                      <div>
+                        <p className="text-slate-400">Método</p>
+                        <p className="text-white">{PAYMENT_METHODS[pago.metodo_pago] || pago.metodo_pago}</p>
+                      </div>
+                      <div>
+                        <p className="text-slate-400">Plan</p>
+                        <p className="text-white capitalize">{pago.plan_solicitado} x {pago.meses}m</p>
+                      </div>
+                      <div>
+                        <p className="text-slate-400">Fecha</p>
+                        <p className="text-white text-xs">{formatDate(pago.created_at)}</p>
+                      </div>
+                    </div>
+
+                    {/* Status & Actions */}
+                    <div className="flex items-center gap-2">
+                      <Badge className={
+                        pago.estado === 'pendiente' ? 'bg-amber-500/20 text-amber-300' :
+                        pago.estado === 'aprobado' ? 'bg-emerald-500/20 text-emerald-300' :
+                        'bg-red-500/20 text-red-300'
+                      }>
+                        {pago.estado.charAt(0).toUpperCase() + pago.estado.slice(1)}
+                      </Badge>
+
+                      {pago.comprobante_filename && (
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => {
+                            setSelectedPago(pago);
+                            viewComprobante(pago.id);
+                          }}
+                          className="border-slate-600 text-slate-300"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                      )}
+
+                      {pago.estado === 'pendiente' && (
+                        <>
+                          <Button 
+                            size="sm" 
+                            onClick={() => handleAprobar(pago.id)}
+                            disabled={actionLoading === pago.id}
+                            className="bg-emerald-600 hover:bg-emerald-700"
+                          >
+                            {actionLoading === pago.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <CheckCircle className="w-4 h-4" />
+                            )}
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="destructive"
+                            onClick={() => {
+                              setSelectedPago(pago);
+                              setMotivoRechazo('');
+                            }}
+                            disabled={actionLoading === pago.id}
+                          >
+                            <XCircle className="w-4 h-4" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Reference */}
+                  {pago.referencia && (
+                    <div className="mt-3 pt-3 border-t border-slate-700">
+                      <p className="text-sm text-slate-400">
+                        Referencia: <span className="font-mono text-white">{pago.referencia}</span>
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Admin notes */}
+                  {pago.admin_notas && (
+                    <div className="mt-2 p-2 bg-slate-700/50 rounded text-sm text-slate-300">
+                      <strong>Nota:</strong> {pago.admin_notas}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Comprobante Dialog */}
+      <Dialog open={showComprobanteDialog} onOpenChange={setShowComprobanteDialog}>
+        <DialogContent className="bg-slate-800 border-slate-700 text-white max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Comprobante de Pago</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            {loadingComprobante ? (
+              <div className="flex items-center justify-center h-64">
+                <Loader2 className="w-8 h-8 animate-spin text-pink-500" />
+              </div>
+            ) : comprobante?.comprobante_base64 ? (
+              <div className="space-y-4">
+                <img 
+                  src={`data:image/png;base64,${comprobante.comprobante_base64}`}
+                  alt="Comprobante"
+                  className="max-w-full max-h-[400px] mx-auto rounded-lg"
+                />
+                <p className="text-center text-slate-400 text-sm">
+                  {comprobante.comprobante_filename}
+                </p>
+              </div>
+            ) : (
+              <p className="text-center text-slate-400">No hay comprobante disponible</p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowComprobanteDialog(false)} className="border-slate-600">
+              Cerrar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reject Confirmation */}
+      {selectedPago?.estado === 'pendiente' && motivoRechazo !== null && (
+        <Dialog open={!!selectedPago && !showComprobanteDialog} onOpenChange={() => setSelectedPago(null)}>
+          <DialogContent className="bg-slate-800 border-slate-700 text-white">
+            <DialogHeader>
+              <DialogTitle className="text-red-400">Rechazar Pago</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <p className="text-slate-400">
+                ¿Estás seguro de rechazar el pago de <strong className="text-white">{selectedPago?.user_nombre}</strong>?
+              </p>
+              <div>
+                <label className="text-sm text-slate-400">Motivo del rechazo (opcional)</label>
+                <Input 
+                  value={motivoRechazo}
+                  onChange={(e) => setMotivoRechazo(e.target.value)}
+                  className="bg-slate-700 border-slate-600 text-white mt-1"
+                  placeholder="Ej: Comprobante ilegible, monto incorrecto..."
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setSelectedPago(null)} className="border-slate-600">
+                Cancelar
+              </Button>
+              <Button 
+                variant="destructive"
+                onClick={() => {
+                  handleRechazar(selectedPago.id);
+                  setSelectedPago(null);
+                }}
+              >
+                Confirmar Rechazo
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+    </div>
+  );
+}
