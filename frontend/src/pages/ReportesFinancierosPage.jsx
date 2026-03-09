@@ -11,6 +11,7 @@ import {
 import { toast } from "sonner";
 import { authAxios } from "@/context/AuthContext";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart as RePieChart, Pie, Cell, LineChart, Line, Legend } from "recharts";
+import { FeatureHelpButton, AutoFeatureTutorial } from "@/components/FeatureTutorial";
 
 const API = process.env.REACT_APP_BACKEND_URL + "/api";
 
@@ -61,6 +62,9 @@ export function ReportesFinancierosPage() {
 
   return (
     <div className="space-y-6 animate-fade-in" data-testid="reportes-financieros-page">
+      {/* Auto Tutorial */}
+      <AutoFeatureTutorial feature="reportes" />
+      
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -68,7 +72,10 @@ export function ReportesFinancierosPage() {
             <BarChart3 className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-stone-800">Reportes Financieros</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl md:text-3xl font-bold text-stone-800">Reportes Financieros</h1>
+              <FeatureHelpButton feature="reportes" />
+            </div>
             <p className="text-stone-500">Análisis completo de tu negocio</p>
           </div>
         </div>

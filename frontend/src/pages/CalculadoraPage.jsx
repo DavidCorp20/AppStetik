@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/utils";
+import { FeatureHelpButton, AutoFeatureTutorial } from "@/components/FeatureTutorial";
 
 export default function CalculadoraPage() {
   const { estilos, disenos, calcularPrecio, loading } = useApp();
@@ -75,11 +76,17 @@ export default function CalculadoraPage() {
 
   return (
     <div className="space-y-6 animate-fade-in" data-testid="calculadora-page">
+      {/* Auto Tutorial */}
+      <AutoFeatureTutorial feature="calculadora" />
+      
       {/* Header */}
       <div>
-        <h1 className="text-2xl md:text-3xl font-medium text-stone-800" style={{ fontFamily: 'Playfair Display, serif' }}>
-          Calculadora de Precios
-        </h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl md:text-3xl font-medium text-stone-800" style={{ fontFamily: 'Playfair Display, serif' }}>
+            Calculadora de Precios
+          </h1>
+          <FeatureHelpButton feature="calculadora" />
+        </div>
         <p className="text-stone-500 mt-1">
           Calcula el precio ideal para tus servicios
         </p>

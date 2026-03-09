@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NailCost Pro - Presentación</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    .font-playfair { font-family: 'Playfair Display', serif; }
+    .font-inter { font-family: 'Inter', sans-serif; }
+    .slide { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; }
+    .gradient-text { background: linear-gradient(135deg, #3B82F6, #8B5CF6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .card-hover { transition: all 0.3s; }
+    .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+    html { scroll-behavior: smooth; }
+  </style>
+</head>
+<body class="font-inter bg-white text-gray-900">
+
+  <!-- Slide 1: Portada -->
+  <section class="slide bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white relative overflow-hidden">
+    <div class="absolute inset-0 opacity-20" style="background-image: url('data:image/svg+xml,...');"></div>
+    <div class="container mx-auto px-8 py-16 text-center relative z-10">
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full mb-8">
+        <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
+        <span class="text-sm">Software para Profesionales de Uñas</span>
+      </div>
+      <h1 class="font-playfair text-6xl md:text-8xl font-bold mb-6">
+        Nail<span class="text-cyan-400">Cost</span> Pro
+      </h1>
+      <p class="text-xl md:text-2xl text-gray-300 max-w-2xl mx-auto mb-12">
+        La herramienta que te ayuda a calcular precios justos y gestionar tu negocio de uñas de forma profesional
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="#problema" class="px-8 py-4 bg-cyan-500 hover:bg-cyan-600 rounded-full font-semibold transition-all">
+          Ver Presentación →
+        </a>
+      </div>
+      <div class="mt-16 grid grid-cols-3 gap-8 max-w-xl mx-auto">
+        <div class="text-center">
+          <div class="text-4xl font-bold text-cyan-400">100+</div>
+          <div class="text-sm text-gray-400">Usuarios</div>
+        </div>
+        <div class="text-center">
+          <div class="text-4xl font-bold text-cyan-400">$5k</div>
+          <div class="text-sm text-gray-400">Calculados/mes</div>
+        </div>
+        <div class="text-center">
+          <div class="text-4xl font-bold text-cyan-400">4.9★</div>
+          <div class="text-sm text-gray-400">Satisfacción</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 2: El Problema -->
+  <section id="problema" class="slide bg-gray-50 py-20">
+    <div class="container mx-auto px-8">
+      <div class="text-center mb-16">
+        <span class="text-rose-500 font-semibold">EL PROBLEMA</span>
+        <h2 class="font-playfair text-4xl md:text-5xl font-bold mt-4">¿Te identificas?</h2>
+      </div>
+      <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 card-hover">
+          <div class="w-16 h-16 bg-rose-100 rounded-2xl flex items-center justify-center mb-6">
+            <span class="text-3xl">😰</span>
+          </div>
+          <h3 class="font-semibold text-xl mb-3">No sabes cuánto cobrar</h3>
+          <p class="text-gray-600">Pones precios "porque así cobran las demás" sin saber si realmente ganas o pierdes dinero.</p>
+        </div>
+        <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 card-hover">
+          <div class="w-16 h-16 bg-amber-100 rounded-2xl flex items-center justify-center mb-6">
+            <span class="text-3xl">📝</span>
+          </div>
+          <h3 class="font-semibold text-xl mb-3">Todo en cuadernos</h3>
+          <p class="text-gray-600">Anotas en libretas, se te olvidan citas, no sabes qué productos te quedan.</p>
+        </div>
+        <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 card-hover">
+          <div class="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mb-6">
+            <span class="text-3xl">💸</span>
+          </div>
+          <h3 class="font-semibold text-xl mb-3">Trabajas mucho, ganas poco</h3>
+          <p class="text-gray-600">Al final del mes no te cuadran los números y no entiendes a dónde se fue el dinero.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 3: La Solución -->
+  <section class="slide bg-white py-20">
+    <div class="container mx-auto px-8">
+      <div class="grid lg:grid-cols-2 gap-16 items-center">
+        <div>
+          <span class="text-cyan-500 font-semibold">LA SOLUCIÓN</span>
+          <h2 class="font-playfair text-4xl md:text-5xl font-bold mt-4 mb-6">
+            Todo tu negocio en <span class="gradient-text">un solo lugar</span>
+          </h2>
+          <p class="text-xl text-gray-600 mb-8">
+            NailCost Pro calcula automáticamente tus precios basándose en tus costos reales, 
+            para que siempre cobres lo justo y tu negocio sea rentable.
+          </p>
+          <div class="space-y-4">
+            <div class="flex items-center gap-4">
+              <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+                <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+              </div>
+              <span class="text-lg">Calcula precios justos automáticamente</span>
+            </div>
+            <div class="flex items-center gap-4">
+              <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+                <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+              </div>
+              <span class="text-lg">Controla tu inventario en tiempo real</span>
+            </div>
+            <div class="flex items-center gap-4">
+              <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+                <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+              </div>
+              <span class="text-lg">Genera facturas profesionales con IVA</span>
+            </div>
+            <div class="flex items-center gap-4">
+              <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+                <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+              </div>
+              <span class="text-lg">Reportes claros de ganancias</span>
+            </div>
+          </div>
+        </div>
+        <div class="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-8 text-white">
+          <div class="text-sm text-gray-400 mb-4">Dashboard de ejemplo</div>
+          <div class="space-y-4">
+            <div class="bg-white/10 rounded-xl p-4">
+              <div class="text-sm text-gray-400">Ingresos Este Mes</div>
+              <div class="text-3xl font-bold text-cyan-400">$592.00</div>
+              <div class="text-sm text-emerald-400">↑ 12% vs mes anterior</div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div class="bg-white/10 rounded-xl p-4">
+                <div class="text-sm text-gray-400">Clientes</div>
+                <div class="text-2xl font-bold">15</div>
+              </div>
+              <div class="bg-white/10 rounded-xl p-4">
+                <div class="text-sm text-gray-400">Meta Mensual</div>
+                <div class="text-2xl font-bold text-amber-400">74%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 4: Funcionalidades -->
+  <section class="slide bg-gray-50 py-20">
+    <div class="container mx-auto px-8">
+      <div class="text-center mb-16">
+        <span class="text-cyan-500 font-semibold">FUNCIONALIDADES</span>
+        <h2 class="font-playfair text-4xl md:text-5xl font-bold mt-4">Todo lo que necesitas</h2>
+      </div>
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+        <!-- Feature 1 -->
+        <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 card-hover">
+          <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
+            <span class="text-2xl">🧮</span>
+          </div>
+          <h3 class="font-semibold text-lg mb-2">Calculadora de Precios</h3>
+          <p class="text-gray-600 text-sm">Calcula el precio justo para cada servicio sumando materiales, tiempo y gastos.</p>
+        </div>
+        <!-- Feature 2 -->
+        <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 card-hover">
+          <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-4">
+            <span class="text-2xl">📦</span>
+          </div>
+          <h3 class="font-semibold text-lg mb-2">Control de Inventario</h3>
+          <p class="text-gray-600 text-sm">Sabe siempre qué tienes en stock y recibe alertas cuando algo se está agotando.</p>
+        </div>
+        <!-- Feature 3 -->
+        <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 card-hover">
+          <div class="w-12 h-12 bg-violet-100 rounded-xl flex items-center justify-center mb-4">
+            <span class="text-2xl">👥</span>
+          </div>
+          <h3 class="font-semibold text-lg mb-2">Gestión de Clientes</h3>
+          <p class="text-gray-600 text-sm">Guarda datos, preferencias e historial de cada clienta para dar mejor servicio.</p>
+        </div>
+        <!-- Feature 4 -->
+        <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 card-hover">
+          <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center mb-4">
+            <span class="text-2xl">📅</span>
+          </div>
+          <h3 class="font-semibold text-lg mb-2">Agenda de Citas</h3>
+          <p class="text-gray-600 text-sm">Organiza tu día y nunca olvides una cita. Visualiza tu semana completa.</p>
+        </div>
+        <!-- Feature 5 -->
+        <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 card-hover">
+          <div class="w-12 h-12 bg-rose-100 rounded-xl flex items-center justify-center mb-4">
+            <span class="text-2xl">🧾</span>
+          </div>
+          <h3 class="font-semibold text-lg mb-2">Facturación con IVA</h3>
+          <p class="text-gray-600 text-sm">Genera facturas profesionales cumpliendo con las normas fiscales de Venezuela.</p>
+        </div>
+        <!-- Feature 6 -->
+        <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 card-hover">
+          <div class="w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center mb-4">
+            <span class="text-2xl">📊</span>
+          </div>
+          <h3 class="font-semibold text-lg mb-2">Reportes y Análisis</h3>
+          <p class="text-gray-600 text-sm">Visualiza tus ganancias, compara meses y toma mejores decisiones.</p>
+        </div>
+        <!-- Feature 7 -->
+        <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 card-hover">
+          <div class="w-12 h-12 bg-pink-100 rounded-xl flex items-center justify-center mb-4">
+            <span class="text-2xl">📈</span>
+          </div>
+          <h3 class="font-semibold text-lg mb-2">Simulador de Ingresos</h3>
+          <p class="text-gray-600 text-sm">Proyecta cuánto podrías ganar y cuántos servicios necesitas para tu meta.</p>
+        </div>
+        <!-- Feature 8 -->
+        <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 card-hover">
+          <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center mb-4">
+            <span class="text-2xl">👩‍💼</span>
+          </div>
+          <h3 class="font-semibold text-lg mb-2">Gestión de Empleados</h3>
+          <p class="text-gray-600 text-sm">Para salones: gestiona tu equipo, comisiones y asigna citas.</p>
+        </div>
+        <!-- Feature 9 -->
+        <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 card-hover">
+          <div class="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center mb-4">
+            <span class="text-2xl">🔔</span>
+          </div>
+          <h3 class="font-semibold text-lg mb-2">Alertas Inteligentes</h3>
+          <p class="text-gray-600 text-sm">Te avisa cuando tu stock está bajo o tu rentabilidad necesita atención.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 5: Planes y Precios -->
+  <section class="slide bg-white py-20">
+    <div class="container mx-auto px-8">
+      <div class="text-center mb-16">
+        <span class="text-cyan-500 font-semibold">PLANES</span>
+        <h2 class="font-playfair text-4xl md:text-5xl font-bold mt-4">Elige tu plan</h2>
+        <p class="text-xl text-gray-600 mt-4">Comienza gratis y actualiza cuando lo necesites</p>
+      </div>
+      <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        <!-- Plan Free -->
+        <div class="bg-white p-8 rounded-2xl border-2 border-gray-200 card-hover">
+          <div class="text-sm font-semibold text-gray-500 mb-2">PERSONAL</div>
+          <h3 class="font-playfair text-2xl font-bold mb-2">Básico</h3>
+          <div class="text-4xl font-bold mb-6">$5<span class="text-lg text-gray-400">/mes</span></div>
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-center gap-2 text-gray-600">
+              <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+              Hasta 20 productos
+            </li>
+            <li class="flex items-center gap-2 text-gray-600">
+              <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+              Calculadora de precios
+            </li>
+            <li class="flex items-center gap-2 text-gray-600">
+              <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+              Gestión de clientes
+            </li>
+            <li class="flex items-center gap-2 text-gray-400">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+              Sin reportes avanzados
+            </li>
+          </ul>
+          <button class="w-full py-3 border-2 border-gray-300 rounded-full font-semibold hover:bg-gray-50 transition-all">
+            Comenzar
+          </button>
+        </div>
+        <!-- Plan Premium -->
+        <div class="bg-gradient-to-br from-cyan-500 to-blue-600 p-8 rounded-2xl text-white transform scale-105 shadow-2xl">
+          <div class="text-sm font-semibold text-cyan-200 mb-2">PERSONAL</div>
+          <h3 class="font-playfair text-2xl font-bold mb-2">Premium</h3>
+          <div class="text-4xl font-bold mb-6">$12<span class="text-lg text-cyan-200">/mes</span></div>
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-cyan-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+              Productos ilimitados
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-cyan-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+              Simulador de ingresos
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-cyan-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+              Reportes avanzados
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-cyan-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+              Facturación con IVA
+            </li>
+          </ul>
+          <button class="w-full py-3 bg-white text-blue-600 rounded-full font-semibold hover:bg-gray-100 transition-all">
+            Más Popular ⭐
+          </button>
+        </div>
+        <!-- Plan Business -->
+        <div class="bg-white p-8 rounded-2xl border-2 border-gray-200 card-hover">
+          <div class="text-sm font-semibold text-gray-500 mb-2">NEGOCIO</div>
+          <h3 class="font-playfair text-2xl font-bold mb-2">Premium</h3>
+          <div class="text-4xl font-bold mb-6">$30<span class="text-lg text-gray-400">/mes</span></div>
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-center gap-2 text-gray-600">
+              <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+              Todo de Personal Premium
+            </li>
+            <li class="flex items-center gap-2 text-gray-600">
+              <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+              Gestión de empleados
+            </li>
+            <li class="flex items-center gap-2 text-gray-600">
+              <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+              Múltiples sucursales
+            </li>
+            <li class="flex items-center gap-2 text-gray-600">
+              <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+              Soporte prioritario
+            </li>
+          </ul>
+          <button class="w-full py-3 border-2 border-gray-300 rounded-full font-semibold hover:bg-gray-50 transition-all">
+            Para Salones
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 6: Testimonio -->
+  <section class="slide bg-gradient-to-br from-slate-900 to-slate-800 text-white py-20">
+    <div class="container mx-auto px-8 text-center">
+      <div class="max-w-3xl mx-auto">
+        <div class="text-6xl mb-8">"</div>
+        <p class="text-2xl md:text-3xl font-light leading-relaxed mb-8">
+          Antes cobraba $25 por un acrílico sin saber si ganaba o perdía. 
+          Con NailCost descubrí que mi costo real era $18. 
+          Ahora cobro $35 con confianza y mi negocio creció un 40%.
+        </p>
+        <div class="flex items-center justify-center gap-4">
+          <div class="w-16 h-16 bg-cyan-500 rounded-full flex items-center justify-center text-2xl font-bold">A</div>
+          <div class="text-left">
+            <div class="font-semibold text-lg">Adriana P.</div>
+            <div class="text-gray-400">Elite Nails Studio, Caracas</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 7: Llamada a la Acción -->
+  <section class="slide bg-white py-20">
+    <div class="container mx-auto px-8 text-center">
+      <h2 class="font-playfair text-4xl md:text-6xl font-bold mb-6">
+        ¿Lista para hacer crecer tu negocio?
+      </h2>
+      <p class="text-xl text-gray-600 max-w-2xl mx-auto mb-12">
+        Únete a cientos de profesionales de uñas que ya calculan sus precios de forma inteligente
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+        <a href="https://salon-margin-tool.preview.emergentagent.com/register" class="px-8 py-4 bg-cyan-500 hover:bg-cyan-600 text-white rounded-full font-semibold text-lg transition-all">
+          Comenzar Gratis →
+        </a>
+        <a href="https://salon-margin-tool.preview.emergentagent.com/login" class="px-8 py-4 border-2 border-gray-300 hover:border-gray-400 rounded-full font-semibold text-lg transition-all">
+          Ya tengo cuenta
+        </a>
+      </div>
+      <p class="text-gray-500">
+        15 días de prueba gratis • Sin tarjeta de crédito • Cancela cuando quieras
+      </p>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-slate-900 text-white py-12">
+    <div class="container mx-auto px-8">
+      <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+        <div>
+          <h3 class="font-playfair text-2xl font-bold">NailCost Pro</h3>
+          <p class="text-gray-400 mt-2">Software para profesionales de uñas</p>
+        </div>
+        <div class="flex gap-6 text-gray-400">
+          <a href="#" class="hover:text-white">Instagram</a>
+          <a href="#" class="hover:text-white">WhatsApp</a>
+          <a href="#" class="hover:text-white">Soporte</a>
+        </div>
+      </div>
+      <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-500">
+        © 2025 NailCost Pro. Todos los derechos reservados.
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

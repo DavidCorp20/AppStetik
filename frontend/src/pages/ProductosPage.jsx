@@ -29,6 +29,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2, Package, Loader2, Wrench } from "lucide-react";
 import { toast } from "sonner";
+import { FeatureHelpButton, AutoFeatureTutorial } from "@/components/FeatureTutorial";
 
 const emptyProducto = {
   nombre: "",
@@ -126,12 +127,18 @@ export default function ProductosPage() {
 
   return (
     <div className="space-y-6 animate-fade-in" data-testid="productos-page">
+      {/* Auto Tutorial */}
+      <AutoFeatureTutorial feature="productos" />
+      
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-medium text-stone-800" style={{ fontFamily: 'Playfair Display, serif' }}>
-            Productos e Insumos
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl md:text-3xl font-medium text-stone-800" style={{ fontFamily: 'Playfair Display, serif' }}>
+              Productos e Insumos
+            </h1>
+            <FeatureHelpButton feature="productos" />
+          </div>
           <p className="text-stone-500 mt-1">
             Gestiona tus productos y herramientas
           </p>

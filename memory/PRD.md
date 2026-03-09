@@ -14,57 +14,38 @@
 
 ### IMPLEMENTADO EN ESTA SESIÓN
 
-#### 1. Panel Admin: Control de Precios
-- Nueva pestaña "Precios" en panel de administración
-- Control de precios de suscripción para todos los planes:
-  - Personal Básico/Premium
-  - Negocio Básico/Premium
-- Guardado persistente en MongoDB
+#### 1. Tutoriales en Todas las Páginas ✅
+- Productos, Estilos, Clientes, Gastos
+- Calculadora, Inventario, Simulación
+- Reportes Financieros
+- Cada página muestra tutorial automático en primera visita
+- Botón "Ayuda" disponible siempre
 
-#### 2. Panel Admin: Control de Costos Operativos
-- Nueva pestaña "Costos" en panel de administración
-- Registro de costos de infraestructura (hosting, DB, dominio, APIs)
-- Análisis de rentabilidad automático:
-  - Total de costos mensuales
-  - Ingresos estimados
-  - Rentabilidad actual (positiva/negativa)
-  - Precio mínimo recomendado por usuario
-  - Break-even point (usuarios necesarios)
-- Recomendaciones automáticas para ser rentable
+#### 2. Presentación de Ventas ✅
+- Ubicación: `/presentacion.html`
+- 7 slides profesionales:
+  1. Portada con estadísticas
+  2. El Problema (¿Te identificas?)
+  3. La Solución (Todo en un lugar)
+  4. Funcionalidades (9 features)
+  5. Planes y Precios
+  6. Testimonio
+  7. Llamada a la acción
 
-#### 3. Dashboard Comercio: Rediseño Completo
-- Stats cards modernos: Ingresos, Gastos, Clientes, Inventario
-- Barra de progreso de Meta Mensual con porcentaje
-- Panel "Top Servicios" rediseñado profesionalmente:
-  - Ranking visual (oro, plata, bronce)
-  - Barras de progreso por rentabilidad
-  - "Ver más" expandible
-- Agenda del día con estados de citas
-- Tu Equipo con especialidades
-- Resumen Rápido (card oscuro)
+#### 3. Roadmap de Lanzamiento ✅
+- Ver: `/app/memory/ROADMAP.md`
+- Fases: Estabilización → Pre-Lanzamiento → Beta → Público
+- Costos detallados
+- Punto de equilibrio calculado
 
-#### 4. Sistema de Alertas Pop
-- Alertas automáticas en esquina inferior derecha
-- Tipos: Stock agotado, Stock bajo, Rentabilidad negativa, Meta en riesgo
-- Navegación entre alertas
-- Descarte individual o masivo
-- Persistencia de descartadas (24h)
+#### 4. Panel Admin Completo
+- Control de precios de suscripción
+- Control de costos operativos con análisis de rentabilidad
 
-#### 5. Seed Data: Precios Reales Venezuela
-- Base de datos limpiada y repoblada
-- 40+ productos con precios reales del mercado venezolano
-- 15 estilos de servicios con precios actualizados
-- Clientes, empleados, citas, facturas de ejemplo
-- Costos operativos de plataforma pre-cargados
-
-#### 6. Tutoriales por Función (Persona/Comercio)
-- Componente FeatureTutorial.jsx creado
-- 10 tutoriales específicos por función:
-  - Productos, Estilos, Clientes, Gastos
-  - Calculadora, Inventario, Facturación
-  - Simulación, Reportes, Agenda
-- Botón "¿Cómo funciona?" en cada página
-- Auto-display en primer uso
+#### 5. Dashboard Comercio Mejorado
+- Top Servicios con ranking visual
+- Meta mensual con progreso
+- Sistema de alertas pop
 
 ---
 
@@ -72,91 +53,64 @@
 
 | Módulo | Estado |
 |--------|--------|
-| Login/Registro | ✅ Funcionando |
-| Dashboard Admin | ✅ Funcionando |
-| Dashboard Comercio | ✅ Mejorado |
-| Dashboard Persona | ✅ Funcionando |
-| Calculadora | ✅ Funcionando |
-| Simulador | ✅ Funcionando |
-| Inventario | ✅ Corregido |
-| Facturación | ✅ Funcionando |
-| Reportes | ✅ Funcionando |
-| Alertas Pop | ✅ Nuevo |
-| Control Precios Admin | ✅ Nuevo |
-| Control Costos Admin | ✅ Nuevo |
-| Tutoriales | ✅ Nuevo |
+| Login/Registro | ✅ |
+| Dashboard Admin | ✅ |
+| Dashboard Comercio | ✅ |
+| Dashboard Persona | ✅ |
+| Productos + Tutorial | ✅ |
+| Estilos + Tutorial | ✅ |
+| Clientes + Tutorial | ✅ |
+| Gastos + Tutorial | ✅ |
+| Calculadora + Tutorial | ✅ |
+| Inventario + Tutorial | ✅ |
+| Simulación + Tutorial | ✅ |
+| Reportes + Tutorial | ✅ |
+| Facturación | ✅ |
+| Alertas Pop | ✅ |
+| Presentación Ventas | ✅ |
 
 ---
 
-## PRÓXIMAS TAREAS
+## URLS IMPORTANTES
 
-### P1 - Alta Prioridad
-- [ ] Integrar FeatureTutorial en cada página (agregar botón "?" y auto-display)
-- [ ] Panel de "Cuentas por Vencer" para Admin
-- [ ] Mejorar exportación Excel con formato profesional
-
-### P2 - Media Prioridad
-- [ ] Comparación visual de precios en inventario
-- [ ] Impuestos personalizables en facturas
-- [ ] Notificaciones por email (SendGrid)
-
-### P3 - Baja Prioridad
-- [ ] Integración Stripe para pagos automáticos
-- [ ] PWA con funcionalidad offline
-- [ ] Modo oscuro completo
+- **App**: https://salon-margin-tool.preview.emergentagent.com
+- **Presentación**: https://salon-margin-tool.preview.emergentagent.com/presentacion.html
+- **Roadmap**: /app/memory/ROADMAP.md
 
 ---
 
-## PLAN DE LANZAMIENTO
+## PRÓXIMOS PASOS (Ver ROADMAP.md)
 
-### Pre-Lanzamiento
-1. **Testing completo** - Probar todos los flujos con datos reales
-2. **Documentación** - Crear guía de usuario
-3. **SSL y Dominio** - Configurar dominio de producción
-4. **Backups** - Configurar respaldos automáticos
+### Fase 1: Estabilización
+- [ ] Testing completo
+- [ ] Correcciones responsive
+- [ ] Optimización rendimiento
 
-### Costos Estimados de Operación (USD/mes)
-| Servicio | Costo Mensual |
-|----------|---------------|
+### Fase 2: Pre-Lanzamiento
+- [ ] Dominio producción
+- [ ] Servidor DigitalOcean
+- [ ] Email transaccional (SendGrid)
+- [ ] Pasarela de pagos (Stripe)
+
+### Fase 3: Beta
+- [ ] 10-20 usuarios reales
+- [ ] Videos tutoriales
+- [ ] Marketing Instagram
+
+---
+
+## COSTOS OPERATIVOS
+
+| Servicio | Costo/mes |
+|----------|-----------|
 | MongoDB Atlas M10 | $57 |
-| Servidor (DigitalOcean 4GB) | $24 |
+| DigitalOcean 4GB | $24 |
 | Cloudflare Pro | $20 |
-| SendGrid (50k emails) | $15 |
-| Backup Storage | $5 |
-| Dominio (.com/año ÷ 12) | $1.50 |
-| **TOTAL** | **$122.50** |
+| SendGrid | $15 |
+| Backup | $5 |
+| **TOTAL** | **$121** |
 
 ### Punto de Equilibrio
-- Con precio Personal Básico $5/mes: Necesitas **25 usuarios activos**
-- Con precio Business Premium $30/mes: Necesitas **5 usuarios activos**
-- **Recomendación**: Enfocarse en usuarios Business para rentabilidad rápida
-
-### Lanzamiento
-1. Soft launch con 10-20 usuarios de prueba
-2. Recopilar feedback durante 2 semanas
-3. Ajustar precios según demanda
-4. Marketing en Instagram/TikTok para nail artists
-5. Launch público
-
----
-
-## ARQUITECTURA
-
-```
-/app/
-├── backend/
-│   ├── server.py          # FastAPI + endpoints admin
-│   ├── seed_data.py       # Datos de prueba Venezuela
-│   └── .env               # Config MongoDB
-└── frontend/
-    └── src/
-        ├── components/
-        │   ├── TutorialModal.jsx     # Tutorial general
-        │   ├── FeatureTutorial.jsx   # Tutoriales por función
-        │   └── AlertPopup.jsx        # Sistema de alertas
-        ├── context/
-        │   └── AppContext.js         # Estado global
-        └── pages/
-            ├── AdminPage.jsx         # Panel admin + precios + costos
-            └── ComercioDashboard.jsx # Dashboard mejorado
-```
+- 25 usuarios Personal Básico ($5)
+- 11 usuarios Personal Premium ($12)
+- 5 usuarios Business Premium ($30)

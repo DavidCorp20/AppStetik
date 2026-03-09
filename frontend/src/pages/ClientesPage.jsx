@@ -23,6 +23,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2, Users, Phone, Mail, Loader2, Calendar } from "lucide-react";
 import { toast } from "sonner";
+import { FeatureHelpButton, AutoFeatureTutorial } from "@/components/FeatureTutorial";
 
 const emptyCliente = {
   nombre: "",
@@ -105,12 +106,18 @@ export default function ClientesPage() {
 
   return (
     <div className="space-y-6 animate-fade-in" data-testid="clientes-page">
+      {/* Auto Tutorial */}
+      <AutoFeatureTutorial feature="clientes" />
+      
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-medium text-stone-800" style={{ fontFamily: 'Playfair Display, serif' }}>
-            Clientes
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl md:text-3xl font-medium text-stone-800" style={{ fontFamily: 'Playfair Display, serif' }}>
+              Clientes
+            </h1>
+            <FeatureHelpButton feature="clientes" />
+          </div>
           <p className="text-stone-500 mt-1">
             Gestiona tu base de clientes
           </p>

@@ -24,6 +24,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Plus, Pencil, Trash2, Palette, Clock, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { FeatureHelpButton, AutoFeatureTutorial } from "@/components/FeatureTutorial";
 
 const emptyEstilo = {
   nombre: "",
@@ -155,12 +156,18 @@ export default function EstilosPage() {
 
   return (
     <div className="space-y-6 animate-fade-in" data-testid="estilos-page">
+      {/* Auto Tutorial */}
+      <AutoFeatureTutorial feature="estilos" />
+      
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-medium text-stone-800" style={{ fontFamily: 'Playfair Display, serif' }}>
-            Estilos de Uñas
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl md:text-3xl font-medium text-stone-800" style={{ fontFamily: 'Playfair Display, serif' }}>
+              Estilos de Uñas
+            </h1>
+            <FeatureHelpButton feature="estilos" />
+          </div>
           <p className="text-stone-500 mt-1">
             Define los estilos y servicios que ofreces
           </p>

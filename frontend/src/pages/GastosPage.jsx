@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Receipt, Save, Loader2, Building, Zap, Droplets, Wifi, Phone, Megaphone, Wrench, SprayCan, CreditCard, Calculator as CalcIcon } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/utils";
+import { FeatureHelpButton, AutoFeatureTutorial } from "@/components/FeatureTutorial";
 
 const gastoFields = [
   { key: "renta", label: "Renta del Local", icon: Building },
@@ -116,15 +117,19 @@ export default function GastosPage() {
 
   return (
     <div className="space-y-6 animate-fade-in" data-testid="gastos-page">
+      {/* Auto Tutorial */}
+      <AutoFeatureTutorial feature="gastos" />
+      
       {/* Header */}
-      <div>
+      <div className="flex items-center gap-2">
         <h1 className="text-2xl md:text-3xl font-medium text-stone-800" style={{ fontFamily: 'Playfair Display, serif' }}>
           Gastos Operativos
         </h1>
-        <p className="text-stone-500 mt-1">
-          Configura tus gastos mensuales fijos
-        </p>
+        <FeatureHelpButton feature="gastos" />
       </div>
+      <p className="text-stone-500 -mt-4">
+        Configura tus gastos mensuales fijos
+      </p>
 
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

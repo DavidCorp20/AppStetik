@@ -35,6 +35,7 @@ import {
 import { toast } from "sonner";
 import { PremiumGate } from "@/components/PremiumGate";
 import { formatCurrency } from "@/lib/utils";
+import { FeatureHelpButton, AutoFeatureTutorial } from "@/components/FeatureTutorial";
 
 export default function SimulacionPage() {
   return (
@@ -79,11 +80,17 @@ function SimulacionContent() {
 
   return (
     <div className="space-y-6 animate-fade-in" data-testid="simulacion-page">
+      {/* Auto Tutorial */}
+      <AutoFeatureTutorial feature="simulacion" />
+      
       {/* Header */}
       <div>
-        <h1 className="text-2xl md:text-3xl font-medium text-stone-800" style={{ fontFamily: 'Playfair Display, serif' }}>
-          Simulación de Ingresos
-        </h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl md:text-3xl font-medium text-stone-800" style={{ fontFamily: 'Playfair Display, serif' }}>
+            Simulación de Ingresos
+          </h1>
+          <FeatureHelpButton feature="simulacion" />
+        </div>
         <p className="text-stone-500 mt-1">
           Proyecta tus ingresos mensuales según tu capacidad
         </p>
