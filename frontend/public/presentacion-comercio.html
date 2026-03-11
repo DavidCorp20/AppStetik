@@ -3,354 +3,586 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NailCost Pro - Para Salones y Spas</title>
+  <title>NailCost Pro - Software de Gestión para Salones de Belleza</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     .font-playfair { font-family: 'Playfair Display', serif; }
     .font-inter { font-family: 'Inter', sans-serif; }
-    .slide { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; }
+    .slide { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; padding: 2rem 0; }
     .gradient-business { background: linear-gradient(135deg, #1E1B4B, #312E81, #4338CA); }
-    .gradient-text-blue { background: linear-gradient(135deg, #3B82F6, #8B5CF6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .card-hover { transition: all 0.3s; }
-    .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(67,56,202,0.15); }
+    .gradient-text { background: linear-gradient(135deg, #3B82F6, #8B5CF6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     html { scroll-behavior: smooth; }
+    .feature-card { transition: all 0.3s ease; }
+    .feature-card:hover { transform: translateY(-8px); box-shadow: 0 25px 50px rgba(67,56,202,0.15); }
+    .nav-fixed { position: fixed; top: 0; left: 0; right: 0; z-index: 50; }
   </style>
 </head>
 <body class="font-inter bg-white text-gray-900">
 
-  <!-- Slide 1: Portada Comercio -->
-  <section class="slide gradient-business text-white relative overflow-hidden">
-    <div class="absolute inset-0 opacity-5">
-      <svg class="w-full h-full" viewBox="0 0 100 100">
-        <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
-          <path d="M 10 0 L 0 0 0 10" fill="none" stroke="white" stroke-width="0.5"/>
-        </pattern>
-        <rect width="100" height="100" fill="url(#grid)" />
-      </svg>
+  <!-- Navigation -->
+  <nav class="nav-fixed bg-slate-900/95 backdrop-blur-sm">
+    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+      <span class="font-playfair text-2xl font-bold text-white">Nail<span class="text-indigo-400">Cost</span> <span class="text-xs bg-indigo-500 px-2 py-1 rounded">BUSINESS</span></span>
+      <div class="hidden md:flex gap-6 text-sm text-gray-300">
+        <a href="#retos" class="hover:text-indigo-400">Retos</a>
+        <a href="#funciones" class="hover:text-indigo-400">Funciones</a>
+        <a href="#planes" class="hover:text-indigo-400">Planes</a>
+        <a href="#comenzar" class="hover:text-indigo-400">Comenzar</a>
+      </div>
+      <a href="https://salon-margin-tool.preview.emergentagent.com" class="px-4 py-2 bg-indigo-500 text-white rounded-full text-sm hover:bg-indigo-600">Demo Gratis</a>
     </div>
-    <div class="container mx-auto px-8 py-16 text-center relative z-10">
-      <div class="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full mb-8">
+  </nav>
+
+  <!-- SLIDE 1: Hero -->
+  <section class="slide gradient-business text-white pt-20">
+    <div class="container mx-auto px-6 text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full mb-6">
         <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
         <span class="text-sm font-medium">Software de Gestión para Salones</span>
       </div>
-      <h1 class="font-playfair text-5xl md:text-7xl font-bold mb-6">
-        Profesionaliza tu<br/>Salón de Belleza
+      <h1 class="font-playfair text-5xl md:text-7xl font-bold mb-6 leading-tight">
+        Profesionaliza tu<br/>salón de belleza
       </h1>
-      <p class="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto mb-12">
-        Control total de inventario, facturación electrónica, empleados y finanzas en una sola plataforma
+      <p class="text-xl md:text-2xl text-white/80 max-w-3xl mx-auto mb-10">
+        Control total de inventario, facturación fiscal, empleados y finanzas en una sola plataforma
       </p>
-      <a href="#retos" class="inline-block px-8 py-4 bg-indigo-500 hover:bg-indigo-600 rounded-full font-semibold transition-all shadow-lg">
-        Ver Cómo Funciona →
-      </a>
-      <div class="mt-16 grid grid-cols-4 gap-8 max-w-3xl mx-auto">
+      <div class="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+        <a href="https://salon-margin-tool.preview.emergentagent.com" class="px-8 py-4 bg-indigo-500 hover:bg-indigo-600 rounded-full font-semibold shadow-lg">
+          Empezar Prueba Gratis →
+        </a>
+        <a href="#funciones" class="px-8 py-4 border-2 border-white/30 rounded-full font-semibold hover:bg-white/10">
+          Ver Funciones
+        </a>
+      </div>
+      <div class="grid grid-cols-4 gap-6 max-w-2xl mx-auto">
         <div class="text-center">
           <div class="text-3xl font-bold text-cyan-300">$15</div>
-          <div class="text-sm text-white/60">al mes</div>
+          <div class="text-xs text-white/60">al mes</div>
         </div>
         <div class="text-center">
           <div class="text-3xl font-bold text-cyan-300">Multi</div>
-          <div class="text-sm text-white/60">empleados</div>
+          <div class="text-xs text-white/60">empleados</div>
         </div>
         <div class="text-center">
           <div class="text-3xl font-bold text-cyan-300">Fiscal</div>
-          <div class="text-sm text-white/60">IVA incluido</div>
+          <div class="text-xs text-white/60">IVA incluido</div>
         </div>
         <div class="text-center">
-          <div class="text-3xl font-bold text-cyan-300">24/7</div>
-          <div class="text-sm text-white/60">soporte</div>
+          <div class="text-3xl font-bold text-cyan-300">30%</div>
+          <div class="text-xs text-white/60">ahorro anual</div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Slide 2: Retos del Comercio -->
+  <!-- SLIDE 2: Retos del Comercio -->
   <section id="retos" class="slide bg-slate-50 py-20">
-    <div class="container mx-auto px-8">
+    <div class="container mx-auto px-6">
       <div class="text-center mb-16">
-        <span class="text-indigo-600 font-semibold">LOS RETOS DE UN SALÓN</span>
-        <h2 class="font-playfair text-4xl md:text-5xl font-bold mt-4">
-          Administrar un negocio no es fácil
-        </h2>
+        <span class="text-indigo-600 font-semibold text-sm uppercase tracking-wider">Los Retos de un Salón</span>
+        <h2 class="font-playfair text-4xl md:text-5xl font-bold mt-4">Administrar un negocio no es fácil</h2>
       </div>
       <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 card-hover">
-          <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center mb-4">
-            <span class="text-2xl">📊</span>
-          </div>
-          <h3 class="font-semibold">Descontrol financiero</h3>
-          <p class="text-sm text-gray-600 mt-2">No sabes si el mes fue rentable hasta que cierras la caja</p>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+          <div class="w-14 h-14 bg-red-100 rounded-xl flex items-center justify-center mb-4 text-2xl">📊</div>
+          <h3 class="font-semibold text-lg mb-2">Descontrol financiero</h3>
+          <p class="text-gray-600 text-sm">No sabes si el mes fue rentable hasta que cierras la caja</p>
         </div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 card-hover">
-          <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center mb-4">
-            <span class="text-2xl">📦</span>
-          </div>
-          <h3 class="font-semibold">Inventario fantasma</h3>
-          <p class="text-sm text-gray-600 mt-2">Productos que "desaparecen" y no sabes si es robo o desperdicio</p>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+          <div class="w-14 h-14 bg-amber-100 rounded-xl flex items-center justify-center mb-4 text-2xl">📦</div>
+          <h3 class="font-semibold text-lg mb-2">Inventario fantasma</h3>
+          <p class="text-gray-600 text-sm">Productos que desaparecen sin saber si es robo o desperdicio</p>
         </div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 card-hover">
-          <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
-            <span class="text-2xl">🧾</span>
-          </div>
-          <h3 class="font-semibold">Facturas a mano</h3>
-          <p class="text-sm text-gray-600 mt-2">Perder tiempo haciendo facturas cuando podrías estar atendiendo</p>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+          <div class="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mb-4 text-2xl">🧾</div>
+          <h3 class="font-semibold text-lg mb-2">Facturas a mano</h3>
+          <p class="text-gray-600 text-sm">Perder tiempo haciendo facturas cuando podrías estar atendiendo</p>
         </div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 card-hover">
-          <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-4">
-            <span class="text-2xl">👥</span>
-          </div>
-          <h3 class="font-semibold">Empleados sin control</h3>
-          <p class="text-sm text-gray-600 mt-2">No sabes cuánto produce cada manicurista ni qué comisiones pagar</p>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+          <div class="w-14 h-14 bg-purple-100 rounded-xl flex items-center justify-center mb-4 text-2xl">👥</div>
+          <h3 class="font-semibold text-lg mb-2">Empleados sin control</h3>
+          <p class="text-gray-600 text-sm">No sabes cuánto produce cada empleado ni qué comisiones pagar</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Slide 3: Solución Integral -->
+  <!-- SLIDE 3: Dashboard Overview -->
   <section class="slide bg-white py-20">
-    <div class="container mx-auto px-8">
+    <div class="container mx-auto px-6">
       <div class="text-center mb-16">
-        <span class="text-indigo-600 font-semibold">UNA SOLUCIÓN INTEGRAL</span>
+        <span class="text-indigo-600 font-semibold text-sm uppercase tracking-wider">Dashboard Gerencial</span>
         <h2 class="font-playfair text-4xl md:text-5xl font-bold mt-4">
-          Todo conectado,<br/><span class="gradient-text-blue">todo automatizado</span>
+          Todo tu negocio<br/><span class="gradient-text">en una sola pantalla</span>
         </h2>
       </div>
-      <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-        <div class="bg-gradient-to-br from-indigo-50 to-violet-50 p-8 rounded-3xl card-hover">
-          <div class="w-14 h-14 gradient-business rounded-2xl flex items-center justify-center mb-6 text-white">
-            <span class="text-2xl">📦</span>
-          </div>
-          <h3 class="font-semibold text-xl mb-3">Inventario Inteligente</h3>
-          <p class="text-gray-600">Control de stock con alertas automáticas. Sabe exactamente qué comprar y cuándo.</p>
-          <ul class="mt-4 text-sm text-gray-500 space-y-1">
-            <li>• Stock mínimo configurable</li>
-            <li>• Alertas de reabastecimiento</li>
-            <li>• Historial de movimientos</li>
-          </ul>
-        </div>
-        <div class="bg-gradient-to-br from-indigo-50 to-violet-50 p-8 rounded-3xl card-hover">
-          <div class="w-14 h-14 gradient-business rounded-2xl flex items-center justify-center mb-6 text-white">
-            <span class="text-2xl">🧾</span>
-          </div>
-          <h3 class="font-semibold text-xl mb-3">Facturación Fiscal</h3>
-          <p class="text-gray-600">Facturas con IVA y retenciones configurables. Cumple con el SENIAT sin complicaciones.</p>
-          <ul class="mt-4 text-sm text-gray-500 space-y-1">
-            <li>• IVA 16% automático</li>
-            <li>• Impuestos personalizables</li>
-            <li>• Histórico de facturas</li>
-          </ul>
-        </div>
-        <div class="bg-gradient-to-br from-indigo-50 to-violet-50 p-8 rounded-3xl card-hover">
-          <div class="w-14 h-14 gradient-business rounded-2xl flex items-center justify-center mb-6 text-white">
-            <span class="text-2xl">📈</span>
-          </div>
-          <h3 class="font-semibold text-xl mb-3">Dashboard Gerencial</h3>
-          <p class="text-gray-600">Visualiza métricas clave: ingresos, gastos, servicios más rentables, empleados top.</p>
-          <ul class="mt-4 text-sm text-gray-500 space-y-1">
-            <li>• Ingresos vs gastos</li>
-            <li>• Servicios más vendidos</li>
-            <li>• Metas mensuales</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Slide 4: Características Premium -->
-  <section class="slide bg-slate-900 text-white py-20">
-    <div class="container mx-auto px-8">
-      <div class="text-center mb-16">
-        <span class="text-indigo-400 font-semibold">FUNCIONALIDADES PREMIUM</span>
-        <h2 class="font-playfair text-4xl font-bold mt-4">Diseñado para crecer contigo</h2>
-      </div>
-      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-        <div class="bg-white/5 backdrop-blur p-6 rounded-2xl border border-white/10">
-          <span class="text-3xl">👥</span>
-          <h3 class="font-semibold text-lg mt-4">Gestión de Empleados</h3>
-          <p class="text-sm text-gray-400 mt-2">Registra servicios por empleado, calcula comisiones automáticas</p>
-        </div>
-        <div class="bg-white/5 backdrop-blur p-6 rounded-2xl border border-white/10">
-          <span class="text-3xl">📅</span>
-          <h3 class="font-semibold text-lg mt-4">Agenda de Citas</h3>
-          <p class="text-sm text-gray-400 mt-2">Calendario visual con recordatorios automáticos a clientes</p>
-        </div>
-        <div class="bg-white/5 backdrop-blur p-6 rounded-2xl border border-white/10">
-          <span class="text-3xl">💳</span>
-          <h3 class="font-semibold text-lg mt-4">Múltiples Pagos</h3>
-          <p class="text-sm text-gray-400 mt-2">Acepta efectivo, punto, Pago Móvil, Zelle - todo registrado</p>
-        </div>
-        <div class="bg-white/5 backdrop-blur p-6 rounded-2xl border border-white/10">
-          <span class="text-3xl">📊</span>
-          <h3 class="font-semibold text-lg mt-4">Reportes Avanzados</h3>
-          <p class="text-sm text-gray-400 mt-2">Exporta a Excel: ventas, gastos, inventario, clientes</p>
-        </div>
-        <div class="bg-white/5 backdrop-blur p-6 rounded-2xl border border-white/10">
-          <span class="text-3xl">🔔</span>
-          <h3 class="font-semibold text-lg mt-4">Alertas Inteligentes</h3>
-          <p class="text-sm text-gray-400 mt-2">Notificaciones de stock bajo, clientes inactivos, metas</p>
-        </div>
-        <div class="bg-white/5 backdrop-blur p-6 rounded-2xl border border-white/10">
-          <span class="text-3xl">🎯</span>
-          <h3 class="font-semibold text-lg mt-4">Simulador de Metas</h3>
-          <p class="text-sm text-gray-400 mt-2">Proyecta ingresos y define objetivos de venta mensuales</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Slide 5: Precios Comercio -->
-  <section class="slide bg-white py-20">
-    <div class="container mx-auto px-8">
-      <div class="text-center mb-16">
-        <span class="text-indigo-600 font-semibold">INVERSIÓN INTELIGENTE</span>
-        <h2 class="font-playfair text-4xl font-bold mt-4">Planes para tu Negocio</h2>
-        <p class="text-gray-600 mt-4">Ahorra hasta 30% pagando anualmente</p>
-      </div>
-      <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-        <div class="bg-slate-50 p-8 rounded-3xl border-2 border-slate-200">
-          <div class="flex justify-between items-start">
-            <div>
-              <h3 class="font-semibold text-xl">Plan Comercio Básico</h3>
-              <p class="text-gray-500 text-sm mt-1">Para salones pequeños</p>
+      <div class="max-w-5xl mx-auto">
+        <div class="bg-slate-900 rounded-3xl p-8 text-white">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white/10 rounded-xl p-4 text-center">
+              <p class="text-sm text-white/60">Ingresos del Mes</p>
+              <p class="text-2xl font-bold text-emerald-400">$2,450</p>
             </div>
-            <span class="bg-slate-200 text-slate-700 px-3 py-1 rounded-full text-sm">Básico</span>
+            <div class="bg-white/10 rounded-xl p-4 text-center">
+              <p class="text-sm text-white/60">Gastos del Mes</p>
+              <p class="text-2xl font-bold text-red-400">$890</p>
+            </div>
+            <div class="bg-white/10 rounded-xl p-4 text-center">
+              <p class="text-sm text-white/60">Ganancia Neta</p>
+              <p class="text-2xl font-bold text-cyan-400">$1,560</p>
+            </div>
+            <div class="bg-white/10 rounded-xl p-4 text-center">
+              <p class="text-sm text-white/60">Meta Mensual</p>
+              <p class="text-2xl font-bold text-amber-400">82%</p>
+            </div>
           </div>
+          <div class="grid md:grid-cols-3 gap-4">
+            <div class="bg-white/5 rounded-xl p-4">
+              <p class="text-sm text-white/60 mb-2">🏆 Top Servicios</p>
+              <div class="space-y-2 text-sm">
+                <div class="flex justify-between"><span>Semipermanente</span><span class="text-emerald-400">45%</span></div>
+                <div class="flex justify-between"><span>Acrílico</span><span class="text-emerald-400">28%</span></div>
+                <div class="flex justify-between"><span>Manicure Spa</span><span class="text-emerald-400">15%</span></div>
+              </div>
+            </div>
+            <div class="bg-white/5 rounded-xl p-4">
+              <p class="text-sm text-white/60 mb-2">⚠️ Alertas</p>
+              <div class="space-y-2 text-sm">
+                <p class="text-red-400">• 3 productos con stock bajo</p>
+                <p class="text-amber-400">• 2 clientes inactivos hace 30d</p>
+              </div>
+            </div>
+            <div class="bg-white/5 rounded-xl p-4">
+              <p class="text-sm text-white/60 mb-2">📅 Hoy</p>
+              <div class="space-y-2 text-sm">
+                <p>8 citas programadas</p>
+                <p class="text-emerald-400">$180 facturado</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4: Funciones Detalladas -->
+  <section id="funciones" class="slide bg-slate-50 py-20">
+    <div class="container mx-auto px-6">
+      <div class="text-center mb-16">
+        <span class="text-indigo-600 font-semibold text-sm uppercase tracking-wider">Funciones Premium</span>
+        <h2 class="font-playfair text-4xl font-bold mt-4">Herramientas profesionales para tu salón</h2>
+      </div>
+      
+      <div class="max-w-6xl mx-auto space-y-20">
+        
+        <!-- Función 1: Inventario Inteligente -->
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+          <div>
+            <div class="inline-flex items-center gap-2 px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm mb-4">
+              <span>📦</span> Inventario Inteligente
+            </div>
+            <h3 class="font-playfair text-3xl font-bold mb-4">Control total de productos</h3>
+            <p class="text-gray-600 mb-6">Nunca más te quedarás sin productos en medio de un servicio. El sistema te avisa antes de que se agoten.</p>
+            <ul class="space-y-3 text-gray-600">
+              <li class="flex items-start gap-3"><span class="text-amber-500 mt-1">✓</span> <strong>Stock en tiempo real</strong> - Ve cuánto tienes de cada producto</li>
+              <li class="flex items-start gap-3"><span class="text-amber-500 mt-1">✓</span> <strong>Alertas automáticas</strong> - Notificaciones cuando un producto baja del mínimo</li>
+              <li class="flex items-start gap-3"><span class="text-amber-500 mt-1">✓</span> <strong>Historial de movimientos</strong> - Quién usó qué y cuándo</li>
+              <li class="flex items-start gap-3"><span class="text-amber-500 mt-1">✓</span> <strong>Valor del inventario</strong> - Sabe cuánto tienes invertido</li>
+              <li class="flex items-start gap-3"><span class="text-amber-500 mt-1">✓</span> <strong>Catálogo pre-cargado</strong> - +150 productos comunes listos</li>
+            </ul>
+          </div>
+          <div class="bg-white p-6 rounded-2xl shadow-lg">
+            <p class="text-sm text-gray-500 mb-4">Panel de alertas</p>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between p-3 bg-red-50 border border-red-200 rounded-lg">
+                <div class="flex items-center gap-3">
+                  <span class="text-red-500">🚨</span>
+                  <span class="text-red-700">Gel Base UV - AGOTADO</span>
+                </div>
+                <button class="text-xs bg-red-500 text-white px-3 py-1 rounded-full">Pedir</button>
+              </div>
+              <div class="flex items-center justify-between p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <div class="flex items-center gap-3">
+                  <span class="text-amber-500">⚠️</span>
+                  <span class="text-amber-700">Esmalte Rojo #45 - 3 uds</span>
+                </div>
+                <span class="text-xs text-amber-600">Stock bajo</span>
+              </div>
+              <div class="flex items-center justify-between p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+                <div class="flex items-center gap-3">
+                  <span class="text-emerald-500">✓</span>
+                  <span class="text-emerald-700">Acetona - 15 uds</span>
+                </div>
+                <span class="text-xs text-emerald-600">OK</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Función 2: Facturación Fiscal -->
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+          <div class="order-2 md:order-1 bg-white p-6 rounded-2xl shadow-lg">
+            <div class="border-b pb-4 mb-4">
+              <div class="flex justify-between items-start">
+                <div>
+                  <p class="font-bold text-lg">FACTURA #0024</p>
+                  <p class="text-sm text-gray-500">Elite Nails Studio C.A.</p>
+                  <p class="text-sm text-gray-500">RIF: J-12345678-9</p>
+                </div>
+                <span class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-sm">Pagada</span>
+              </div>
+            </div>
+            <div class="space-y-2 text-sm mb-4">
+              <div class="flex justify-between"><span>Manicure Semipermanente</span><span>$15.00</span></div>
+              <div class="flex justify-between"><span>Diseño Nail Art</span><span>$8.00</span></div>
+              <div class="flex justify-between text-gray-500"><span>Subtotal</span><span>$23.00</span></div>
+              <div class="flex justify-between text-gray-500"><span>IVA 16%</span><span>$3.68</span></div>
+            </div>
+            <div class="flex justify-between font-bold text-lg border-t pt-4">
+              <span>Total</span><span class="text-indigo-600">$26.68</span>
+            </div>
+          </div>
+          <div class="order-1 md:order-2">
+            <div class="inline-flex items-center gap-2 px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm mb-4">
+              <span>🧾</span> Facturación Fiscal
+            </div>
+            <h3 class="font-playfair text-3xl font-bold mb-4">Facturas profesionales en segundos</h3>
+            <p class="text-gray-600 mb-6">Cumple con el SENIAT sin complicaciones. Genera facturas con IVA automáticamente.</p>
+            <ul class="space-y-3 text-gray-600">
+              <li class="flex items-start gap-3"><span class="text-indigo-500 mt-1">✓</span> <strong>IVA automático (16%)</strong> - Se calcula solo</li>
+              <li class="flex items-start gap-3"><span class="text-indigo-500 mt-1">✓</span> <strong>Impuestos personalizables</strong> - ISLR, Municipal, otros</li>
+              <li class="flex items-start gap-3"><span class="text-indigo-500 mt-1">✓</span> <strong>Datos fiscales</strong> - RIF, dirección, nombre empresa</li>
+              <li class="flex items-start gap-3"><span class="text-indigo-500 mt-1">✓</span> <strong>Historial completo</strong> - Todas tus facturas ordenadas</li>
+              <li class="flex items-start gap-3"><span class="text-indigo-500 mt-1">✓</span> <strong>Exportar a PDF</strong> - Imprime o envía por WhatsApp</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Función 3: Gestión de Empleados -->
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+          <div>
+            <div class="inline-flex items-center gap-2 px-3 py-1 bg-violet-100 text-violet-700 rounded-full text-sm mb-4">
+              <span>👥</span> Gestión de Empleados
+            </div>
+            <h3 class="font-playfair text-3xl font-bold mb-4">Sabe cuánto produce cada uno</h3>
+            <p class="text-gray-600 mb-6">Registra los servicios por empleado y calcula comisiones automáticamente.</p>
+            <ul class="space-y-3 text-gray-600">
+              <li class="flex items-start gap-3"><span class="text-violet-500 mt-1">✓</span> <strong>Servicios por empleado</strong> - Quién hizo qué</li>
+              <li class="flex items-start gap-3"><span class="text-violet-500 mt-1">✓</span> <strong>Comisiones automáticas</strong> - Define % por servicio</li>
+              <li class="flex items-start gap-3"><span class="text-violet-500 mt-1">✓</span> <strong>Ranking de producción</strong> - Top empleados del mes</li>
+              <li class="flex items-start gap-3"><span class="text-violet-500 mt-1">✓</span> <strong>Horarios y turnos</strong> - Organiza el calendario</li>
+            </ul>
+          </div>
+          <div class="bg-white p-6 rounded-2xl shadow-lg">
+            <p class="text-sm text-gray-500 mb-4">Producción del mes</p>
+            <div class="space-y-4">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-gradient-to-br from-violet-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">ML</div>
+                <div class="flex-1">
+                  <div class="flex justify-between"><span class="font-semibold">María López</span><span class="text-emerald-600">$890</span></div>
+                  <div class="w-full bg-gray-200 rounded-full h-2 mt-1"><div class="bg-violet-500 h-2 rounded-full" style="width: 85%"></div></div>
+                </div>
+              </div>
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-gradient-to-br from-pink-500 to-rose-600 rounded-full flex items-center justify-center text-white font-bold">CG</div>
+                <div class="flex-1">
+                  <div class="flex justify-between"><span class="font-semibold">Carmen García</span><span class="text-emerald-600">$720</span></div>
+                  <div class="w-full bg-gray-200 rounded-full h-2 mt-1"><div class="bg-pink-500 h-2 rounded-full" style="width: 70%"></div></div>
+                </div>
+              </div>
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-full flex items-center justify-center text-white font-bold">AP</div>
+                <div class="flex-1">
+                  <div class="flex justify-between"><span class="font-semibold">Ana Pérez</span><span class="text-emerald-600">$540</span></div>
+                  <div class="w-full bg-gray-200 rounded-full h-2 mt-1"><div class="bg-blue-500 h-2 rounded-full" style="width: 55%"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Función 4: Clientes y CRM -->
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+          <div class="order-2 md:order-1 bg-white p-6 rounded-2xl shadow-lg">
+            <div class="flex items-center gap-4 mb-6">
+              <div class="w-16 h-16 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-full flex items-center justify-center text-white text-xl font-bold">SG</div>
+              <div>
+                <p class="font-bold text-lg">Sofía González</p>
+                <p class="text-sm text-gray-500">Cliente VIP desde 2023</p>
+                <div class="flex gap-1 mt-1">
+                  <span class="text-amber-400">★★★★★</span>
+                </div>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+              <div class="bg-indigo-50 p-3 rounded-lg">
+                <p class="text-xs text-gray-500">Total gastado</p>
+                <p class="font-bold text-indigo-600">$1,250</p>
+              </div>
+              <div class="bg-emerald-50 p-3 rounded-lg">
+                <p class="text-xs text-gray-500">Visitas</p>
+                <p class="font-bold text-emerald-600">28</p>
+              </div>
+            </div>
+            <div class="text-sm text-gray-600 space-y-1">
+              <p>📱 0424-555-1234</p>
+              <p>💅 Preferencia: Acrílico con diseño</p>
+              <p>🎂 Cumpleaños: 15 de Mayo</p>
+            </div>
+          </div>
+          <div class="order-1 md:order-2">
+            <div class="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm mb-4">
+              <span>💼</span> Gestión de Clientes
+            </div>
+            <h3 class="font-playfair text-3xl font-bold mb-4">Conoce a tus clientes como nunca</h3>
+            <p class="text-gray-600 mb-6">Toda la información de tus clientes en un solo lugar. Historial, preferencias y más.</p>
+            <ul class="space-y-3 text-gray-600">
+              <li class="flex items-start gap-3"><span class="text-blue-500 mt-1">✓</span> <strong>Ficha completa</strong> - Datos, teléfono, email, dirección</li>
+              <li class="flex items-start gap-3"><span class="text-blue-500 mt-1">✓</span> <strong>Historial de servicios</strong> - Qué se hizo y cuándo</li>
+              <li class="flex items-start gap-3"><span class="text-blue-500 mt-1">✓</span> <strong>Preferencias guardadas</strong> - Estilos favoritos</li>
+              <li class="flex items-start gap-3"><span class="text-blue-500 mt-1">✓</span> <strong>Notas privadas</strong> - Alergias, observaciones</li>
+              <li class="flex items-start gap-3"><span class="text-blue-500 mt-1">✓</span> <strong>Clientes VIP</strong> - Identifica los más rentables</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Función 5: Reportes y Análisis -->
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+          <div>
+            <div class="inline-flex items-center gap-2 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm mb-4">
+              <span>📊</span> Reportes y Análisis
+            </div>
+            <h3 class="font-playfair text-3xl font-bold mb-4">Decisiones basadas en datos</h3>
+            <p class="text-gray-600 mb-6">Visualiza el rendimiento de tu negocio con gráficos claros y exportables.</p>
+            <ul class="space-y-3 text-gray-600">
+              <li class="flex items-start gap-3"><span class="text-emerald-500 mt-1">✓</span> <strong>Ingresos vs Gastos</strong> - Gráfico mensual</li>
+              <li class="flex items-start gap-3"><span class="text-emerald-500 mt-1">✓</span> <strong>Servicios más vendidos</strong> - Top 10 del mes</li>
+              <li class="flex items-start gap-3"><span class="text-emerald-500 mt-1">✓</span> <strong>Productos más usados</strong> - Controla consumo</li>
+              <li class="flex items-start gap-3"><span class="text-emerald-500 mt-1">✓</span> <strong>Exportar a Excel</strong> - Lleva registros para contabilidad</li>
+              <li class="flex items-start gap-3"><span class="text-emerald-500 mt-1">✓</span> <strong>Comparativa mensual</strong> - Este mes vs anterior</li>
+            </ul>
+          </div>
+          <div class="bg-white p-6 rounded-2xl shadow-lg">
+            <p class="text-sm text-gray-500 mb-4">Resumen del trimestre</p>
+            <div class="h-48 flex items-end justify-between gap-2">
+              <div class="flex flex-col items-center">
+                <div class="bg-indigo-200 w-12 rounded-t" style="height: 60%"></div>
+                <span class="text-xs text-gray-500 mt-2">Ene</span>
+              </div>
+              <div class="flex flex-col items-center">
+                <div class="bg-indigo-300 w-12 rounded-t" style="height: 75%"></div>
+                <span class="text-xs text-gray-500 mt-2">Feb</span>
+              </div>
+              <div class="flex flex-col items-center">
+                <div class="bg-indigo-500 w-12 rounded-t" style="height: 100%"></div>
+                <span class="text-xs text-gray-500 mt-2">Mar</span>
+              </div>
+            </div>
+            <div class="flex justify-between mt-4 text-sm">
+              <span class="text-gray-500">Crecimiento:</span>
+              <span class="text-emerald-600 font-bold">+24% vs trimestre anterior</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Función 6: Simulador de Metas -->
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+          <div class="order-2 md:order-1 bg-gradient-to-br from-indigo-600 to-violet-700 p-6 rounded-2xl text-white">
+            <p class="text-sm opacity-80 mb-4">Simulación Mensual</p>
+            <div class="bg-white/20 rounded-xl p-4 mb-4">
+              <div class="flex justify-between text-sm mb-2">
+                <span>Servicios por día:</span><span class="font-bold">12</span>
+              </div>
+              <div class="flex justify-between text-sm mb-2">
+                <span>Días laborables:</span><span class="font-bold">24</span>
+              </div>
+              <div class="flex justify-between text-sm">
+                <span>Precio promedio:</span><span class="font-bold">$18</span>
+              </div>
+            </div>
+            <div class="text-center py-4">
+              <p class="text-sm opacity-80">Ingreso proyectado</p>
+              <p class="text-5xl font-bold">$5,184</p>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mt-4">
+              <div class="bg-white/10 rounded-lg p-3 text-center">
+                <p class="text-xs opacity-70">Escenario Optimista</p>
+                <p class="font-bold">$6,220</p>
+              </div>
+              <div class="bg-white/10 rounded-lg p-3 text-center">
+                <p class="text-xs opacity-70">Escenario Conservador</p>
+                <p class="font-bold">$4,147</p>
+              </div>
+            </div>
+          </div>
+          <div class="order-1 md:order-2">
+            <div class="inline-flex items-center gap-2 px-3 py-1 bg-rose-100 text-rose-700 rounded-full text-sm mb-4">
+              <span>🎯</span> Simulador de Metas
+            </div>
+            <h3 class="font-playfair text-3xl font-bold mb-4">Proyecta tus ingresos</h3>
+            <p class="text-gray-600 mb-6">Define metas mensuales y el sistema te dice cuántos servicios necesitas para alcanzarlas.</p>
+            <ul class="space-y-3 text-gray-600">
+              <li class="flex items-start gap-3"><span class="text-rose-500 mt-1">✓</span> <strong>Proyección mensual</strong> - Basada en datos reales</li>
+              <li class="flex items-start gap-3"><span class="text-rose-500 mt-1">✓</span> <strong>Escenarios múltiples</strong> - Optimista, realista, conservador</li>
+              <li class="flex items-start gap-3"><span class="text-rose-500 mt-1">✓</span> <strong>Metas de ingresos</strong> - Define cuánto quieres ganar</li>
+              <li class="flex items-start gap-3"><span class="text-rose-500 mt-1">✓</span> <strong>Seguimiento de progreso</strong> - % de meta cumplida</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 5: Planes y Precios -->
+  <section id="planes" class="slide bg-white py-20">
+    <div class="container mx-auto px-6">
+      <div class="text-center mb-16">
+        <span class="text-indigo-600 font-semibold text-sm uppercase tracking-wider">Planes y Precios</span>
+        <h2 class="font-playfair text-4xl font-bold mt-4">Inversión inteligente para tu negocio</h2>
+        <p class="text-gray-500 mt-4">Ahorra hasta 30% pagando anualmente</p>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-12">
+        <!-- Plan Comercio Básico -->
+        <div class="bg-slate-50 rounded-3xl p-8 border-2 border-slate-200">
+          <h3 class="font-semibold text-xl">Plan Comercio Básico</h3>
+          <p class="text-gray-500 text-sm mt-1">Para salones pequeños</p>
           <div class="mt-6">
             <span class="text-5xl font-bold">$15</span>
             <span class="text-gray-500">/mes</span>
           </div>
           <ul class="mt-6 space-y-3 text-gray-600">
-            <li class="flex items-center gap-3"><span class="text-emerald-500 text-lg">✓</span> 50 productos</li>
-            <li class="flex items-center gap-3"><span class="text-emerald-500 text-lg">✓</span> 20 servicios</li>
-            <li class="flex items-center gap-3"><span class="text-emerald-500 text-lg">✓</span> 100 clientes</li>
-            <li class="flex items-center gap-3"><span class="text-emerald-500 text-lg">✓</span> Facturación básica</li>
-            <li class="flex items-center gap-3"><span class="text-emerald-500 text-lg">✓</span> 1 usuario</li>
+            <li class="flex items-center gap-3"><span class="text-emerald-500">✓</span> Hasta 50 productos</li>
+            <li class="flex items-center gap-3"><span class="text-emerald-500">✓</span> Hasta 20 servicios</li>
+            <li class="flex items-center gap-3"><span class="text-emerald-500">✓</span> 100 clientes</li>
+            <li class="flex items-center gap-3"><span class="text-emerald-500">✓</span> Facturación con IVA</li>
+            <li class="flex items-center gap-3"><span class="text-emerald-500">✓</span> 1 usuario</li>
+            <li class="flex items-center gap-3 text-gray-400"><span>✗</span> Multi-empleados</li>
+            <li class="flex items-center gap-3 text-gray-400"><span>✗</span> Reportes avanzados</li>
           </ul>
-          <div class="mt-6 space-y-2">
-            <div class="flex justify-between text-sm">
-              <span class="text-gray-500">Semestral (20% OFF)</span>
-              <span class="font-semibold">$72 = $12/mes</span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-gray-500">Anual (30% OFF)</span>
-              <span class="font-semibold text-emerald-600">$126 = $10.50/mes</span>
-            </div>
+          <div class="mt-6 p-4 bg-white rounded-xl space-y-2 text-sm">
+            <div class="flex justify-between"><span>Trimestral (10% OFF)</span><span class="font-semibold">$40.50</span></div>
+            <div class="flex justify-between"><span>Semestral (20% OFF)</span><span class="font-semibold">$72.00</span></div>
+            <div class="flex justify-between text-emerald-600"><span>Anual (30% OFF)</span><span class="font-bold">$126.00</span></div>
           </div>
         </div>
-        <div class="gradient-business p-8 rounded-3xl text-white relative">
+
+        <!-- Plan Comercio Premium -->
+        <div class="gradient-business rounded-3xl p-8 text-white relative overflow-hidden">
           <div class="absolute top-4 right-4 bg-amber-400 text-slate-900 px-3 py-1 rounded-full text-sm font-semibold">
             ⭐ Más Popular
           </div>
-          <div class="flex justify-between items-start">
-            <div>
-              <h3 class="font-semibold text-xl">Plan Comercio Premium</h3>
-              <p class="text-white/70 text-sm mt-1">Para salones en crecimiento</p>
-            </div>
-          </div>
+          <h3 class="font-semibold text-xl">Plan Comercio Premium</h3>
+          <p class="text-white/70 text-sm mt-1">Para salones en crecimiento</p>
           <div class="mt-6">
             <span class="text-5xl font-bold">$20</span>
             <span class="text-white/70">/mes</span>
           </div>
           <ul class="mt-6 space-y-3 text-white/90">
-            <li class="flex items-center gap-3"><span class="text-cyan-300 text-lg">✓</span> Productos ilimitados</li>
-            <li class="flex items-center gap-3"><span class="text-cyan-300 text-lg">✓</span> Servicios ilimitados</li>
-            <li class="flex items-center gap-3"><span class="text-cyan-300 text-lg">✓</span> Clientes ilimitados</li>
-            <li class="flex items-center gap-3"><span class="text-cyan-300 text-lg">✓</span> Facturación fiscal completa</li>
-            <li class="flex items-center gap-3"><span class="text-cyan-300 text-lg">✓</span> Multi-usuario (empleados)</li>
-            <li class="flex items-center gap-3"><span class="text-cyan-300 text-lg">✓</span> Reportes y simulador</li>
-            <li class="flex items-center gap-3"><span class="text-cyan-300 text-lg">✓</span> Soporte prioritario</li>
+            <li class="flex items-center gap-3"><span class="text-cyan-300">✓</span> Productos ilimitados</li>
+            <li class="flex items-center gap-3"><span class="text-cyan-300">✓</span> Servicios ilimitados</li>
+            <li class="flex items-center gap-3"><span class="text-cyan-300">✓</span> Clientes ilimitados</li>
+            <li class="flex items-center gap-3"><span class="text-cyan-300">✓</span> Facturación fiscal completa</li>
+            <li class="flex items-center gap-3"><span class="text-cyan-300">✓</span> Multi-usuario (empleados)</li>
+            <li class="flex items-center gap-3"><span class="text-cyan-300">✓</span> Reportes y simulador</li>
+            <li class="flex items-center gap-3"><span class="text-cyan-300">✓</span> Soporte prioritario</li>
           </ul>
-          <div class="mt-6 space-y-2 bg-white/10 rounded-xl p-4">
-            <div class="flex justify-between text-sm">
-              <span class="text-white/70">Semestral (20% OFF)</span>
-              <span class="font-semibold">$96 = $16/mes</span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-white/70">Anual (30% OFF)</span>
-              <span class="font-semibold text-cyan-300">$168 = $14/mes</span>
-            </div>
+          <div class="mt-6 p-4 bg-white/20 rounded-xl space-y-2 text-sm">
+            <div class="flex justify-between"><span>Trimestral (10% OFF)</span><span class="font-semibold">$54.00</span></div>
+            <div class="flex justify-between"><span>Semestral (20% OFF)</span><span class="font-semibold">$96.00</span></div>
+            <div class="flex justify-between text-cyan-300"><span>Anual (30% OFF)</span><span class="font-bold">$168.00</span></div>
           </div>
         </div>
+      </div>
+
+      <!-- Métodos de Pago -->
+      <div class="text-center">
+        <p class="text-gray-500 text-sm mb-4">Métodos de pago disponibles</p>
+        <div class="flex flex-wrap justify-center gap-6 text-gray-500">
+          <span>📱 Pago Móvil</span>
+          <span>🏦 Transferencia</span>
+          <span>💱 Binance/USDT</span>
+          <span>💵 Zelle</span>
+        </div>
+        <p class="text-sm text-gray-400 mt-4">Emitimos factura fiscal para tu contabilidad</p>
       </div>
     </div>
   </section>
 
-  <!-- Slide 6: Caso de Éxito -->
+  <!-- SLIDE 6: Caso de Éxito -->
   <section class="slide bg-indigo-50 py-20">
-    <div class="container mx-auto px-8">
+    <div class="container mx-auto px-6">
       <div class="max-w-4xl mx-auto">
         <div class="text-center mb-12">
-          <span class="text-indigo-600 font-semibold">CASO DE ÉXITO</span>
+          <span class="text-indigo-600 font-semibold text-sm uppercase tracking-wider">Caso de Éxito</span>
         </div>
         <div class="bg-white p-8 md:p-12 rounded-3xl shadow-xl">
           <div class="grid md:grid-cols-2 gap-8 items-center">
             <div>
-              <div class="w-24 h-24 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center text-4xl text-white mb-6">
-                ES
-              </div>
+              <div class="w-24 h-24 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-2xl flex items-center justify-center text-4xl text-white mb-6">ES</div>
               <h3 class="font-playfair text-2xl font-bold">Elite Spa Nails</h3>
               <p class="text-gray-500">Caracas, Venezuela</p>
+              <p class="text-sm text-gray-400 mt-2">5 empleados • 200+ clientes</p>
             </div>
             <div class="space-y-4">
-              <div class="flex justify-between border-b pb-2">
+              <div class="flex justify-between items-center border-b pb-3">
                 <span class="text-gray-600">Antes (control manual)</span>
-                <span class="font-semibold text-red-500">-$200/mes en pérdidas</span>
+                <span class="font-bold text-red-500">-$200/mes pérdidas</span>
               </div>
-              <div class="flex justify-between border-b pb-2">
+              <div class="flex justify-between items-center border-b pb-3">
                 <span class="text-gray-600">Después (NailCost Pro)</span>
-                <span class="font-semibold text-emerald-500">+$500/mes de ganancia</span>
+                <span class="font-bold text-emerald-500">+$500/mes ganancia</span>
               </div>
-              <div class="flex justify-between">
+              <div class="flex justify-between items-center">
                 <span class="text-gray-600">Tiempo ahorrado</span>
-                <span class="font-semibold text-indigo-600">8 horas/semana</span>
+                <span class="font-bold text-indigo-600">8 horas/semana</span>
               </div>
             </div>
           </div>
           <blockquote class="mt-8 p-6 bg-indigo-50 rounded-xl">
-            <p class="text-lg text-gray-700 italic">
-              "Descubrimos que teníamos 3 productos con fecha vencida y 2 empleadas que registraban menos servicios de los que hacían. En 2 meses recuperamos la inversión de todo el año."
+            <p class="text-gray-700 italic">
+              "Descubrimos que teníamos 3 productos vencidos y 2 empleadas registrando menos servicios de los reales. En 2 meses recuperamos la inversión del año completo."
             </p>
-            <p class="mt-4 font-semibold">— Carmen Rodríguez, Propietaria</p>
+            <p class="mt-4 font-semibold text-indigo-700">— Carmen Rodríguez, Propietaria</p>
           </blockquote>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Slide 7: CTA Final -->
-  <section class="slide gradient-business text-white py-20">
-    <div class="container mx-auto px-8 text-center">
+  <!-- SLIDE 7: CTA Final -->
+  <section id="comenzar" class="slide gradient-business text-white py-20">
+    <div class="container mx-auto px-6 text-center">
       <h2 class="font-playfair text-4xl md:text-6xl font-bold mb-6">
         Lleva tu salón<br/>al siguiente nivel
       </h2>
-      <p class="text-xl text-white/90 max-w-xl mx-auto mb-8">
-        Prueba gratis 15 días. Sin compromiso. Setup asistido incluido.
+      <p class="text-xl text-white/80 max-w-xl mx-auto mb-10">
+        15 días gratis para probar todas las funciones.<br/>Setup asistido incluido. Sin compromiso.
       </p>
-      <div class="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-        <a href="https://salon-margin-tool.preview.emergentagent.com" class="px-8 py-4 bg-white text-indigo-700 hover:bg-indigo-50 rounded-full font-semibold transition-all shadow-lg">
+      <div class="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+        <a href="https://salon-margin-tool.preview.emergentagent.com" class="px-10 py-5 bg-white text-indigo-700 rounded-full font-bold text-lg hover:bg-indigo-50 shadow-lg">
           Empezar Prueba Gratis →
         </a>
-        <a href="https://wa.me/584141234567?text=Hola,%20quiero%20una%20demo%20de%20NailCost%20Pro%20para%20mi%20salón" class="px-8 py-4 bg-emerald-500 hover:bg-emerald-600 rounded-full font-semibold transition-all">
+        <a href="https://wa.me/584141234567?text=Hola,%20quiero%20una%20demo%20de%20NailCost%20Pro%20para%20mi%20salón" class="px-10 py-5 bg-emerald-500 hover:bg-emerald-600 rounded-full font-bold text-lg shadow-lg">
           Agendar Demo 📅
         </a>
       </div>
-      <div class="flex justify-center gap-8 text-sm text-white/60">
+      <div class="flex flex-wrap justify-center gap-6 text-sm text-white/60">
         <span>✓ Migración de datos gratis</span>
         <span>✓ Capacitación incluida</span>
         <span>✓ Soporte en español</span>
+        <span>✓ Factura fiscal</span>
       </div>
-      <p class="mt-8 text-white/50 text-sm">
-        Pagos con Pago Móvil, Transferencia, Binance o Zelle | Factura fiscal disponible
-      </p>
     </div>
   </section>
 
   <!-- Footer -->
-  <footer class="bg-slate-950 text-white py-8">
-    <div class="container mx-auto px-8 text-center">
-      <p class="font-playfair text-xl">Nail<span class="text-indigo-400">Cost</span> Pro</p>
-      <p class="text-gray-500 mt-2">Software de Gestión para Salones de Belleza</p>
-      <p class="text-gray-600 mt-4 text-sm">Venezuela 2026 | Todos los derechos reservados</p>
+  <footer class="bg-slate-950 text-white py-12">
+    <div class="container mx-auto px-6 text-center">
+      <p class="font-playfair text-2xl mb-2">Nail<span class="text-indigo-400">Cost</span> Pro</p>
+      <p class="text-gray-500 mb-6">Software de Gestión para Salones de Belleza</p>
+      <p class="text-gray-600 text-sm">Venezuela 2026 | Todos los derechos reservados</p>
     </div>
   </footer>
 

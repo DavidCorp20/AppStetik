@@ -3,53 +3,66 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NailCost Pro - Para Emprendedoras Independientes</title>
+  <title>NailCost Pro - Solución Completa para Nail Artists</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     .font-playfair { font-family: 'Playfair Display', serif; }
     .font-inter { font-family: 'Inter', sans-serif; }
-    .slide { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; }
+    .slide { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; padding: 2rem 0; }
     .gradient-pink { background: linear-gradient(135deg, #E84A8A, #EC4899, #A855F7); }
-    .gradient-text-pink { background: linear-gradient(135deg, #E84A8A, #EC4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .card-hover { transition: all 0.3s; }
-    .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(232,74,138,0.15); }
+    .gradient-text { background: linear-gradient(135deg, #E84A8A, #EC4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     html { scroll-behavior: smooth; }
+    .feature-card { transition: all 0.3s ease; }
+    .feature-card:hover { transform: translateY(-8px); box-shadow: 0 25px 50px rgba(232,74,138,0.15); }
+    .nav-fixed { position: fixed; top: 0; left: 0; right: 0; z-index: 50; }
   </style>
 </head>
 <body class="font-inter bg-white text-gray-900">
 
-  <!-- Slide 1: Portada Personal -->
-  <section class="slide gradient-pink text-white relative overflow-hidden">
-    <div class="absolute inset-0 opacity-10">
-      <svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-        <circle cx="20" cy="30" r="15" fill="white"/>
-        <circle cx="80" cy="70" r="20" fill="white"/>
-        <circle cx="50" cy="80" r="10" fill="white"/>
-      </svg>
+  <!-- Navigation -->
+  <nav class="nav-fixed bg-white/95 backdrop-blur-sm shadow-sm">
+    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+      <span class="font-playfair text-2xl font-bold">Nail<span class="text-pink-500">Cost</span></span>
+      <div class="hidden md:flex gap-6 text-sm">
+        <a href="#problema" class="hover:text-pink-500">El Problema</a>
+        <a href="#funciones" class="hover:text-pink-500">Funciones</a>
+        <a href="#planes" class="hover:text-pink-500">Planes</a>
+        <a href="#comenzar" class="hover:text-pink-500">Comenzar</a>
+      </div>
+      <a href="https://salon-margin-tool.preview.emergentagent.com" class="px-4 py-2 bg-pink-500 text-white rounded-full text-sm hover:bg-pink-600">Probar Gratis</a>
     </div>
-    <div class="container mx-auto px-8 py-16 text-center relative z-10">
-      <div class="inline-flex items-center gap-2 px-4 py-2 bg-white/20 rounded-full mb-8">
-        <span class="text-2xl">💅</span>
+  </nav>
+
+  <!-- SLIDE 1: Hero -->
+  <section class="slide gradient-pink text-white pt-20">
+    <div class="container mx-auto px-6 text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-white/20 rounded-full mb-6">
+        <span class="text-xl">💅</span>
         <span class="text-sm font-medium">Para Nail Artists Independientes</span>
       </div>
-      <h1 class="font-playfair text-5xl md:text-7xl font-bold mb-6">
-        Deja de adivinar<br/>cuánto cobrar
+      <h1 class="font-playfair text-5xl md:text-7xl font-bold mb-6 leading-tight">
+        Cobra lo que<br/>realmente vale<br/>tu trabajo
       </h1>
-      <p class="text-xl md:text-2xl text-white/90 max-w-2xl mx-auto mb-12">
-        NailCost Pro te dice exactamente cuánto vale tu trabajo basado en tus costos reales
+      <p class="text-xl md:text-2xl text-white/90 max-w-2xl mx-auto mb-10">
+        La app que calcula tus precios basándose en tus costos reales, no en lo que cobran las demás
       </p>
-      <a href="#historia" class="inline-block px-8 py-4 bg-white text-pink-600 hover:bg-pink-50 rounded-full font-semibold transition-all shadow-lg">
-        Mi Historia es como la Tuya →
-      </a>
-      <div class="mt-16 flex justify-center gap-12">
+      <div class="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+        <a href="https://salon-margin-tool.preview.emergentagent.com" class="px-8 py-4 bg-white text-pink-600 rounded-full font-semibold hover:bg-pink-50 shadow-lg">
+          Empezar Gratis - 15 días →
+        </a>
+        <a href="#funciones" class="px-8 py-4 border-2 border-white rounded-full font-semibold hover:bg-white/10">
+          Ver Funciones
+        </a>
+      </div>
+      <div class="grid grid-cols-3 gap-8 max-w-md mx-auto">
         <div class="text-center">
           <div class="text-4xl font-bold">$5</div>
           <div class="text-sm text-white/70">al mes</div>
         </div>
         <div class="text-center">
-          <div class="text-4xl font-bold">15 días</div>
-          <div class="text-sm text-white/70">gratis</div>
+          <div class="text-4xl font-bold">30%</div>
+          <div class="text-sm text-white/70">ahorro anual</div>
         </div>
         <div class="text-center">
           <div class="text-4xl font-bold">100%</div>
@@ -59,48 +72,271 @@
     </div>
   </section>
 
-  <!-- Slide 2: Historia / Problema -->
-  <section id="historia" class="slide bg-rose-50 py-20">
-    <div class="container mx-auto px-8">
-      <div class="max-w-4xl mx-auto">
-        <div class="text-center mb-12">
-          <span class="text-rose-500 font-semibold">¿TE SUENA FAMILIAR?</span>
-          <h2 class="font-playfair text-4xl md:text-5xl font-bold mt-4">
-            "Trabajo todo el día y al final del mes no me queda nada"
-          </h2>
+  <!-- SLIDE 2: El Problema -->
+  <section id="problema" class="slide bg-rose-50 py-20">
+    <div class="container mx-auto px-6">
+      <div class="text-center mb-16">
+        <span class="text-rose-500 font-semibold text-sm uppercase tracking-wider">El Problema</span>
+        <h2 class="font-playfair text-4xl md:text-5xl font-bold mt-4">¿Te suena familiar?</h2>
+      </div>
+      <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+        <div class="bg-white p-6 rounded-2xl shadow-sm">
+          <div class="w-14 h-14 bg-rose-100 rounded-xl flex items-center justify-center mb-4 text-2xl">😰</div>
+          <h3 class="font-semibold text-lg mb-2">No sabes cuánto cobrar</h3>
+          <p class="text-gray-600 text-sm">Pones precios "al ojo" sin saber si ganas o pierdes</p>
         </div>
-        <div class="bg-white p-8 md:p-12 rounded-3xl shadow-xl">
-          <div class="grid md:grid-cols-2 gap-8">
-            <div class="space-y-6">
-              <div class="flex gap-4">
-                <span class="text-3xl">😓</span>
-                <div>
-                  <h3 class="font-semibold text-lg">Cobras $15 por un servicio</h3>
-                  <p class="text-gray-600">...pero no sabes si los productos te cuestan $3 o $8</p>
-                </div>
+        <div class="bg-white p-6 rounded-2xl shadow-sm">
+          <div class="w-14 h-14 bg-amber-100 rounded-xl flex items-center justify-center mb-4 text-2xl">📝</div>
+          <h3 class="font-semibold text-lg mb-2">Todo en cuadernos</h3>
+          <p class="text-gray-600 text-sm">Anotas en libretas que se pierden o se te olvidan</p>
+        </div>
+        <div class="bg-white p-6 rounded-2xl shadow-sm">
+          <div class="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mb-4 text-2xl">💸</div>
+          <h3 class="font-semibold text-lg mb-2">Trabajas mucho, ganas poco</h3>
+          <p class="text-gray-600 text-sm">Al final del mes no te cuadran los números</p>
+        </div>
+        <div class="bg-white p-6 rounded-2xl shadow-sm">
+          <div class="w-14 h-14 bg-purple-100 rounded-xl flex items-center justify-center mb-4 text-2xl">🤷‍♀️</div>
+          <h3 class="font-semibold text-lg mb-2">Copias a otras</h3>
+          <p class="text-gray-600 text-sm">Sin saber si ellas tampoco saben lo que hacen</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: La Solución -->
+  <section class="slide bg-white py-20">
+    <div class="container mx-auto px-6">
+      <div class="text-center mb-16">
+        <span class="text-pink-500 font-semibold text-sm uppercase tracking-wider">La Solución</span>
+        <h2 class="font-playfair text-4xl md:text-5xl font-bold mt-4">
+          NailCost hace los números,<br/><span class="gradient-text">tú haces el arte</span>
+        </h2>
+      </div>
+      <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        <div class="text-center">
+          <div class="w-20 h-20 gradient-pink rounded-2xl flex items-center justify-center mx-auto mb-6 text-white text-3xl font-bold">1</div>
+          <h3 class="font-semibold text-xl mb-3">Registra tus productos</h3>
+          <p class="text-gray-600">Agrega esmaltes, gel, acrílico. NailCost calcula el costo por uso automáticamente.</p>
+        </div>
+        <div class="text-center">
+          <div class="w-20 h-20 gradient-pink rounded-2xl flex items-center justify-center mx-auto mb-6 text-white text-3xl font-bold">2</div>
+          <h3 class="font-semibold text-xl mb-3">Crea tus servicios</h3>
+          <p class="text-gray-600">Define qué productos usas en cada estilo de uñas que ofreces.</p>
+        </div>
+        <div class="text-center">
+          <div class="w-20 h-20 gradient-pink rounded-2xl flex items-center justify-center mx-auto mb-6 text-white text-3xl font-bold">3</div>
+          <h3 class="font-semibold text-xl mb-3">Obtén tu precio justo</h3>
+          <p class="text-gray-600">La calculadora te dice exactamente cuánto cobrar para ganar lo que mereces.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4: Funciones Detalladas -->
+  <section id="funciones" class="slide bg-gray-50 py-20">
+    <div class="container mx-auto px-6">
+      <div class="text-center mb-16">
+        <span class="text-pink-500 font-semibold text-sm uppercase tracking-wider">Funciones Completas</span>
+        <h2 class="font-playfair text-4xl font-bold mt-4">Todo lo que necesitas en un solo lugar</h2>
+      </div>
+      
+      <!-- Función 1: Productos -->
+      <div class="max-w-6xl mx-auto space-y-16">
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+          <div>
+            <div class="inline-flex items-center gap-2 px-3 py-1 bg-pink-100 text-pink-700 rounded-full text-sm mb-4">
+              <span>📦</span> Módulo de Productos
+            </div>
+            <h3 class="font-playfair text-3xl font-bold mb-4">Control total de tus insumos</h3>
+            <ul class="space-y-3 text-gray-600">
+              <li class="flex items-start gap-3"><span class="text-pink-500 mt-1">✓</span> Registra todos tus productos con precio de compra</li>
+              <li class="flex items-start gap-3"><span class="text-pink-500 mt-1">✓</span> Calcula automáticamente el costo por uso/aplicación</li>
+              <li class="flex items-start gap-3"><span class="text-pink-500 mt-1">✓</span> Catálogo pre-cargado con +150 productos comunes</li>
+              <li class="flex items-start gap-3"><span class="text-pink-500 mt-1">✓</span> Organiza por categorías: esmaltes, gel, acrílico, herramientas</li>
+            </ul>
+          </div>
+          <div class="bg-white p-6 rounded-2xl shadow-lg">
+            <div class="bg-gray-100 rounded-lg p-4 text-center">
+              <p class="text-sm text-gray-500 mb-2">Ejemplo de cálculo automático</p>
+              <p class="text-lg">Esmalte Semipermanente $8.00 / 30 usos</p>
+              <p class="text-3xl font-bold text-pink-500 mt-2">= $0.27 por cliente</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Función 2: Servicios/Estilos -->
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+          <div class="order-2 md:order-1 bg-white p-6 rounded-2xl shadow-lg">
+            <div class="space-y-3">
+              <div class="flex justify-between items-center p-3 bg-pink-50 rounded-lg">
+                <span>Semipermanente Básico</span>
+                <span class="font-bold text-pink-600">$2.45 costo</span>
               </div>
-              <div class="flex gap-4">
-                <span class="text-3xl">📝</span>
-                <div>
-                  <h3 class="font-semibold text-lg">Anotas en el cuaderno</h3>
-                  <p class="text-gray-600">...pero se te olvida actualizar precios cuando todo sube</p>
-                </div>
+              <div class="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
+                <span>Acrílico con Diseño</span>
+                <span class="font-bold text-purple-600">$5.80 costo</span>
               </div>
-              <div class="flex gap-4">
-                <span class="text-3xl">🤷‍♀️</span>
-                <div>
-                  <h3 class="font-semibold text-lg">Copias los precios de otras</h3>
-                  <p class="text-gray-600">...sin saber si ellas tampoco saben lo que hacen</p>
-                </div>
+              <div class="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                <span>Press-On Personalizadas</span>
+                <span class="font-bold text-blue-600">$3.20 costo</span>
               </div>
             </div>
-            <div class="bg-gradient-to-br from-rose-100 to-pink-100 rounded-2xl p-6 flex items-center justify-center">
-              <div class="text-center">
-                <p class="text-6xl mb-4">💭</p>
-                <p class="font-playfair text-2xl font-semibold text-rose-700">
-                  "¿Y si supiera exactamente cuánto gano con cada uña que hago?"
-                </p>
+          </div>
+          <div class="order-1 md:order-2">
+            <div class="inline-flex items-center gap-2 px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm mb-4">
+              <span>💅</span> Módulo de Servicios
+            </div>
+            <h3 class="font-playfair text-3xl font-bold mb-4">Define tus estilos de uñas</h3>
+            <ul class="space-y-3 text-gray-600">
+              <li class="flex items-start gap-3"><span class="text-purple-500 mt-1">✓</span> Crea servicios combinando productos</li>
+              <li class="flex items-start gap-3"><span class="text-purple-500 mt-1">✓</span> El sistema suma los costos automáticamente</li>
+              <li class="flex items-start gap-3"><span class="text-purple-500 mt-1">✓</span> Catálogo con +70 servicios pre-definidos</li>
+              <li class="flex items-start gap-3"><span class="text-purple-500 mt-1">✓</span> Clasifica por dificultad: fácil, medio, difícil</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Función 3: Calculadora -->
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+          <div>
+            <div class="inline-flex items-center gap-2 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm mb-4">
+              <span>🧮</span> Calculadora de Precios
+            </div>
+            <h3 class="font-playfair text-3xl font-bold mb-4">Precios justos, no inventados</h3>
+            <ul class="space-y-3 text-gray-600">
+              <li class="flex items-start gap-3"><span class="text-emerald-500 mt-1">✓</span> Calcula precio basado en costo real de productos</li>
+              <li class="flex items-start gap-3"><span class="text-emerald-500 mt-1">✓</span> Incluye tu tiempo de trabajo ($/hora)</li>
+              <li class="flex items-start gap-3"><span class="text-emerald-500 mt-1">✓</span> Agrega margen de ganancia deseado</li>
+              <li class="flex items-start gap-3"><span class="text-emerald-500 mt-1">✓</span> Te dice exactamente cuánto cobrar</li>
+            </ul>
+          </div>
+          <div class="bg-gradient-to-br from-emerald-500 to-teal-600 p-6 rounded-2xl text-white">
+            <p class="text-sm opacity-80 mb-4">Tu precio recomendado:</p>
+            <div class="bg-white/20 rounded-xl p-4 mb-4">
+              <p class="text-sm">Costo productos: $3.50</p>
+              <p class="text-sm">Tu tiempo (1h): $5.00</p>
+              <p class="text-sm">Margen 40%: $3.40</p>
+            </div>
+            <p class="text-4xl font-bold text-center">$11.90</p>
+            <p class="text-center text-sm opacity-80">Precio sugerido</p>
+          </div>
+        </div>
+
+        <!-- Función 4: Inventario -->
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+          <div class="order-2 md:order-1 bg-white p-6 rounded-2xl shadow-lg">
+            <div class="flex items-center justify-between p-3 bg-red-50 border border-red-200 rounded-lg mb-3">
+              <span class="text-red-700">⚠️ Esmalte Rojo - Stock bajo</span>
+              <span class="text-red-600 font-bold">2 uds</span>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-amber-50 border border-amber-200 rounded-lg mb-3">
+              <span class="text-amber-700">⏰ Gel Base - Por agotarse</span>
+              <span class="text-amber-600 font-bold">5 uds</span>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+              <span class="text-emerald-700">✓ Top Coat - OK</span>
+              <span class="text-emerald-600 font-bold">12 uds</span>
+            </div>
+          </div>
+          <div class="order-1 md:order-2">
+            <div class="inline-flex items-center gap-2 px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm mb-4">
+              <span>📊</span> Control de Inventario
+            </div>
+            <h3 class="font-playfair text-3xl font-bold mb-4">Nunca te quedes sin productos</h3>
+            <ul class="space-y-3 text-gray-600">
+              <li class="flex items-start gap-3"><span class="text-amber-500 mt-1">✓</span> Alertas automáticas de stock bajo</li>
+              <li class="flex items-start gap-3"><span class="text-amber-500 mt-1">✓</span> Registra entradas y salidas</li>
+              <li class="flex items-start gap-3"><span class="text-amber-500 mt-1">✓</span> Ve el valor total de tu inventario</li>
+              <li class="flex items-start gap-3"><span class="text-amber-500 mt-1">✓</span> Define stock mínimo por producto</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Función 5: Clientes -->
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+          <div>
+            <div class="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm mb-4">
+              <span>👥</span> Gestión de Clientes
+            </div>
+            <h3 class="font-playfair text-3xl font-bold mb-4">Conoce a tus clientas</h3>
+            <ul class="space-y-3 text-gray-600">
+              <li class="flex items-start gap-3"><span class="text-blue-500 mt-1">✓</span> Guarda datos de contacto y preferencias</li>
+              <li class="flex items-start gap-3"><span class="text-blue-500 mt-1">✓</span> Historial de servicios realizados</li>
+              <li class="flex items-start gap-3"><span class="text-blue-500 mt-1">✓</span> Notas personalizadas por clienta</li>
+              <li class="flex items-start gap-3"><span class="text-blue-500 mt-1">✓</span> Recuerda cumpleaños y fechas especiales</li>
+            </ul>
+          </div>
+          <div class="bg-white p-6 rounded-2xl shadow-lg">
+            <div class="flex items-center gap-4 mb-4">
+              <div class="w-16 h-16 bg-gradient-to-br from-pink-400 to-purple-500 rounded-full flex items-center justify-center text-white text-xl font-bold">MG</div>
+              <div>
+                <p class="font-semibold">María González</p>
+                <p class="text-sm text-gray-500">Cliente desde Ene 2024</p>
               </div>
+            </div>
+            <div class="text-sm text-gray-600 space-y-1">
+              <p>📱 0414-123-4567</p>
+              <p>💅 Prefiere: Semipermanente rosado</p>
+              <p>📝 Alérgica al metacrilato</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Función 6: Gastos y Ganancias -->
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+          <div class="order-2 md:order-1 bg-white p-6 rounded-2xl shadow-lg">
+            <div class="grid grid-cols-2 gap-4 mb-4">
+              <div class="bg-emerald-50 p-4 rounded-xl text-center">
+                <p class="text-sm text-gray-500">Ingresos</p>
+                <p class="text-2xl font-bold text-emerald-600">$450</p>
+              </div>
+              <div class="bg-red-50 p-4 rounded-xl text-center">
+                <p class="text-sm text-gray-500">Gastos</p>
+                <p class="text-2xl font-bold text-red-500">$120</p>
+              </div>
+            </div>
+            <div class="bg-gradient-to-r from-pink-500 to-purple-500 p-4 rounded-xl text-white text-center">
+              <p class="text-sm opacity-80">Ganancia Neta</p>
+              <p class="text-3xl font-bold">$330</p>
+            </div>
+          </div>
+          <div class="order-1 md:order-2">
+            <div class="inline-flex items-center gap-2 px-3 py-1 bg-rose-100 text-rose-700 rounded-full text-sm mb-4">
+              <span>💰</span> Gastos y Ganancias
+            </div>
+            <h3 class="font-playfair text-3xl font-bold mb-4">Sabe cuánto ganas de verdad</h3>
+            <ul class="space-y-3 text-gray-600">
+              <li class="flex items-start gap-3"><span class="text-rose-500 mt-1">✓</span> Registra gastos fijos: alquiler, luz, internet</li>
+              <li class="flex items-start gap-3"><span class="text-rose-500 mt-1">✓</span> Ve tus ingresos por día, semana, mes</li>
+              <li class="flex items-start gap-3"><span class="text-rose-500 mt-1">✓</span> Calcula tu ganancia neta real</li>
+              <li class="flex items-start gap-3"><span class="text-rose-500 mt-1">✓</span> Gráficos de evolución mensual</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Función 7: Simulador -->
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+          <div>
+            <div class="inline-flex items-center gap-2 px-3 py-1 bg-violet-100 text-violet-700 rounded-full text-sm mb-4">
+              <span>📈</span> Simulador de Ingresos
+            </div>
+            <h3 class="font-playfair text-3xl font-bold mb-4">Proyecta tu mes</h3>
+            <ul class="space-y-3 text-gray-600">
+              <li class="flex items-start gap-3"><span class="text-violet-500 mt-1">✓</span> Define cuántos servicios haces por día</li>
+              <li class="flex items-start gap-3"><span class="text-violet-500 mt-1">✓</span> Indica cuántos días trabajas</li>
+              <li class="flex items-start gap-3"><span class="text-violet-500 mt-1">✓</span> Ve proyección de ingresos mensuales</li>
+              <li class="flex items-start gap-3"><span class="text-violet-500 mt-1">✓</span> Ajusta escenarios: optimista, realista, conservador</li>
+            </ul>
+          </div>
+          <div class="bg-gradient-to-br from-violet-500 to-purple-600 p-6 rounded-2xl text-white">
+            <p class="text-sm opacity-80 mb-2">Si haces 3 servicios/día × 22 días:</p>
+            <div class="text-center py-4">
+              <p class="text-5xl font-bold">$726</p>
+              <p class="text-sm opacity-80">Ingreso estimado mensual</p>
+            </div>
+            <div class="bg-white/20 rounded-lg p-3 text-sm">
+              <p>66 servicios × $11 promedio</p>
             </div>
           </div>
         </div>
@@ -108,180 +344,146 @@
     </div>
   </section>
 
-  <!-- Slide 3: La Solución -->
-  <section class="slide bg-white py-20">
-    <div class="container mx-auto px-8">
+  <!-- SLIDE 5: Planes y Precios -->
+  <section id="planes" class="slide bg-white py-20">
+    <div class="container mx-auto px-6">
       <div class="text-center mb-16">
-        <span class="text-pink-500 font-semibold">LA SOLUCIÓN</span>
-        <h2 class="font-playfair text-4xl md:text-5xl font-bold mt-4">
-          NailCost hace los números<br/><span class="gradient-text-pink">tú haces el arte</span>
-        </h2>
-      </div>
-      <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-        <div class="bg-gradient-to-br from-pink-50 to-rose-50 p-8 rounded-3xl card-hover">
-          <div class="w-16 h-16 gradient-pink rounded-2xl flex items-center justify-center mb-6 text-white text-2xl">1</div>
-          <h3 class="font-semibold text-xl mb-3">Registra tus productos</h3>
-          <p class="text-gray-600">Agrega lo que compraste: esmaltes, acrílico, gel. NailCost calcula el costo por uso automáticamente.</p>
-        </div>
-        <div class="bg-gradient-to-br from-pink-50 to-rose-50 p-8 rounded-3xl card-hover">
-          <div class="w-16 h-16 gradient-pink rounded-2xl flex items-center justify-center mb-6 text-white text-2xl">2</div>
-          <h3 class="font-semibold text-xl mb-3">Crea tus servicios</h3>
-          <p class="text-gray-600">Define qué productos usas en cada estilo. Ya sea semipermanente, acrílico o diseño.</p>
-        </div>
-        <div class="bg-gradient-to-br from-pink-50 to-rose-50 p-8 rounded-3xl card-hover">
-          <div class="w-16 h-16 gradient-pink rounded-2xl flex items-center justify-center mb-6 text-white text-2xl">3</div>
-          <h3 class="font-semibold text-xl mb-3">Obtén tu precio justo</h3>
-          <p class="text-gray-600">La calculadora te dice cuánto cobrar para ganar lo que mereces, considerando tu tiempo.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Slide 4: Funcionalidades -->
-  <section class="slide bg-gray-50 py-20">
-    <div class="container mx-auto px-8">
-      <div class="text-center mb-16">
-        <span class="text-pink-500 font-semibold">TODO LO QUE NECESITAS</span>
-        <h2 class="font-playfair text-4xl font-bold mt-4">Simple pero poderoso</h2>
-      </div>
-      <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
-        <div class="bg-white p-6 rounded-2xl shadow-sm card-hover">
-          <span class="text-3xl">📦</span>
-          <h3 class="font-semibold mt-4">Inventario</h3>
-          <p class="text-sm text-gray-600 mt-2">Controla tus productos y te avisa cuando se acaban</p>
-        </div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm card-hover">
-          <span class="text-3xl">🧮</span>
-          <h3 class="font-semibold mt-4">Calculadora</h3>
-          <p class="text-sm text-gray-600 mt-2">Precios justos basados en tus costos reales</p>
-        </div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm card-hover">
-          <span class="text-3xl">👥</span>
-          <h3 class="font-semibold mt-4">Clientes</h3>
-          <p class="text-sm text-gray-600 mt-2">Guarda datos, historial y preferencias</p>
-        </div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm card-hover">
-          <span class="text-3xl">📊</span>
-          <h3 class="font-semibold mt-4">Ganancias</h3>
-          <p class="text-sm text-gray-600 mt-2">Ve cuánto ganas cada mes de verdad</p>
-        </div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm card-hover">
-          <span class="text-3xl">💰</span>
-          <h3 class="font-semibold mt-4">Gastos</h3>
-          <p class="text-sm text-gray-600 mt-2">Registra alquiler, luz, transporte</p>
-        </div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm card-hover">
-          <span class="text-3xl">📈</span>
-          <h3 class="font-semibold mt-4">Simulador</h3>
-          <p class="text-sm text-gray-600 mt-2">Proyecta cuánto ganarás este mes</p>
-        </div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm card-hover">
-          <span class="text-3xl">📱</span>
-          <h3 class="font-semibold mt-4">Móvil</h3>
-          <p class="text-sm text-gray-600 mt-2">Funciona en tu celular, sin instalar</p>
-        </div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm card-hover">
-          <span class="text-3xl">🇻🇪</span>
-          <h3 class="font-semibold mt-4">Venezuela</h3>
-          <p class="text-sm text-gray-600 mt-2">Precios adaptados al mercado local</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Slide 5: Precios -->
-  <section class="slide bg-white py-20">
-    <div class="container mx-auto px-8">
-      <div class="text-center mb-16">
-        <span class="text-pink-500 font-semibold">PRECIOS ACCESIBLES</span>
+        <span class="text-pink-500 font-semibold text-sm uppercase tracking-wider">Planes y Precios</span>
         <h2 class="font-playfair text-4xl font-bold mt-4">Invierte en tu negocio</h2>
-        <p class="text-gray-600 mt-4">Menos de lo que cuesta un esmalte al mes</p>
+        <p class="text-gray-500 mt-4">Menos de lo que cuesta un esmalte al mes. Ahorra pagando por más tiempo.</p>
       </div>
-      <div class="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
-        <div class="bg-gray-50 p-8 rounded-3xl border-2 border-gray-200">
+      
+      <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-12">
+        <!-- Plan Básico -->
+        <div class="bg-gray-50 rounded-3xl p-8 border-2 border-gray-200">
           <h3 class="font-semibold text-xl">Plan Básico</h3>
-          <div class="mt-4">
+          <p class="text-gray-500 text-sm mt-1">Para empezar a organizar tu negocio</p>
+          <div class="mt-6">
             <span class="text-5xl font-bold">$5</span>
             <span class="text-gray-500">/mes</span>
           </div>
           <ul class="mt-6 space-y-3 text-gray-600">
-            <li class="flex items-center gap-2"><span class="text-emerald-500">✓</span> 10 productos</li>
-            <li class="flex items-center gap-2"><span class="text-emerald-500">✓</span> 5 estilos</li>
-            <li class="flex items-center gap-2"><span class="text-emerald-500">✓</span> 20 clientes</li>
-            <li class="flex items-center gap-2"><span class="text-emerald-500">✓</span> Calculadora de precios</li>
+            <li class="flex items-center gap-3"><span class="text-emerald-500">✓</span> Hasta 10 productos</li>
+            <li class="flex items-center gap-3"><span class="text-emerald-500">✓</span> Hasta 5 servicios/estilos</li>
+            <li class="flex items-center gap-3"><span class="text-emerald-500">✓</span> 20 clientes</li>
+            <li class="flex items-center gap-3"><span class="text-emerald-500">✓</span> Calculadora de precios</li>
+            <li class="flex items-center gap-3"><span class="text-emerald-500">✓</span> Control básico de inventario</li>
+            <li class="flex items-center gap-3 text-gray-400"><span>✗</span> Simulador de ingresos</li>
+            <li class="flex items-center gap-3 text-gray-400"><span>✗</span> Reportes avanzados</li>
           </ul>
-          <div class="mt-6 p-3 bg-emerald-50 rounded-lg text-center">
-            <p class="text-sm text-emerald-700">Paga semestral: <strong>$24</strong> (20% OFF)</p>
-            <p class="text-sm text-emerald-700">Paga anual: <strong>$42</strong> (30% OFF)</p>
+          <div class="mt-6 p-4 bg-white rounded-xl space-y-2 text-sm">
+            <div class="flex justify-between"><span>Trimestral (10% OFF)</span><span class="font-semibold">$13.50</span></div>
+            <div class="flex justify-between"><span>Semestral (20% OFF)</span><span class="font-semibold">$24.00</span></div>
+            <div class="flex justify-between text-emerald-600"><span>Anual (30% OFF)</span><span class="font-bold">$42.00</span></div>
           </div>
         </div>
-        <div class="gradient-pink p-8 rounded-3xl text-white relative overflow-hidden">
-          <div class="absolute top-4 right-4 bg-white/20 px-3 py-1 rounded-full text-sm">Recomendado</div>
+
+        <!-- Plan Premium -->
+        <div class="gradient-pink rounded-3xl p-8 text-white relative overflow-hidden">
+          <div class="absolute top-4 right-4 bg-amber-400 text-slate-900 px-3 py-1 rounded-full text-sm font-semibold">
+            ⭐ Recomendado
+          </div>
           <h3 class="font-semibold text-xl">Plan Premium</h3>
-          <div class="mt-4">
+          <p class="text-white/70 text-sm mt-1">Todo lo que necesitas para crecer</p>
+          <div class="mt-6">
             <span class="text-5xl font-bold">$10</span>
             <span class="text-white/70">/mes</span>
           </div>
           <ul class="mt-6 space-y-3 text-white/90">
-            <li class="flex items-center gap-2"><span>✓</span> Productos ilimitados</li>
-            <li class="flex items-center gap-2"><span>✓</span> Estilos ilimitados</li>
-            <li class="flex items-center gap-2"><span>✓</span> Clientes ilimitados</li>
-            <li class="flex items-center gap-2"><span>✓</span> Simulador de ingresos</li>
-            <li class="flex items-center gap-2"><span>✓</span> Reportes avanzados</li>
+            <li class="flex items-center gap-3"><span class="text-amber-300">✓</span> Productos ilimitados</li>
+            <li class="flex items-center gap-3"><span class="text-amber-300">✓</span> Servicios ilimitados</li>
+            <li class="flex items-center gap-3"><span class="text-amber-300">✓</span> Clientes ilimitados</li>
+            <li class="flex items-center gap-3"><span class="text-amber-300">✓</span> Calculadora avanzada</li>
+            <li class="flex items-center gap-3"><span class="text-amber-300">✓</span> Control completo de inventario</li>
+            <li class="flex items-center gap-3"><span class="text-amber-300">✓</span> Simulador de ingresos</li>
+            <li class="flex items-center gap-3"><span class="text-amber-300">✓</span> Reportes y gráficos</li>
           </ul>
-          <div class="mt-6 p-3 bg-white/20 rounded-lg text-center">
-            <p class="text-sm">Paga semestral: <strong>$48</strong> (20% OFF)</p>
-            <p class="text-sm">Paga anual: <strong>$84</strong> (30% OFF)</p>
+          <div class="mt-6 p-4 bg-white/20 rounded-xl space-y-2 text-sm">
+            <div class="flex justify-between"><span>Trimestral (10% OFF)</span><span class="font-semibold">$27.00</span></div>
+            <div class="flex justify-between"><span>Semestral (20% OFF)</span><span class="font-semibold">$48.00</span></div>
+            <div class="flex justify-between text-amber-300"><span>Anual (30% OFF)</span><span class="font-bold">$84.00</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Métodos de Pago -->
+      <div class="text-center">
+        <p class="text-gray-500 text-sm mb-4">Métodos de pago disponibles</p>
+        <div class="flex justify-center gap-6 text-gray-400">
+          <span>📱 Pago Móvil</span>
+          <span>🏦 Transferencia</span>
+          <span>💱 Binance/USDT</span>
+          <span>💵 Zelle</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6: Testimonios -->
+  <section class="slide bg-rose-50 py-20">
+    <div class="container mx-auto px-6">
+      <div class="text-center mb-12">
+        <span class="text-pink-500 font-semibold text-sm uppercase tracking-wider">Testimonios</span>
+        <h2 class="font-playfair text-4xl font-bold mt-4">Lo que dicen nuestras usuarias</h2>
+      </div>
+      <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <div class="bg-white p-8 rounded-2xl shadow-sm">
+          <p class="text-gray-600 italic mb-6">"Antes cobraba $12 por semipermanente pensando que ganaba bien. Con NailCost descubrí que me costaba $7 y solo ganaba $5. Ahora cobro $18 y realmente gano."</p>
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-gradient-to-br from-pink-400 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">MF</div>
+            <div>
+              <p class="font-semibold">María Fernanda</p>
+              <p class="text-sm text-gray-500">Nail Artist, Caracas</p>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white p-8 rounded-2xl shadow-sm">
+          <p class="text-gray-600 italic mb-6">"El inventario me salvó la vida. Antes siempre me quedaba sin productos en medio de un trabajo. Ahora las alertas me avisan antes de que se acaben."</p>
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold">AC</div>
+            <div>
+              <p class="font-semibold">Andrea Castillo</p>
+              <p class="text-sm text-gray-500">Nail Artist, Valencia</p>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Slide 6: Testimonio -->
-  <section class="slide bg-rose-50 py-20">
-    <div class="container mx-auto px-8">
-      <div class="max-w-3xl mx-auto text-center">
-        <span class="text-6xl">💕</span>
-        <blockquote class="font-playfair text-3xl md:text-4xl font-medium mt-8 text-gray-800">
-          "Antes cobraba $12 por semipermanente pensando que ganaba bien. Con NailCost descubrí que me costaba $7 y solo ganaba $5. Ahora cobro $18 y realmente gano."
-        </blockquote>
-        <div class="mt-8">
-          <p class="font-semibold">María Fernanda</p>
-          <p class="text-gray-500">Nail Artist desde casa, Caracas</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Slide 7: CTA Final -->
-  <section class="slide gradient-pink text-white py-20">
-    <div class="container mx-auto px-8 text-center">
+  <!-- SLIDE 7: CTA Final -->
+  <section id="comenzar" class="slide gradient-pink text-white py-20">
+    <div class="container mx-auto px-6 text-center">
       <h2 class="font-playfair text-4xl md:text-6xl font-bold mb-6">
         Empieza a cobrar<br/>lo que mereces
       </h2>
-      <p class="text-xl text-white/90 max-w-xl mx-auto mb-12">
-        15 días gratis. Sin tarjeta. Cancela cuando quieras.
+      <p class="text-xl text-white/90 max-w-xl mx-auto mb-10">
+        15 días gratis para probar todas las funciones.<br/>Sin tarjeta. Cancela cuando quieras.
       </p>
-      <div class="flex flex-col sm:flex-row gap-4 justify-center">
-        <a href="https://salon-margin-tool.preview.emergentagent.com" class="px-8 py-4 bg-white text-pink-600 hover:bg-pink-50 rounded-full font-semibold transition-all shadow-lg">
+      <div class="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+        <a href="https://salon-margin-tool.preview.emergentagent.com" class="px-10 py-5 bg-white text-pink-600 rounded-full font-bold text-lg hover:bg-pink-50 shadow-lg">
           Crear mi Cuenta Gratis →
         </a>
-        <a href="https://wa.me/584141234567" class="px-8 py-4 bg-transparent border-2 border-white hover:bg-white/10 rounded-full font-semibold transition-all">
+        <a href="https://wa.me/584141234567" class="px-10 py-5 border-2 border-white rounded-full font-semibold hover:bg-white/10">
           Tengo Dudas 💬
         </a>
       </div>
-      <p class="mt-12 text-white/60 text-sm">
-        Pago con Pago Móvil, Transferencia, Binance o Zelle
-      </p>
+      <div class="flex justify-center gap-8 text-sm text-white/70">
+        <span>✓ 15 días gratis</span>
+        <span>✓ Sin tarjeta</span>
+        <span>✓ Soporte en español</span>
+      </div>
     </div>
   </section>
 
   <!-- Footer -->
-  <footer class="bg-gray-900 text-white py-8">
-    <div class="container mx-auto px-8 text-center">
-      <p class="font-playfair text-xl">Nail<span class="text-pink-400">Cost</span> Pro</p>
-      <p class="text-gray-500 mt-2">Hecho con 💅 en Venezuela</p>
+  <footer class="bg-gray-900 text-white py-12">
+    <div class="container mx-auto px-6 text-center">
+      <p class="font-playfair text-2xl mb-2">Nail<span class="text-pink-400">Cost</span> Pro</p>
+      <p class="text-gray-500 mb-6">La herramienta que necesitas para tu negocio de uñas</p>
+      <div class="flex justify-center gap-6 text-sm text-gray-400">
+        <span>Hecho con 💅 en Venezuela</span>
+      </div>
     </div>
   </footer>
 

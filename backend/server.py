@@ -28,12 +28,48 @@ client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
 # JWT Configuration
-SECRET_KEY = os.environ.get('JWT_SECRET', 'nailcost-pro-secret-key-2024-secure')
+SECRET_KEY = os.environ.get('JWT_SECRET')
+if not SECRET_KEY:
+    raise ValueError("JWT_SECRET environment variable is required")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_DAYS = 30
+ACCESS_TOKEN_EXPIRE_DAYS = 1  # Reducido a 24h por seguridad
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# ======================
+# INPUT SANITIZATION
+# ======================
+import re
+import html as html_module
+
+def sanitize_string(value: str, max_length: int = 1000) -> str:
+    """Sanitize string input against XSS and injection"""
+    if not isinstance(value, str):
+        return value
+    # Truncate to max length
+    value = value[:max_length]
+    # Escape HTML entities
+    value = html_module.escape(value)
+    # Remove potential script tags (double protection)
+    value = re.sub(r'<script[^>]*>.*?</script>', '', value, flags=re.IGNORECASE | re.DOTALL)
+    value = re.sub(r'javascript:', '', value, flags=re.IGNORECASE)
+    value = re.sub(r'on\w+\s*=', '', value, flags=re.IGNORECASE)
+    return value.strip()
+
+def sanitize_dict(data: dict) -> dict:
+    """Recursively sanitize all string values in a dictionary"""
+    sanitized = {}
+    for key, value in data.items():
+        if isinstance(value, str):
+            sanitized[key] = sanitize_string(value)
+        elif isinstance(value, dict):
+            sanitized[key] = sanitize_dict(value)
+        elif isinstance(value, list):
+            sanitized[key] = [sanitize_dict(v) if isinstance(v, dict) else sanitize_string(v) if isinstance(v, str) else v for v in value]
+        else:
+            sanitized[key] = value
+    return sanitized
 
 # Security
 security = HTTPBearer()
@@ -527,13 +563,14 @@ async def register(user_data: UserRegister):
     now = datetime.now(timezone.utc)
     trial_end = now + timedelta(days=15)
     
+    # Sanitize user input
     user_doc = {
         "id": user_id,
         "email": user_data.email.lower(),
         "password": hashed_password,
-        "nombre": user_data.nombre,
-        "nombre_negocio": user_data.nombre_negocio,
-        "telefono": user_data.telefono,
+        "nombre": sanitize_string(user_data.nombre),
+        "nombre_negocio": sanitize_string(user_data.nombre_negocio) if user_data.nombre_negocio else "",
+        "telefono": sanitize_string(user_data.telefono) if user_data.telefono else "",
         "plan": "free",
         "role": "user",
         "user_type": user_data.user_type,
