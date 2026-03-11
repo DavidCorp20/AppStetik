@@ -820,8 +820,8 @@ export default function AdminPage() {
                     <span className="text-white font-medium">${subscriptions.summary.total_users > 0 ? ((subscriptions.summary.monthly_revenue || 0) / subscriptions.summary.total_users).toFixed(2) : 0}</span>
                   </div>
                 </div>
-                <Button className="w-full" variant="outline" onClick={() => exportToCSV([{ mrr: subscriptions.summary.monthly_revenue, arr: (subscriptions.summary.monthly_revenue || 0) * 12, users: subscriptions.summary.total_users }], 'reporte_ingresos')}>
-                  <FileDown className="w-4 h-4 mr-2" />Descargar Reporte
+                <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => exportToCSV([{ mrr: subscriptions.summary.monthly_revenue, arr: (subscriptions.summary.monthly_revenue || 0) * 12, users: subscriptions.summary.total_users }], 'reporte_ingresos')}>
+                  <FileDown className="w-4 h-4 mr-2" />Descargar Excel
                 </Button>
               </CardContent>
             </Card>
@@ -854,8 +854,8 @@ export default function AdminPage() {
                     <span className="text-amber-400 font-medium">{subscriptions.summary.in_trial || 0}</span>
                   </div>
                 </div>
-                <Button className="w-full" variant="outline">
-                  <FileDown className="w-4 h-4 mr-2" />Descargar Reporte
+                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white" onClick={() => exportToCSV([{ activos: activeUsers.length, inactivos: expiredUsers.length, trial: subscriptions.summary.in_trial || 0, tasa_retencion: subscriptions.summary.total_users > 0 ? Math.round((activeUsers.length / subscriptions.summary.total_users) * 100) : 0 }], 'reporte_retencion')}>
+                  <FileDown className="w-4 h-4 mr-2" />Descargar Excel
                 </Button>
               </CardContent>
             </Card>

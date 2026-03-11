@@ -115,10 +115,33 @@
 
 ---
 
+## IMPLEMENTADO HOY (09 Mar 2026)
+
+#### 3. Impuestos Personalizables en Facturación ✅
+- IVA 16% (activable)
+- Retención ISLR 5% (activable)
+- Impuesto Municipal 2% (activable)
+- Agregar impuestos personalizados
+
+#### 4. Planes con Descuentos ✅
+- Mensual: sin descuento
+- Trimestral: 10% OFF
+- Semestral: 20% OFF
+- Anual: 30% OFF
+
+#### 5. Presentaciones de Ventas Diferenciadas ✅
+- `/presentacion-persona.html` - Para emprendedoras independientes
+- `/presentacion-comercio.html` - Para salones y spas
+
+#### 6. Fix Botones Reportes Admin ✅
+- Botones ahora con colores sólidos (emerald-600, blue-600)
+
+---
+
 ## PRÓXIMOS PASOS (Ver ROADMAP.md)
 
 ### Fase 1: Estabilización
-- [ ] Testing completo
+- [x] Testing completo
 - [ ] Correcciones responsive
 - [ ] Optimización rendimiento
 

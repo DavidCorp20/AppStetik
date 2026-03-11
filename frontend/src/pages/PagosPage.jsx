@@ -4,13 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { 
   CreditCard, Smartphone, Building, Bitcoin, Banknote, Mail, Upload, 
   CheckCircle, XCircle, Clock, Eye, ChevronDown, ChevronUp, Copy,
-  AlertCircle, FileImage
+  AlertCircle, FileImage, Star, Zap, Crown, Gift
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -28,6 +29,14 @@ const STATUS_STYLES = {
   aprobado: { bg: 'bg-green-100', text: 'text-green-800', icon: CheckCircle },
   rechazado: { bg: 'bg-red-100', text: 'text-red-800', icon: XCircle },
 };
+
+// Planes de suscripción con descuentos
+const PLANES_DURACION = [
+  { meses: 1, label: 'Mensual', descuento: 0, badge: null },
+  { meses: 3, label: 'Trimestral', descuento: 10, badge: '10% OFF' },
+  { meses: 6, label: 'Semestral', descuento: 20, badge: '20% OFF' },
+  { meses: 12, label: 'Anual', descuento: 30, badge: '30% OFF' },
+];
 
 export function PagosPage() {
   const { user, isBusinessUser } = useAuth();
@@ -52,12 +61,17 @@ export function PagosPage() {
   const [comprobante, setComprobante] = useState(null);
   const [comprobantePreview, setComprobantePreview] = useState(null);
 
-  // Pricing
-  const pricing = isBusinessUser 
+  // Pricing con descuentos
+  const precioBase = isBusinessUser 
     ? { basic: 15, premium: 20 }
     : { basic: 5, premium: 10 };
 
-  const totalAPagar = pricing[planSolicitado] * parseInt(meses || 1);
+  const duracionSeleccionada = PLANES_DURACION.find(p => p.meses === parseInt(meses)) || PLANES_DURACION[0];
+  const precioMensualOriginal = precioBase[planSolicitado];
+  const totalSinDescuento = precioMensualOriginal * parseInt(meses || 1);
+  const descuentoMonto = totalSinDescuento * (duracionSeleccionada.descuento / 100);
+  const totalAPagar = totalSinDescuento - descuentoMonto;
+  const precioMensualConDescuento = totalAPagar / parseInt(meses || 1);
 
   const fetchData = useCallback(async () => {
     try {
@@ -191,29 +205,107 @@ export function PagosPage() {
       {/* Pricing Info */}
       <Card className="bg-gradient-to-r from-[#E84A8A]/10 to-purple-100 border-[#E84A8A]/20">
         <CardContent className="pt-6">
+          <div className="text-center mb-4">
+            <h2 className="text-xl font-bold text-gray-900">Elige tu Plan</h2>
+            <p className="text-gray-500 text-sm">Paga por más tiempo y ahorra hasta 30%</p>
+          </div>
+          
+          {/* Tipo de usuario */}
+          <div className="flex justify-center mb-4">
+            <Badge className={isBusinessUser ? "bg-violet-500" : "bg-blue-500"}>
+              {isBusinessUser ? "Cuenta Comercio/Empresa" : "Cuenta Personal"}
+            </Badge>
+          </div>
+
+          {/* Duración con descuentos */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-6">
+            {PLANES_DURACION.map((plan) => (
+              <button
+                key={plan.meses}
+                onClick={() => setMeses(plan.meses.toString())}
+                className={`relative p-3 rounded-lg border-2 transition-all ${
+                  parseInt(meses) === plan.meses
+                    ? 'border-[#E84A8A] bg-[#E84A8A]/10'
+                    : 'border-gray-200 hover:border-[#E84A8A]/50'
+                }`}
+              >
+                {plan.badge && (
+                  <span className="absolute -top-2 -right-2 bg-emerald-500 text-white text-xs px-2 py-0.5 rounded-full">
+                    {plan.badge}
+                  </span>
+                )}
+                <p className="font-semibold text-gray-900">{plan.label}</p>
+                <p className="text-xs text-gray-500">{plan.meses} mes{plan.meses > 1 ? 'es' : ''}</p>
+              </button>
+            ))}
+          </div>
+
+          {/* Planes */}
           <div className="grid md:grid-cols-2 gap-4">
-            <div className="bg-white/80 rounded-lg p-4 border border-[#E84A8A]/20">
-              <h3 className="font-semibold text-gray-900">Plan Básico</h3>
-              <p className="text-3xl font-bold text-[#E84A8A]">${pricing.basic}<span className="text-sm font-normal text-gray-500">/mes</span></p>
+            <button
+              onClick={() => setPlanSolicitado('basic')}
+              className={`bg-white/80 rounded-lg p-4 text-left border-2 transition-all ${
+                planSolicitado === 'basic' ? 'border-[#E84A8A] ring-2 ring-[#E84A8A]/20' : 'border-gray-200'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Zap className="w-5 h-5 text-blue-500" />
+                <h3 className="font-semibold text-gray-900">Plan Básico</h3>
+              </div>
+              <p className="text-3xl font-bold text-[#E84A8A] mt-2">
+                ${precioBase.basic}
+                <span className="text-sm font-normal text-gray-500">/mes</span>
+              </p>
               <ul className="mt-2 text-sm text-gray-600 space-y-1">
                 <li>• Hasta 10 productos</li>
                 <li>• Hasta 5 servicios</li>
                 <li>• 20 clientes</li>
               </ul>
-            </div>
-            <div className="bg-white/80 rounded-lg p-4 border-2 border-[#E84A8A]">
+            </button>
+            <button
+              onClick={() => setPlanSolicitado('premium')}
+              className={`bg-white/80 rounded-lg p-4 text-left border-2 transition-all relative ${
+                planSolicitado === 'premium' ? 'border-[#E84A8A] ring-2 ring-[#E84A8A]/20' : 'border-gray-200'
+              }`}
+            >
+              <span className="absolute -top-2 right-2 bg-[#E84A8A] text-white text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
+                <Crown className="w-3 h-3" /> Recomendado
+              </span>
               <div className="flex items-center gap-2">
+                <Star className="w-5 h-5 text-amber-500" />
                 <h3 className="font-semibold text-gray-900">Plan Premium</h3>
-                <span className="bg-[#E84A8A] text-white text-xs px-2 py-0.5 rounded-full">Recomendado</span>
               </div>
-              <p className="text-3xl font-bold text-[#E84A8A]">${pricing.premium}<span className="text-sm font-normal text-gray-500">/mes</span></p>
+              <p className="text-3xl font-bold text-[#E84A8A] mt-2">
+                ${precioBase.premium}
+                <span className="text-sm font-normal text-gray-500">/mes</span>
+              </p>
               <ul className="mt-2 text-sm text-gray-600 space-y-1">
                 <li>• Productos ilimitados</li>
                 <li>• Servicios ilimitados</li>
                 <li>• Reportes y simulaciones</li>
+                <li>• Facturación y clientes</li>
               </ul>
-            </div>
+            </button>
           </div>
+
+          {/* Resumen de precio */}
+          {duracionSeleccionada.descuento > 0 && (
+            <div className="mt-4 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Gift className="w-5 h-5 text-emerald-600" />
+                  <span className="text-emerald-700 font-medium">¡Estás ahorrando {duracionSeleccionada.descuento}%!</span>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-gray-500 line-through">${totalSinDescuento.toFixed(2)}</p>
+                  <p className="text-lg font-bold text-emerald-600">${totalAPagar.toFixed(2)}</p>
+                </div>
+              </div>
+              <p className="text-xs text-emerald-600 mt-1">
+                Pagas ${precioMensualConDescuento.toFixed(2)}/mes en lugar de ${precioMensualOriginal}/mes
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -229,39 +321,20 @@ export function PagosPage() {
           {showForm && (
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Plan Selection */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>Plan</Label>
-                    <Select value={planSolicitado} onValueChange={setPlanSolicitado}>
-                      <SelectTrigger data-testid="plan-select">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="free">Básico (${pricing.basic}/mes)</SelectItem>
-                        <SelectItem value="premium">Premium (${pricing.premium}/mes)</SelectItem>
-                      </SelectContent>
-                    </Select>
+                {/* Total a pagar - Resumen */}
+                <div className="bg-[#E84A8A]/10 rounded-lg p-4 text-center">
+                  <p className="text-sm text-gray-600">
+                    Plan {planSolicitado === 'premium' ? 'Premium' : 'Básico'} - {duracionSeleccionada.label}
+                  </p>
+                  <div className="flex items-center justify-center gap-2 mt-1">
+                    {duracionSeleccionada.descuento > 0 && (
+                      <span className="text-sm text-gray-400 line-through">${totalSinDescuento.toFixed(2)}</span>
+                    )}
+                    <span className="text-3xl font-bold text-[#E84A8A]">${totalAPagar.toFixed(2)}</span>
                   </div>
-                  <div>
-                    <Label>Meses</Label>
-                    <Select value={meses} onValueChange={setMeses}>
-                      <SelectTrigger data-testid="meses-select">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1">1 mes</SelectItem>
-                        <SelectItem value="3">3 meses</SelectItem>
-                        <SelectItem value="6">6 meses</SelectItem>
-                        <SelectItem value="12">12 meses</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="bg-[#E84A8A]/10 rounded-lg p-3 text-center">
-                  <span className="text-gray-600">Total a pagar:</span>
-                  <span className="text-2xl font-bold text-[#E84A8A] ml-2">${totalAPagar}</span>
+                  {duracionSeleccionada.descuento > 0 && (
+                    <Badge className="bg-emerald-500 mt-1">Ahorras ${descuentoMonto.toFixed(2)}</Badge>
+                  )}
                 </div>
 
                 {/* Payment Method */}

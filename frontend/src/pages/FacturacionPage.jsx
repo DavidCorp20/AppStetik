@@ -22,6 +22,13 @@ const API = process.env.REACT_APP_BACKEND_URL + '/api';
 // IVA Venezuela 2025
 const IVA_RATE = 0.16; // 16%
 
+// Impuestos personalizables
+const IMPUESTOS_DEFAULT = [
+  { id: 'iva', nombre: 'IVA', tasa: 16, activo: true, descripcion: 'Impuesto al Valor Agregado' },
+  { id: 'islr', nombre: 'Retención ISLR', tasa: 5, activo: false, descripcion: 'Impuesto sobre la renta' },
+  { id: 'municipal', nombre: 'Impuesto Municipal', tasa: 2, activo: false, descripcion: 'Patente o similar' },
+];
+
 // Status Badge
 const StatusBadge = ({ status }) => {
   const styles = {
@@ -367,8 +374,24 @@ export default function FacturacionPage() {
       rif: '',
       direccion: '',
       aplicaIVA: false,
+      impuestos: IMPUESTOS_DEFAULT,
     };
   });
+
+  // Calcular impuestos activos
+  const calcularImpuestos = (baseImponible) => {
+    const impuestosActivos = (configFiscal.impuestos || IMPUESTOS_DEFAULT).filter(imp => imp.activo);
+    let totalImpuestos = 0;
+    const desglose = [];
+    
+    for (const imp of impuestosActivos) {
+      const monto = baseImponible * (imp.tasa / 100);
+      totalImpuestos += monto;
+      desglose.push({ ...imp, monto });
+    }
+    
+    return { total: totalImpuestos, desglose };
+  };
 
   const [formData, setFormData] = useState({
     cliente_id: "", cliente_rif: "", cliente_direccion: "",
@@ -400,8 +423,8 @@ export default function FacturacionPage() {
 
     const subtotal = formData.items.reduce((sum, item) => sum + (item.cantidad * item.precio_unitario), 0);
     const baseImponible = subtotal - formData.descuento;
-    const iva = configFiscal.aplicaIVA ? baseImponible * IVA_RATE : 0;
-    const total = baseImponible + iva;
+    const { total: totalImpuestos, desglose } = calcularImpuestos(baseImponible);
+    const total = baseImponible + totalImpuestos;
 
     try {
       await authAxios.post(`${API}/facturas`, {
@@ -411,7 +434,9 @@ export default function FacturacionPage() {
         cliente_email: cliente.email,
         cliente_rif: formData.cliente_rif,
         cliente_direccion: formData.cliente_direccion,
-        subtotal, total, iva_monto: iva,
+        subtotal, total, 
+        iva_monto: totalImpuestos,
+        impuestos_desglose: desglose,
         estado: "pendiente",
       });
       toast.success("Factura creada");
@@ -758,7 +783,7 @@ export default function FacturacionPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2"><Settings className="w-5 h-5" />Configuración Fiscal</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto">
             <div>
               <Label>Nombre de la Empresa</Label>
               <Input value={configFiscal.nombreEmpresa} onChange={(e) => setConfigFiscal(prev => ({ ...prev, nombreEmpresa: e.target.value }))} placeholder="Mi Salón de Uñas C.A." />
@@ -771,16 +796,86 @@ export default function FacturacionPage() {
               <Label>Dirección Fiscal</Label>
               <Input value={configFiscal.direccion} onChange={(e) => setConfigFiscal(prev => ({ ...prev, direccion: e.target.value }))} placeholder="Av. Principal, Local 5, Caracas" />
             </div>
-            <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
-              <div>
-                <p className="font-medium">Aplicar IVA (16%)</p>
-                <p className="text-sm text-slate-500">Incluir impuesto en facturas</p>
+            
+            {/* Impuestos personalizables */}
+            <div className="border-t pt-4">
+              <Label className="text-base font-semibold">Impuestos Aplicables</Label>
+              <p className="text-sm text-slate-500 mb-3">Configura los impuestos que aplican a tus facturas</p>
+              
+              <div className="space-y-3">
+                {(configFiscal.impuestos || IMPUESTOS_DEFAULT).map((imp, index) => (
+                  <div key={imp.id} className={`p-3 rounded-lg border ${imp.activo ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200'}`}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <input 
+                          type="checkbox" 
+                          checked={imp.activo} 
+                          onChange={(e) => {
+                            const newImpuestos = [...(configFiscal.impuestos || IMPUESTOS_DEFAULT)];
+                            newImpuestos[index] = { ...newImpuestos[index], activo: e.target.checked };
+                            setConfigFiscal(prev => ({ ...prev, impuestos: newImpuestos }));
+                          }}
+                          className="w-5 h-5 rounded"
+                        />
+                        <div>
+                          <p className="font-medium">{imp.nombre}</p>
+                          <p className="text-xs text-slate-500">{imp.descripcion}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Input 
+                          type="number"
+                          value={imp.tasa}
+                          onChange={(e) => {
+                            const newImpuestos = [...(configFiscal.impuestos || IMPUESTOS_DEFAULT)];
+                            newImpuestos[index] = { ...newImpuestos[index], tasa: parseFloat(e.target.value) || 0 };
+                            setConfigFiscal(prev => ({ ...prev, impuestos: newImpuestos }));
+                          }}
+                          className="w-20 h-8 text-center"
+                          min="0"
+                          max="100"
+                          step="0.1"
+                        />
+                        <span className="text-sm text-slate-500">%</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <input type="checkbox" checked={configFiscal.aplicaIVA} onChange={(e) => setConfigFiscal(prev => ({ ...prev, aplicaIVA: e.target.checked }))} className="w-5 h-5" />
+
+              {/* Agregar nuevo impuesto */}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-3 w-full border-dashed"
+                onClick={() => {
+                  const newImp = {
+                    id: `custom_${Date.now()}`,
+                    nombre: 'Nuevo Impuesto',
+                    tasa: 0,
+                    activo: false,
+                    descripcion: 'Impuesto personalizado'
+                  };
+                  setConfigFiscal(prev => ({
+                    ...prev,
+                    impuestos: [...(prev.impuestos || IMPUESTOS_DEFAULT), newImp]
+                  }));
+                }}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Agregar Impuesto Personalizado
+              </Button>
             </div>
-            {configFiscal.aplicaIVA && (
+
+            {/* Resumen */}
+            {(configFiscal.impuestos || IMPUESTOS_DEFAULT).some(i => i.activo) && (
               <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
-                <strong>Nota:</strong> Al activar IVA, las facturas incluirán el 16% según normativa SENIAT Venezuela 2025.
+                <strong>Impuestos activos:</strong>{' '}
+                {(configFiscal.impuestos || IMPUESTOS_DEFAULT)
+                  .filter(i => i.activo)
+                  .map(i => `${i.nombre} (${i.tasa}%)`)
+                  .join(', ')}
               </div>
             )}
           </div>
