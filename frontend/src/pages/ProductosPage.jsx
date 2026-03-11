@@ -21,7 +21,7 @@ import {
   Check, ChevronRight, Sparkles, AlertCircle 
 } from "lucide-react";
 import { toast } from "sonner";
-import { FeatureHelpButton, AutoFeatureTutorial } from "@/components/FeatureTutorial";
+import { TutorialHelpButton, AutoTutorial } from "@/components/FeatureTutorial";
 import { CATALOGO_PRODUCTOS } from "@/data/catalogos";
 import { formatCurrency } from "@/lib/utils";
 
@@ -195,7 +195,7 @@ export default function ProductosPage() {
   return (
     <div className="space-y-6 animate-fade-in" data-testid="productos-page">
       {/* Auto Tutorial */}
-      <AutoFeatureTutorial feature="productos" />
+      <AutoTutorial feature="productos" />
       
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -204,7 +204,7 @@ export default function ProductosPage() {
             <h1 className="text-2xl md:text-3xl font-medium text-stone-800" style={{ fontFamily: 'Playfair Display, serif' }}>
               Productos e Insumos
             </h1>
-            <FeatureHelpButton feature="productos" />
+            <TutorialHelpButton feature="productos" />
           </div>
           <p className="text-stone-500 mt-1">
             Gestiona tus productos y herramientas

@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { AutoTutorial, TutorialHelpButton } from '@/components/FeatureTutorial';
 import { toast } from 'sonner';
 import { 
   CreditCard, Smartphone, Building, Bitcoin, Banknote, Mail, Upload, 
@@ -194,10 +195,16 @@ export function PagosPage() {
 
   return (
     <div className="space-y-6 p-4 md:p-6" data-testid="pagos-page">
+      {/* Tutorial */}
+      <AutoTutorial feature="pagos" />
+      
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Pagos y Suscripción</h1>
-          <p className="text-gray-500">Registra tu pago para activar o renovar tu suscripción</p>
+        <div className="flex items-center gap-2">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Pagos y Suscripción</h1>
+            <p className="text-gray-500">Registra tu pago para activar o renovar tu suscripción</p>
+          </div>
+          <TutorialHelpButton feature="pagos" />
         </div>
         <CreditCard className="w-8 h-8 text-[#E84A8A]" />
       </div>

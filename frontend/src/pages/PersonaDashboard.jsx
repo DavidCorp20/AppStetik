@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RecommendationsPanel } from "@/components/RecommendationsPanel";
 import { TutorialModal, useTutorial } from "@/components/TutorialModal";
+import { AutoTutorial, TutorialHelpButton } from "@/components/FeatureTutorial";
 import { 
   Calculator, 
   Users, 
@@ -354,6 +355,9 @@ export default function PersonaDashboard() {
 
   return (
     <div className="space-y-5 pb-24" data-testid="persona-dashboard">
+      {/* Tutorial */}
+      <AutoTutorial feature="dashboard" />
+      
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

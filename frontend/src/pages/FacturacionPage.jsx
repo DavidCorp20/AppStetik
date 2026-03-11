@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AutoTutorial, TutorialHelpButton } from "@/components/FeatureTutorial";
 import { 
   FileText, Plus, Search, Download, Eye, Printer, Calendar, User, DollarSign, Loader2,
   CheckCircle, Clock, XCircle, Hash, Building2, Phone, Mail, Receipt, BarChart3,
@@ -534,6 +535,9 @@ export default function FacturacionPage() {
 
   return (
     <div className="space-y-6" data-testid="facturacion-page">
+      {/* Tutorial */}
+      <AutoTutorial feature="facturacion" />
+      
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -544,6 +548,7 @@ export default function FacturacionPage() {
             <h1 className="text-2xl font-bold text-slate-800">Facturación</h1>
             <p className="text-sm text-slate-500">{configFiscal.aplicaIVA ? 'IVA 16% Activo' : 'Sin IVA'} • {facturas.length} facturas</p>
           </div>
+          <TutorialHelpButton feature="facturacion" />
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setConfigDialog(true)} className="gap-2">

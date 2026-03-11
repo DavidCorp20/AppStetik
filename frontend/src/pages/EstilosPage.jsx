@@ -19,7 +19,7 @@ import {
   Check, ChevronRight, Sparkles, Star, DollarSign
 } from "lucide-react";
 import { toast } from "sonner";
-import { FeatureHelpButton, AutoFeatureTutorial } from "@/components/FeatureTutorial";
+import { TutorialHelpButton, AutoTutorial } from "@/components/FeatureTutorial";
 import { CATALOGO_ESTILOS } from "@/data/catalogos";
 import { formatCurrency } from "@/lib/utils";
 
@@ -235,7 +235,7 @@ export default function EstilosPage() {
   return (
     <div className="space-y-6 animate-fade-in" data-testid="estilos-page">
       {/* Auto Tutorial */}
-      <AutoFeatureTutorial feature="estilos" />
+      <AutoTutorial feature="estilos" />
       
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -244,7 +244,7 @@ export default function EstilosPage() {
             <h1 className="text-2xl md:text-3xl font-medium text-stone-800" style={{ fontFamily: 'Playfair Display, serif' }}>
               Servicios y Estilos
             </h1>
-            <FeatureHelpButton feature="estilos" />
+            <TutorialHelpButton feature="estilos" />
           </div>
           <p className="text-stone-500 mt-1">
             Define los servicios que ofreces y sus costos

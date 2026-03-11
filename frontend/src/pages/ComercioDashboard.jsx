@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TutorialModal, useComercioTutorial } from "@/components/TutorialModal";
 import { AlertPopup, useAlerts } from "@/components/AlertPopup";
+import { AutoTutorial, TutorialHelpButton } from "@/components/FeatureTutorial";
 import { formatCurrency } from "@/lib/utils";
 import { 
   Package, 
@@ -215,11 +216,17 @@ export default function ComercioDashboard() {
 
   return (
     <div className="space-y-6 p-6 max-w-7xl mx-auto" data-testid="comercio-dashboard">
+      {/* Tutorial */}
+      <AutoTutorial feature="dashboard" />
+      
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-500 text-sm">Resumen de tu negocio</p>
+        <div className="flex items-center gap-2">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+            <p className="text-gray-500 text-sm">Resumen de tu negocio</p>
+          </div>
+          <TutorialHelpButton feature="dashboard" />
         </div>
         <div className="flex gap-2">
           <Link to="/calculadora">

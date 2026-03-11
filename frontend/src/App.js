@@ -2,6 +2,7 @@ import "@/App.css";
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { AppProvider } from "@/context/AppContext";
+import { TutorialProvider } from "@/components/FeatureTutorial";
 import { Toaster } from "@/components/ui/sonner";
 import { Layout } from "@/components/Layout";
 import { NotificationManager } from "@/components/NotificationManager";
@@ -149,11 +150,13 @@ function App() {
   return (
     <AuthProvider>
       <AppProvider>
-        <BrowserRouter>
-          <AppRoutes />
-          <NotificationManager />
-        </BrowserRouter>
-        <Toaster position="top-right" richColors />
+        <TutorialProvider>
+          <BrowserRouter>
+            <AppRoutes />
+            <NotificationManager />
+          </BrowserRouter>
+          <Toaster position="top-right" richColors />
+        </TutorialProvider>
       </AppProvider>
     </AuthProvider>
   );
