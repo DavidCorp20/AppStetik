@@ -823,19 +823,47 @@ async def get_admin_user(current_user: dict = Depends(get_current_user)):
 
 @api_router.get("/admin/users")
 async def admin_get_users(admin: dict = Depends(get_admin_user)):
-    """Get all users (admin only)"""
-    users = await db.users.find({}, {"_id": 0, "password": 0}).to_list(1000)
+    """Get all users with stats (admin only) - optimized with aggregation"""
+    # Use aggregation pipeline to get users with stats in one query
+    pipeline = [
+        {"$match": {}},
+        {"$project": {"_id": 0, "password": 0}},
+        {"$lookup": {
+            "from": "productos",
+            "let": {"uid": "$id"},
+            "pipeline": [{"$match": {"$expr": {"$eq": ["$user_id", "$$uid"]}}}, {"$count": "count"}],
+            "as": "productos_count"
+        }},
+        {"$lookup": {
+            "from": "estilos",
+            "let": {"uid": "$id"},
+            "pipeline": [{"$match": {"$expr": {"$eq": ["$user_id", "$$uid"]}}}, {"$count": "count"}],
+            "as": "estilos_count"
+        }},
+        {"$lookup": {
+            "from": "disenos",
+            "let": {"uid": "$id"},
+            "pipeline": [{"$match": {"$expr": {"$eq": ["$user_id", "$$uid"]}}}, {"$count": "count"}],
+            "as": "disenos_count"
+        }},
+        {"$lookup": {
+            "from": "clientes",
+            "let": {"uid": "$id"},
+            "pipeline": [{"$match": {"$expr": {"$eq": ["$user_id", "$$uid"]}}}, {"$count": "count"}],
+            "as": "clientes_count"
+        }},
+        {"$addFields": {
+            "stats": {
+                "productos": {"$ifNull": [{"$arrayElemAt": ["$productos_count.count", 0]}, 0]},
+                "estilos": {"$ifNull": [{"$arrayElemAt": ["$estilos_count.count", 0]}, 0]},
+                "disenos": {"$ifNull": [{"$arrayElemAt": ["$disenos_count.count", 0]}, 0]},
+                "clientes": {"$ifNull": [{"$arrayElemAt": ["$clientes_count.count", 0]}, 0]}
+            }
+        }},
+        {"$project": {"productos_count": 0, "estilos_count": 0, "disenos_count": 0, "clientes_count": 0}}
+    ]
     
-    # Add usage stats for each user
-    for user in users:
-        user_id = user["id"]
-        user["stats"] = {
-            "productos": await db.productos.count_documents({"user_id": user_id}),
-            "estilos": await db.estilos.count_documents({"user_id": user_id}),
-            "disenos": await db.disenos.count_documents({"user_id": user_id}),
-            "clientes": await db.clientes.count_documents({"user_id": user_id}),
-        }
-    
+    users = await db.users.aggregate(pipeline).to_list(1000)
     return users
 
 @api_router.put("/admin/users/{user_id}/plan")
@@ -3194,9 +3222,11 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Admin credentials - PERMANENT
-ADMIN_EMAIL = "admin@nailcost.pro"
-ADMIN_PASSWORD = "NailCost@Adm1n#2024Secure"
+# Admin credentials from environment
+ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'admin@nailcost.pro')
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD')
+if not ADMIN_PASSWORD:
+    raise ValueError("ADMIN_PASSWORD environment variable is required")
 
 @app.on_event("startup")
 async def startup_event():
