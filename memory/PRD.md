@@ -7,12 +7,63 @@
 | Comercio | elite.nails@test.com | Test123! |
 | Personal | maria.nails@test.com | Test123! |
 | Comercio 2 | glamour.spa@test.com | Test123! |
+| **Sub-usuario Empleado** | ana.garcia@elite.nails.test | SecurePass123! |
+| **Sub-usuario Admin** | carlos.admin@elite.nails.test | AdminPass456! |
 
 ---
 
-## Última Actualización: 09 Marzo 2026
+## Última Actualización: 12 Marzo 2026
 
-### IMPLEMENTADO EN ESTA SESIÓN
+### IMPLEMENTADO HOY (12 Mar 2026) - FASE 1 MULTI-USUARIO ✅
+
+#### Sistema Multi-Usuario para Negocios (Backend)
+
+**Colección `business_users`:**
+```javascript
+{
+  id: "uuid",
+  business_id: "owner_user_id",  // ID del comercio propietario
+  nombre: "string",
+  email: "string",
+  password: "hashed",
+  role: "owner|administrador|empleado",
+  permissions: ["view_dashboard", "create_clients", ...],
+  especialidad: "string",
+  comision_porcentaje: 0,
+  activo: true,
+  last_login: "datetime",
+  created_at: "datetime"
+}
+```
+
+**Endpoints Nuevos:**
+- `GET /api/business/users` - Listar sub-usuarios (owner/admin)
+- `GET /api/business/users/{id}` - Obtener sub-usuario
+- `POST /api/business/users` - Crear sub-usuario (solo owner)
+- `PUT /api/business/users/{id}` - Actualizar sub-usuario (solo owner)
+- `DELETE /api/business/users/{id}` - Eliminar sub-usuario (solo owner)
+- `POST /api/business/users/{id}/reset-password` - Restablecer contraseña
+- `GET /api/business/roles` - Listar roles disponibles
+- `GET /api/business/permissions` - Listar permisos por categoría
+- `GET /api/business/my-permissions` - Ver mis permisos
+
+**Sistema de Roles:**
+| Rol | Permisos | Descripción |
+|-----|----------|-------------|
+| Owner | 31 permisos | Acceso completo, gestión de usuarios |
+| Administrador | 20 permisos | Operacional, sin gestión de usuarios |
+| Empleado | 8 permisos | Solo visualización y citas básicas |
+
+**Login Actualizado:**
+- Soporta autenticación de sub-usuarios (colección `business_users`)
+- Token incluye `type: "business_user"` y `business_id`
+- Sub-usuarios acceden a datos del negocio propietario via `effective_user_id`
+
+**Testing:** 29/29 tests pasados (100%)
+
+---
+
+### IMPLEMENTADO ANTERIORMENTE
 
 #### 1. Sistema de Pagos Tradicionales ✅ (NUEVO)
 **Backend (`/app/backend/server.py`):**
@@ -100,9 +151,13 @@
 | Facturación | ✅ |
 | Alertas Pop | ✅ |
 | Presentación Ventas | ✅ |
-| **Sistema de Pagos** | ✅ |
-| **Catálogo Productos** | ✅ |
-| **Catálogo Servicios** | ✅ |
+| Sistema de Pagos | ✅ |
+| Catálogo Productos | ✅ |
+| Catálogo Servicios | ✅ |
+| **Multi-Usuario Backend** | ✅ |
+| **RBAC (Roles/Permisos)** | ✅ |
+| Multi-Usuario Frontend | 🔄 Pendiente |
+| Optimización Móvil | 🔄 Pendiente |
 
 ---
 
@@ -138,23 +193,39 @@
 
 ---
 
-## PRÓXIMOS PASOS (Ver ROADMAP.md)
+## PRÓXIMOS PASOS
 
-### Fase 1: Estabilización
-- [x] Testing completo
-- [ ] Correcciones responsive
-- [ ] Optimización rendimiento
+### Proyecto Multi-Usuario & Optimización Móvil
 
-### Fase 2: Pre-Lanzamiento
-- [ ] Dominio producción
-- [ ] Servidor DigitalOcean
-- [ ] Email transaccional (SendGrid)
-- [ ] Pasarela de pagos automática (Stripe) - opcional
+#### Fase 2: Frontend Gestión de Usuarios (P1 - Próximo)
+- [ ] Crear página `GestionUsuariosPage.jsx`
+- [ ] Panel de listado de sub-usuarios con estado
+- [ ] Modal para crear/editar usuarios
+- [ ] Selector de rol con permisos automáticos
+- [ ] Configuración de permisos personalizados
+- [ ] Integrar en menú lateral del Comercio
 
-### Fase 3: Beta
-- [ ] 10-20 usuarios reales
+#### Fase 3: Middleware RBAC en Frontend (P1)
+- [ ] Hook `usePermissions()` para verificar permisos
+- [ ] Componente `ProtectedAction` para botones/acciones
+- [ ] Ocultar elementos del menú según permisos
+- [ ] Mostrar mensaje de acceso denegado
+
+#### Fase 4: Optimización Móvil (P2)
+- [ ] Bottom navigation bar para móvil
+- [ ] Convertir tablas a cards responsivas
+- [ ] Mejorar modales para pantallas pequeñas
+- [ ] Touch-friendly buttons y spacing
+
+#### Fase 5: Estabilidad (P2)
+- [ ] Global loading states
+- [ ] Error boundaries
+- [ ] Debounce en búsquedas
+
+### Backlog
+- [ ] "Ver más" en Recomendaciones Inteligentes
 - [ ] Videos tutoriales
-- [ ] Marketing Instagram
+- [ ] Pasarela de pagos automática (Stripe)
 
 ---
 
