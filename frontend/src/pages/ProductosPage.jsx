@@ -280,7 +280,7 @@ export default function ProductosPage() {
         </Card>
       </div>
 
-      {/* Products Table */}
+      {/* Products - Mobile Cards / Desktop Table */}
       <Card className="border-stone-200">
         <CardContent className="p-0">
           {loading ? (
@@ -297,53 +297,114 @@ export default function ProductosPage() {
               </Button>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-stone-50">
-                    <TableHead>Producto</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead className="text-right">Precio Compra</TableHead>
-                    <TableHead className="text-right">Cantidad</TableHead>
-                    <TableHead className="text-right">Costo Unit.</TableHead>
-                    <TableHead className="text-right">Uso/Servicio</TableHead>
-                    <TableHead className="w-[100px]"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredProducts.map((producto) => (
-                    <TableRow key={producto.id} className="hover:bg-stone-50">
-                      <TableCell className="font-medium">{producto.nombre}</TableCell>
-                      <TableCell>
-                        <Badge variant={producto.tipo === "insumo" ? "secondary" : "outline"} className="capitalize">
-                          {producto.tipo === "insumo" ? (
-                            <><Package className="w-3 h-3 mr-1" /> Insumo</>
-                          ) : (
-                            <><Wrench className="w-3 h-3 mr-1" /> Herramienta</>
-                          )}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">{formatCurrency(producto.precio_compra)}</TableCell>
-                      <TableCell className="text-right">{producto.cantidad_comprada} {producto.unidad}</TableCell>
-                      <TableCell className="text-right font-medium text-emerald-600">
-                        {formatCurrency(getCostoUnitario(producto))}
-                      </TableCell>
-                      <TableCell className="text-right">{producto.uso_por_servicio}</TableCell>
-                      <TableCell>
-                        <div className="flex gap-1 justify-end">
-                          <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(producto)} className="h-8 w-8">
-                            <Pencil className="w-4 h-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleDelete(producto.id)} className="h-8 w-8 text-red-500 hover:text-red-600">
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+            <>
+              {/* Mobile View - Cards */}
+              <div className="md:hidden divide-y divide-stone-100">
+                {filteredProducts.map((producto) => (
+                  <div 
+                    key={producto.id}
+                    className="p-4 hover:bg-stone-50 active:bg-stone-100 transition-colors"
+                    data-testid={`producto-card-${producto.id}`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+                          <p className="font-medium text-stone-800 truncate">{producto.nombre}</p>
+                          <Badge variant={producto.tipo === "insumo" ? "secondary" : "outline"} className="capitalize text-xs flex-shrink-0">
+                            {producto.tipo === "insumo" ? "Insumo" : "Herram."}
+                          </Badge>
                         </div>
-                      </TableCell>
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                          <div>
+                            <p className="text-stone-400 text-xs">Precio compra</p>
+                            <p className="text-stone-700">{formatCurrency(producto.precio_compra)}</p>
+                          </div>
+                          <div>
+                            <p className="text-stone-400 text-xs">Cantidad</p>
+                            <p className="text-stone-700">{producto.cantidad_comprada} {producto.unidad}</p>
+                          </div>
+                          <div>
+                            <p className="text-stone-400 text-xs">Costo unitario</p>
+                            <p className="text-emerald-600 font-medium">{formatCurrency(getCostoUnitario(producto))}</p>
+                          </div>
+                          <div>
+                            <p className="text-stone-400 text-xs">Uso/servicio</p>
+                            <p className="text-stone-700">{producto.uso_por_servicio}</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleOpenDialog(producto)}
+                          className="h-10 w-10 p-0 rounded-full"
+                        >
+                          <Pencil className="w-5 h-5 text-stone-500" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(producto.id)}
+                          className="h-10 w-10 p-0 rounded-full"
+                        >
+                          <Trash2 className="w-5 h-5 text-rose-500" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop View - Table */}
+              <div className="hidden md:block overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-stone-50">
+                      <TableHead>Producto</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead className="text-right">Precio Compra</TableHead>
+                      <TableHead className="text-right">Cantidad</TableHead>
+                      <TableHead className="text-right">Costo Unit.</TableHead>
+                      <TableHead className="text-right">Uso/Servicio</TableHead>
+                      <TableHead className="w-[100px]"></TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredProducts.map((producto) => (
+                      <TableRow key={producto.id} className="hover:bg-stone-50">
+                        <TableCell className="font-medium">{producto.nombre}</TableCell>
+                        <TableCell>
+                          <Badge variant={producto.tipo === "insumo" ? "secondary" : "outline"} className="capitalize">
+                            {producto.tipo === "insumo" ? (
+                              <><Package className="w-3 h-3 mr-1" /> Insumo</>
+                            ) : (
+                              <><Wrench className="w-3 h-3 mr-1" /> Herramienta</>
+                            )}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">{formatCurrency(producto.precio_compra)}</TableCell>
+                        <TableCell className="text-right">{producto.cantidad_comprada} {producto.unidad}</TableCell>
+                        <TableCell className="text-right font-medium text-emerald-600">
+                          {formatCurrency(getCostoUnitario(producto))}
+                        </TableCell>
+                        <TableCell className="text-right">{producto.uso_por_servicio}</TableCell>
+                        <TableCell>
+                          <div className="flex gap-1 justify-end">
+                            <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(producto)} className="h-8 w-8">
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => handleDelete(producto.id)} className="h-8 w-8 text-red-500 hover:text-red-600">
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

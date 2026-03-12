@@ -243,7 +243,7 @@ export default function ClientesPage() {
         </Card>
       </div>
 
-      {/* Clients Table */}
+      {/* Clients - Mobile Cards / Desktop Table */}
       <Card className="bg-white border-stone-100" data-testid="clientes-table-card">
         <CardContent className="p-0">
           {filteredClientes.length === 0 ? (
@@ -263,90 +263,164 @@ export default function ClientesPage() {
               )}
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-stone-100">
-                    <TableHead className="text-xs font-semibold text-stone-500 uppercase">Cliente</TableHead>
-                    <TableHead className="text-xs font-semibold text-stone-500 uppercase">Contacto</TableHead>
-                    <TableHead className="text-xs font-semibold text-stone-500 uppercase text-center">Visitas</TableHead>
-                    <TableHead className="text-xs font-semibold text-stone-500 uppercase">Última Visita</TableHead>
-                    <TableHead className="text-xs font-semibold text-stone-500 uppercase text-right">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredClientes.map((cliente) => (
-                    <TableRow 
-                      key={cliente.id} 
-                      className="border-stone-100 hover:bg-stone-50"
-                      data-testid={`cliente-row-${cliente.id}`}
-                    >
-                      <TableCell>
-                        <div>
-                          <p className="font-medium text-stone-800">{cliente.nombre}</p>
-                          {cliente.notas && (
-                            <p className="text-xs text-stone-400 truncate max-w-[200px]">{cliente.notas}</p>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
+            <>
+              {/* Mobile View - Cards */}
+              <div className="md:hidden divide-y divide-stone-100">
+                {filteredClientes.map((cliente) => (
+                  <div 
+                    key={cliente.id}
+                    className="p-4 hover:bg-stone-50 active:bg-stone-100 transition-colors"
+                    data-testid={`cliente-card-${cliente.id}`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-stone-800 truncate">{cliente.nombre}</p>
+                        <div className="mt-2 space-y-1">
                           {cliente.telefono && (
-                            <div className="flex items-center gap-1 text-sm text-stone-600">
-                              <Phone className="w-3 h-3" />
+                            <a 
+                              href={`tel:${cliente.telefono}`}
+                              className="flex items-center gap-2 text-sm text-stone-600 tap-effect"
+                            >
+                              <Phone className="w-4 h-4 text-stone-400" />
                               {cliente.telefono}
-                            </div>
+                            </a>
                           )}
                           {cliente.email && (
-                            <div className="flex items-center gap-1 text-sm text-stone-600">
-                              <Mail className="w-3 h-3" />
-                              {cliente.email}
-                            </div>
+                            <a 
+                              href={`mailto:${cliente.email}`}
+                              className="flex items-center gap-2 text-sm text-stone-600 tap-effect"
+                            >
+                              <Mail className="w-4 h-4 text-stone-400" />
+                              <span className="truncate">{cliente.email}</span>
+                            </a>
                           )}
                         </div>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Badge variant="secondary" className="bg-stone-100">
-                          {cliente.total_visitas || 0}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {cliente.ultima_visita ? (
-                          <div className="flex items-center gap-1 text-sm text-stone-600">
-                            <Calendar className="w-3 h-3" />
-                            {new Date(cliente.ultima_visita).toLocaleDateString('es-ES')}
-                          </div>
-                        ) : (
-                          <span className="text-stone-400 text-sm">Sin visitas</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleOpenDialog(cliente)}
-                            className="h-8 w-8 p-0"
-                            data-testid={`edit-cliente-${cliente.id}`}
-                          >
-                            <Pencil className="w-4 h-4 text-stone-500" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(cliente.id)}
-                            className="h-8 w-8 p-0"
-                            data-testid={`delete-cliente-${cliente.id}`}
-                          >
-                            <Trash2 className="w-4 h-4 text-rose-500" />
-                          </Button>
+                        <div className="flex items-center gap-3 mt-3">
+                          <Badge variant="secondary" className="bg-stone-100 text-xs">
+                            {cliente.total_visitas || 0} visitas
+                          </Badge>
+                          {cliente.ultima_visita && (
+                            <span className="text-xs text-stone-400 flex items-center gap-1">
+                              <Calendar className="w-3 h-3" />
+                              {new Date(cliente.ultima_visita).toLocaleDateString('es-ES')}
+                            </span>
+                          )}
                         </div>
-                      </TableCell>
+                        {cliente.notas && (
+                          <p className="text-xs text-stone-400 mt-2 line-clamp-2">{cliente.notas}</p>
+                        )}
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleOpenDialog(cliente)}
+                          className="h-10 w-10 p-0 rounded-full"
+                          data-testid={`edit-cliente-mobile-${cliente.id}`}
+                        >
+                          <Pencil className="w-5 h-5 text-stone-500" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(cliente.id)}
+                          className="h-10 w-10 p-0 rounded-full"
+                          data-testid={`delete-cliente-mobile-${cliente.id}`}
+                        >
+                          <Trash2 className="w-5 h-5 text-rose-500" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop View - Table */}
+              <div className="hidden md:block overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-stone-100">
+                      <TableHead className="text-xs font-semibold text-stone-500 uppercase">Cliente</TableHead>
+                      <TableHead className="text-xs font-semibold text-stone-500 uppercase">Contacto</TableHead>
+                      <TableHead className="text-xs font-semibold text-stone-500 uppercase text-center">Visitas</TableHead>
+                      <TableHead className="text-xs font-semibold text-stone-500 uppercase">Última Visita</TableHead>
+                      <TableHead className="text-xs font-semibold text-stone-500 uppercase text-right">Acciones</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredClientes.map((cliente) => (
+                      <TableRow 
+                        key={cliente.id} 
+                        className="border-stone-100 hover:bg-stone-50"
+                        data-testid={`cliente-row-${cliente.id}`}
+                      >
+                        <TableCell>
+                          <div>
+                            <p className="font-medium text-stone-800">{cliente.nombre}</p>
+                            {cliente.notas && (
+                              <p className="text-xs text-stone-400 truncate max-w-[200px]">{cliente.notas}</p>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="space-y-1">
+                            {cliente.telefono && (
+                              <div className="flex items-center gap-1 text-sm text-stone-600">
+                                <Phone className="w-3 h-3" />
+                                {cliente.telefono}
+                              </div>
+                            )}
+                            {cliente.email && (
+                              <div className="flex items-center gap-1 text-sm text-stone-600">
+                                <Mail className="w-3 h-3" />
+                                {cliente.email}
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant="secondary" className="bg-stone-100">
+                            {cliente.total_visitas || 0}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {cliente.ultima_visita ? (
+                            <div className="flex items-center gap-1 text-sm text-stone-600">
+                              <Calendar className="w-3 h-3" />
+                              {new Date(cliente.ultima_visita).toLocaleDateString('es-ES')}
+                            </div>
+                          ) : (
+                            <span className="text-stone-400 text-sm">Sin visitas</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleOpenDialog(cliente)}
+                              className="h-8 w-8 p-0"
+                              data-testid={`edit-cliente-${cliente.id}`}
+                            >
+                              <Pencil className="w-4 h-4 text-stone-500" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDelete(cliente.id)}
+                              className="h-8 w-8 p-0"
+                              data-testid={`delete-cliente-${cliente.id}`}
+                            >
+                              <Trash2 className="w-4 h-4 text-rose-500" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

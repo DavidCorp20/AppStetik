@@ -244,3 +244,133 @@
 .focus-ring {
     @apply focus:outline-none focus:ring-2 focus:ring-stone-400 focus:ring-offset-2;
 }
+
+/* ===========================
+   MOBILE OPTIMIZATION STYLES
+   =========================== */
+
+/* Tap effect for touch devices */
+.tap-effect {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+.tap-effect:active {
+    transform: scale(0.97);
+    opacity: 0.9;
+}
+
+/* Safe area for iOS devices with notch */
+.safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.safe-area-top {
+    padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Smooth scroll for mobile */
+@supports (-webkit-overflow-scrolling: touch) {
+    .scroll-smooth {
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* Better touch targets (min 44x44px) */
+.touch-target {
+    min-height: 44px;
+    min-width: 44px;
+}
+
+/* Hide scrollbar on mobile but keep functionality */
+.hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+/* Mobile card styles */
+.mobile-card {
+    @apply bg-white rounded-xl p-4 border border-stone-100 
+           active:bg-stone-50 transition-colors;
+}
+
+/* Slide animations */
+@keyframes slide-down {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slide-up {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.animate-slide-down {
+    animation: slide-down 0.2s ease-out;
+}
+
+.animate-slide-up {
+    animation: slide-up 0.2s ease-out;
+}
+
+.animate-fade-in {
+    animation: fade-in 0.3s ease-out;
+}
+
+/* Line clamp utilities */
+.line-clamp-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Responsive text sizing */
+@media (max-width: 640px) {
+    .section-title {
+        @apply text-xl;
+    }
+    
+    .section-subtitle {
+        @apply text-sm;
+    }
+}
+
+/* Improved modal for mobile */
+@media (max-width: 640px) {
+    .modal-content {
+        @apply mx-2 max-h-[90vh] overflow-y-auto;
+    }
+}

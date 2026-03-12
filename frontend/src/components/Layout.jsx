@@ -555,6 +555,15 @@ const ComercioUserMenuDark = () => {
   );
 };
 
+// Bottom Navigation Items for Comercio Mobile
+const comercioBottomNav = [
+  { to: "/", icon: Home, label: "Inicio" },
+  { to: "/agenda", icon: Calendar, label: "Agenda" },
+  { to: "/calculadora", icon: Calculator, label: "Cotizar", primary: true },
+  { to: "/clientes", icon: Users, label: "Clientes" },
+  { to: "/facturacion", icon: Receipt, label: "Facturar" },
+];
+
 const ComercioLayout = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
@@ -565,7 +574,7 @@ const ComercioLayout = () => {
   const isInHerramientasGroup = comercioHerramientasGroup.items.some(item => location.pathname === item.to);
 
   return (
-    <div className="min-h-screen bg-[#F1F5F9]" data-testid="comercio-layout">
+    <div className="min-h-screen bg-[#F1F5F9] pb-20 lg:pb-0" data-testid="comercio-layout">
       {/* Header - Dark Blue Professional */}
       <header className="sticky top-0 z-40 bg-gradient-to-r from-[#0F172A] to-[#1E3A5F] shadow-lg">
         <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
@@ -744,8 +753,38 @@ const ComercioLayout = () => {
         <Outlet />
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-[#E2E8F0] bg-white mt-auto">
+      {/* Mobile Bottom Navigation - Only visible on small screens */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-[#E2E8F0] safe-area-bottom" data-testid="comercio-bottom-nav">
+        <div className="flex items-center justify-around h-16 max-w-lg mx-auto">
+          {comercioBottomNav.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.to === "/"}
+              className={({ isActive }) => cn(
+                "flex flex-col items-center justify-center w-16 h-full transition-all tap-effect",
+                item.primary ? "relative -top-3" : "",
+                isActive && !item.primary ? "text-[#1E3A5F]" : "text-[#94A3B8]"
+              )}
+              data-testid={`comercio-nav-${item.label.toLowerCase()}`}
+            >
+              {item.primary ? (
+                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#1E3A5F] to-[#3B82F6] flex items-center justify-center shadow-lg shadow-blue-500/30 hover:scale-110 active:scale-95 transition-transform">
+                  <item.icon className="w-6 h-6 text-white" />
+                </div>
+              ) : (
+                <>
+                  <item.icon className="w-5 h-5" />
+                  <span className="text-[10px] mt-1 font-medium">{item.label}</span>
+                </>
+              )}
+            </NavLink>
+          ))}
+        </div>
+      </nav>
+
+      {/* Footer - Hidden on mobile, visible on desktop */}
+      <footer className="hidden lg:block border-t border-[#E2E8F0] bg-white mt-auto">
         <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between text-xs text-[#64748B]">
             <span className="flex items-center gap-2">

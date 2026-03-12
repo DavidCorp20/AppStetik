@@ -63,6 +63,29 @@
 
 ---
 
+### IMPLEMENTADO HOY (12 Mar 2026) - OPTIMIZACIÓN MÓVIL ✅
+
+#### Bottom Navigation para Comercio
+- Barra de navegación inferior fija en pantallas < 1024px
+- 5 accesos directos: Inicio, Agenda, Cotizar (botón primario), Clientes, Facturar
+- Diseño touch-friendly con tap-effect animations
+- Safe-area support para dispositivos con notch
+
+#### Vista de Cards Responsiva
+- **ClientesPage**: Cards en móvil (<768px), tabla en desktop
+- **ProductosPage**: Cards en móvil (<768px), tabla en desktop
+- Cards muestran información condensada con acciones rápidas
+- Links clickeables para teléfono (tel:) y email (mailto:)
+
+#### Estilos CSS Móviles
+- `.tap-effect`: Feedback visual en taps (scale + opacity)
+- `.safe-area-bottom`: Padding para iPhone X+ 
+- `.hide-scrollbar`: Ocultar scrollbar manteniendo scroll
+- `.line-clamp-1/2`: Truncar texto a 1-2 líneas
+- Animaciones: slide-down, slide-up, fade-in
+
+---
+
 ### IMPLEMENTADO ANTERIORMENTE
 
 #### 1. Sistema de Pagos Tradicionales ✅ (NUEVO)
@@ -156,8 +179,8 @@
 | Catálogo Servicios | ✅ |
 | **Multi-Usuario Backend** | ✅ |
 | **RBAC (Roles/Permisos)** | ✅ |
+| **Optimización Móvil** | ✅ |
 | Multi-Usuario Frontend | 🔄 Pendiente |
-| Optimización Móvil | 🔄 Pendiente |
 
 ---
 
@@ -210,12 +233,6 @@
 - [ ] Componente `ProtectedAction` para botones/acciones
 - [ ] Ocultar elementos del menú según permisos
 - [ ] Mostrar mensaje de acceso denegado
-
-#### Fase 4: Optimización Móvil (P2)
-- [ ] Bottom navigation bar para móvil
-- [ ] Convertir tablas a cards responsivas
-- [ ] Mejorar modales para pantallas pequeñas
-- [ ] Touch-friendly buttons y spacing
 
 #### Fase 5: Estabilidad (P2)
 - [ ] Global loading states
