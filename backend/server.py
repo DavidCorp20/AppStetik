@@ -132,6 +132,44 @@ class UserType(str, Enum):
     PERSONAL = "personal"
     BUSINESS = "business"
 
+# Roles for business sub-users
+class BusinessUserRole(str, Enum):
+    OWNER = "owner"          # Full access - the business account holder
+    ADMIN = "administrador"  # Operational access - can manage most things
+    EMPLOYEE = "empleado"    # Limited daily use - basic operations only
+
+# Default permissions for each business role
+BUSINESS_ROLE_PERMISSIONS = {
+    "owner": [
+        "view_dashboard", "edit_settings", "manage_users",
+        "view_clients", "create_clients", "edit_clients", "delete_clients",
+        "view_products", "create_products", "edit_products", "delete_products",
+        "view_services", "create_services", "edit_services", "delete_services",
+        "view_appointments", "create_appointments", "edit_appointments", "delete_appointments",
+        "view_invoices", "create_invoices", "edit_invoices", "delete_invoices",
+        "view_reports", "export_data", "view_finances", "manage_inventory",
+        "view_employees", "manage_employees", "view_payments", "manage_payments"
+    ],
+    "administrador": [
+        "view_dashboard",
+        "view_clients", "create_clients", "edit_clients",
+        "view_products", "create_products", "edit_products",
+        "view_services", "create_services", "edit_services",
+        "view_appointments", "create_appointments", "edit_appointments", "delete_appointments",
+        "view_invoices", "create_invoices", "edit_invoices",
+        "view_reports", "manage_inventory",
+        "view_employees"
+    ],
+    "empleado": [
+        "view_dashboard",
+        "view_clients",
+        "view_products",
+        "view_services",
+        "view_appointments", "create_appointments",
+        "view_invoices", "create_invoices"
+    ]
+}
+
 # ======================
 # AUTH MODELS
 # ======================
@@ -191,7 +229,7 @@ class CalculationHistory(BaseModel):
     cliente_nombre: str = ""
     notas: str = ""
 
-# Employee Model (for business users)
+# Employee Model (for business users) - Legacy, kept for backward compatibility
 class Employee(BaseModel):
     id: str = ""
     user_id: str = ""
@@ -202,6 +240,45 @@ class Employee(BaseModel):
     comision_porcentaje: float = 0
     activo: bool = True
     created_at: str = ""
+
+# ======================
+# BUSINESS SUB-USERS MODELS (Multi-User System)
+# ======================
+class BusinessUserCreate(BaseModel):
+    """Model for creating a sub-user within a business account"""
+    nombre: str
+    email: str
+    password: str
+    telefono: str = ""
+    role: BusinessUserRole = BusinessUserRole.EMPLOYEE
+    permissions: List[str] = []  # Custom permissions (optional, defaults to role permissions)
+    especialidad: str = ""
+    comision_porcentaje: float = 0
+
+class BusinessUserUpdate(BaseModel):
+    """Model for updating a business sub-user"""
+    nombre: Optional[str] = None
+    telefono: Optional[str] = None
+    role: Optional[BusinessUserRole] = None
+    permissions: Optional[List[str]] = None
+    especialidad: Optional[str] = None
+    comision_porcentaje: Optional[float] = None
+    activo: Optional[bool] = None
+
+class BusinessUserResponse(BaseModel):
+    """Response model for business sub-users"""
+    id: str
+    business_id: str
+    nombre: str
+    email: str
+    telefono: str = ""
+    role: str
+    permissions: List[str] = []
+    especialidad: str = ""
+    comision_porcentaje: float = 0
+    activo: bool = True
+    last_login: Optional[str] = None
+    created_at: str
 
 # Inventory Alert Model
 class InventoryAlert(BaseModel):
@@ -292,14 +369,51 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("sub")
+        token_type: str = payload.get("type", "user")  # "user" or "business_user"
+        business_id: str = payload.get("business_id")
+        
         if user_id is None:
             raise HTTPException(status_code=401, detail="Token inválido")
     except JWTError:
         raise HTTPException(status_code=401, detail="Token inválido o expirado")
     
+    # Handle business sub-user tokens
+    if token_type == "business_user" and business_id:
+        business_user = await db.business_users.find_one({"id": user_id}, {"_id": 0, "password": 0})
+        if business_user is None:
+            raise HTTPException(status_code=401, detail="Usuario de negocio no encontrado")
+        
+        # Check if still active
+        if not business_user.get("activo", True):
+            raise HTTPException(status_code=403, detail="Tu cuenta ha sido desactivada")
+        
+        # Get business account for plan info
+        business_account = await db.users.find_one({"id": business_id}, {"_id": 0, "password": 0})
+        if business_account is None:
+            raise HTTPException(status_code=401, detail="Cuenta de negocio no encontrada")
+        
+        # Return enriched business user data
+        return {
+            **business_user,
+            "is_business_user": True,
+            "business_id": business_id,
+            "business_role": business_user.get("role"),
+            "plan": business_account.get("plan", "free"),
+            "user_type": "business",
+            "nombre_negocio": business_account.get("nombre_negocio", ""),
+            # Use business account's ID for data queries
+            "effective_user_id": business_id
+        }
+    
+    # Standard user lookup
     user = await db.users.find_one({"id": user_id}, {"_id": 0, "password": 0})
     if user is None:
         raise HTTPException(status_code=401, detail="Usuario no encontrado")
+    
+    # Add effective_user_id for consistent data queries
+    user["effective_user_id"] = user["id"]
+    user["is_business_user"] = False
+    
     return user
 
 async def check_plan_limit(user: dict, resource: str, current_count: int):
@@ -324,6 +438,12 @@ async def check_premium_feature(user: dict, feature: str):
             status_code=403,
             detail=f"Esta función requiere plan Premium. Actualiza tu plan para acceder."
         )
+
+def get_data_user_id(user: dict) -> str:
+    """Get the user ID to use for data queries. 
+    For business sub-users, returns the business owner's ID.
+    For regular users, returns their own ID."""
+    return user.get("effective_user_id") or user.get("business_id") or user.get("id")
 
 # ======================
 # MODELS
@@ -612,11 +732,92 @@ async def login(credentials: UserLogin, request: Request):
     if rate_limiter.is_blocked(client_ip):
         raise HTTPException(status_code=429, detail="Demasiados intentos. Espera 5 minutos.")
     
+    # First try to find in main users collection
     user = await db.users.find_one({"email": credentials.email.lower()})
-    if not user:
-        rate_limiter.add_request(client_ip)
-        raise HTTPException(status_code=401, detail="Email o contraseña incorrectos")
     
+    # If not found in main users, try business_users
+    if not user:
+        business_user = await db.business_users.find_one({"email": credentials.email.lower()})
+        if business_user:
+            # Verify password for business user
+            if not verify_password(credentials.password, business_user["password"]):
+                rate_limiter.add_request(client_ip)
+                raise HTTPException(status_code=401, detail="Email o contraseña incorrectos")
+            
+            # Check if business user is active
+            if not business_user.get("activo", True):
+                raise HTTPException(status_code=403, detail="Tu cuenta ha sido desactivada. Contacta al propietario del negocio.")
+            
+            # Get the parent business account
+            business_account = await db.users.find_one({"id": business_user["business_id"]})
+            if not business_account:
+                raise HTTPException(status_code=500, detail="Error de configuración: cuenta de negocio no encontrada")
+            
+            # Check if business account is active and not expired
+            if business_account.get("is_disabled", False):
+                raise HTTPException(status_code=403, detail="La cuenta del negocio ha sido deshabilitada.")
+            
+            account_status = business_account.get("account_status", "active")
+            if account_status != "active":
+                raise HTTPException(status_code=403, detail="La cuenta del negocio no está activa.")
+            
+            # Check business subscription
+            now = datetime.now(timezone.utc)
+            sub_ends = business_account.get("subscription_ends_at")
+            trial_ends = business_account.get("trial_ends_at")
+            
+            is_expired = False
+            if sub_ends:
+                sub_end_date = datetime.fromisoformat(sub_ends.replace('Z', '+00:00'))
+                if now > sub_end_date:
+                    is_expired = True
+            elif trial_ends:
+                trial_end_date = datetime.fromisoformat(trial_ends.replace('Z', '+00:00'))
+                if now > trial_end_date:
+                    is_expired = True
+            
+            if is_expired:
+                raise HTTPException(
+                    status_code=403,
+                    detail="La suscripción del negocio ha vencido. Contacta al propietario."
+                )
+            
+            # Update last login for business user
+            await db.business_users.update_one(
+                {"id": business_user["id"]},
+                {"$set": {"last_login": datetime.now(timezone.utc).isoformat()}}
+            )
+            
+            # Create token with business user identifier
+            access_token = create_access_token(data={
+                "sub": business_user["id"],
+                "type": "business_user",
+                "business_id": business_user["business_id"]
+            })
+            
+            return TokenResponse(
+                access_token=access_token,
+                user=UserResponse(
+                    id=business_user["id"],
+                    email=business_user["email"],
+                    nombre=business_user["nombre"],
+                    nombre_negocio=business_account.get("nombre_negocio", ""),
+                    telefono=business_user.get("telefono", ""),
+                    plan=business_account.get("plan", "free"),
+                    role=business_user.get("role", "empleado"),
+                    user_type="business",
+                    created_at=business_user["created_at"],
+                    account_status="active",
+                    trial_ends_at=business_account.get("trial_ends_at"),
+                    subscription_starts_at=business_account.get("subscription_starts_at"),
+                    subscription_ends_at=business_account.get("subscription_ends_at")
+                )
+            )
+        else:
+            rate_limiter.add_request(client_ip)
+            raise HTTPException(status_code=401, detail="Email o contraseña incorrectos")
+    
+    # Main user login flow
     if not verify_password(credentials.password, user["password"]):
         rate_limiter.add_request(client_ip)
         raise HTTPException(status_code=401, detail="Email o contraseña incorrectos")
@@ -1396,6 +1597,324 @@ async def delete_empleado(empleado_id: str, current_user: dict = Depends(get_cur
     return {"message": "Empleado eliminado"}
 
 # ======================
+# ENDPOINTS - Business Sub-Users (Multi-User System)
+# ======================
+def get_effective_business_id(user: dict) -> str:
+    """Get the business ID - either the user's own ID (if owner) or their business_id (if sub-user)"""
+    return user.get("business_id") or user.get("id")
+
+def get_user_permissions(user: dict) -> List[str]:
+    """Get effective permissions for a user"""
+    # If it's a business sub-user, return their permissions
+    if user.get("is_business_user"):
+        return user.get("permissions", [])
+    # If it's the main business account, they have owner permissions
+    if user.get("user_type") == "business":
+        return BUSINESS_ROLE_PERMISSIONS["owner"]
+    # Personal accounts don't have business permissions
+    return []
+
+def check_permission(user: dict, permission: str):
+    """Check if user has a specific permission"""
+    permissions = get_user_permissions(user)
+    if permission not in permissions:
+        raise HTTPException(
+            status_code=403, 
+            detail=f"No tienes permiso para esta acción: {permission}"
+        )
+
+async def get_business_owner(current_user: dict = Depends(get_current_user)):
+    """Dependency to check if current user is a business owner"""
+    # Check if it's a main business account
+    if current_user.get("user_type") == "business" and not current_user.get("is_business_user"):
+        return current_user
+    # Check if it's a business sub-user with owner role
+    if current_user.get("is_business_user") and current_user.get("business_role") == "owner":
+        return current_user
+    raise HTTPException(
+        status_code=403, 
+        detail="Solo el propietario del negocio puede realizar esta acción"
+    )
+
+async def get_business_admin_or_owner(current_user: dict = Depends(get_current_user)):
+    """Dependency to check if user is owner or admin"""
+    if current_user.get("user_type") == "business" and not current_user.get("is_business_user"):
+        return current_user
+    if current_user.get("is_business_user"):
+        role = current_user.get("business_role", "")
+        if role in ["owner", "administrador"]:
+            return current_user
+    raise HTTPException(
+        status_code=403,
+        detail="Solo propietarios y administradores pueden realizar esta acción"
+    )
+
+@api_router.get("/business/users", response_model=List[BusinessUserResponse])
+async def get_business_users(current_user: dict = Depends(get_business_admin_or_owner)):
+    """Get all sub-users for a business"""
+    business_id = get_effective_business_id(current_user)
+    
+    users = await db.business_users.find(
+        {"business_id": business_id},
+        {"_id": 0, "password": 0}
+    ).to_list(100)
+    
+    return users
+
+@api_router.get("/business/users/{user_id}", response_model=BusinessUserResponse)
+async def get_business_user(user_id: str, current_user: dict = Depends(get_business_admin_or_owner)):
+    """Get a specific sub-user"""
+    business_id = get_effective_business_id(current_user)
+    
+    user = await db.business_users.find_one(
+        {"id": user_id, "business_id": business_id},
+        {"_id": 0, "password": 0}
+    )
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    return user
+
+@api_router.post("/business/users", response_model=BusinessUserResponse)
+async def create_business_user(
+    user_data: BusinessUserCreate,
+    current_user: dict = Depends(get_business_owner)
+):
+    """Create a new sub-user for the business"""
+    business_id = get_effective_business_id(current_user)
+    
+    # Check if email already exists in main users or business_users
+    existing_main = await db.users.find_one({"email": user_data.email.lower()})
+    existing_sub = await db.business_users.find_one({"email": user_data.email.lower()})
+    
+    if existing_main or existing_sub:
+        raise HTTPException(status_code=400, detail="Este email ya está registrado")
+    
+    # Get default permissions for role if not provided
+    permissions = user_data.permissions if user_data.permissions else BUSINESS_ROLE_PERMISSIONS.get(user_data.role.value, [])
+    
+    now = datetime.now(timezone.utc)
+    user_doc = {
+        "id": str(uuid.uuid4()),
+        "business_id": business_id,
+        "nombre": sanitize_string(user_data.nombre),
+        "email": user_data.email.lower(),
+        "password": get_password_hash(user_data.password),
+        "telefono": sanitize_string(user_data.telefono),
+        "role": user_data.role.value,
+        "permissions": permissions,
+        "especialidad": sanitize_string(user_data.especialidad),
+        "comision_porcentaje": user_data.comision_porcentaje,
+        "activo": True,
+        "last_login": None,
+        "created_at": now.isoformat(),
+        "created_by": current_user.get("id")
+    }
+    
+    await db.business_users.insert_one(user_doc)
+    
+    # Return without password
+    user_doc.pop("password", None)
+    user_doc.pop("_id", None)
+    
+    return user_doc
+
+@api_router.put("/business/users/{user_id}", response_model=BusinessUserResponse)
+async def update_business_user(
+    user_id: str,
+    user_data: BusinessUserUpdate,
+    current_user: dict = Depends(get_business_owner)
+):
+    """Update a sub-user"""
+    business_id = get_effective_business_id(current_user)
+    
+    # Find the user
+    existing = await db.business_users.find_one({"id": user_id, "business_id": business_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    # Build update dict with only provided fields
+    update_data = {}
+    if user_data.nombre is not None:
+        update_data["nombre"] = sanitize_string(user_data.nombre)
+    if user_data.telefono is not None:
+        update_data["telefono"] = sanitize_string(user_data.telefono)
+    if user_data.role is not None:
+        update_data["role"] = user_data.role.value
+        # Update permissions to default for new role if not explicitly provided
+        if user_data.permissions is None:
+            update_data["permissions"] = BUSINESS_ROLE_PERMISSIONS.get(user_data.role.value, [])
+    if user_data.permissions is not None:
+        update_data["permissions"] = user_data.permissions
+    if user_data.especialidad is not None:
+        update_data["especialidad"] = sanitize_string(user_data.especialidad)
+    if user_data.comision_porcentaje is not None:
+        update_data["comision_porcentaje"] = user_data.comision_porcentaje
+    if user_data.activo is not None:
+        update_data["activo"] = user_data.activo
+    
+    if update_data:
+        update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+        await db.business_users.update_one(
+            {"id": user_id, "business_id": business_id},
+            {"$set": update_data}
+        )
+    
+    # Get updated user
+    updated = await db.business_users.find_one(
+        {"id": user_id},
+        {"_id": 0, "password": 0}
+    )
+    
+    return updated
+
+@api_router.delete("/business/users/{user_id}")
+async def delete_business_user(user_id: str, current_user: dict = Depends(get_business_owner)):
+    """Delete a sub-user"""
+    business_id = get_effective_business_id(current_user)
+    
+    result = await db.business_users.delete_one({
+        "id": user_id,
+        "business_id": business_id
+    })
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    return {"message": "Usuario eliminado exitosamente"}
+
+@api_router.post("/business/users/{user_id}/reset-password")
+async def reset_business_user_password(
+    user_id: str,
+    current_user: dict = Depends(get_business_owner)
+):
+    """Reset a sub-user's password"""
+    business_id = get_effective_business_id(current_user)
+    
+    existing = await db.business_users.find_one({"id": user_id, "business_id": business_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    # Generate temporary password
+    temp_password = secrets.token_urlsafe(12)
+    hashed = get_password_hash(temp_password)
+    
+    await db.business_users.update_one(
+        {"id": user_id},
+        {"$set": {"password": hashed, "password_reset_required": True}}
+    )
+    
+    return {
+        "message": "Contraseña restablecida exitosamente",
+        "temp_password": temp_password,
+        "note": "El usuario deberá cambiar esta contraseña al iniciar sesión"
+    }
+
+@api_router.get("/business/roles")
+async def get_business_roles(current_user: dict = Depends(get_current_user)):
+    """Get available business roles and their default permissions"""
+    if current_user.get("user_type") != "business":
+        raise HTTPException(status_code=403, detail="Solo disponible para cuentas de negocio")
+    
+    roles = []
+    role_descriptions = {
+        "owner": {
+            "nombre": "Propietario",
+            "descripcion": "Acceso completo a todas las funciones del negocio"
+        },
+        "administrador": {
+            "nombre": "Administrador",
+            "descripcion": "Acceso operacional - puede gestionar la mayoría de funciones"
+        },
+        "empleado": {
+            "nombre": "Empleado",
+            "descripcion": "Acceso limitado - operaciones básicas del día a día"
+        }
+    }
+    
+    for role_key, permissions in BUSINESS_ROLE_PERMISSIONS.items():
+        role_info = role_descriptions.get(role_key, {"nombre": role_key, "descripcion": ""})
+        roles.append({
+            "id": role_key,
+            "nombre": role_info["nombre"],
+            "descripcion": role_info["descripcion"],
+            "permissions": permissions,
+            "total_permissions": len(permissions)
+        })
+    
+    return roles
+
+@api_router.get("/business/permissions")
+async def get_all_permissions(current_user: dict = Depends(get_current_user)):
+    """Get all available permissions with descriptions"""
+    if current_user.get("user_type") != "business":
+        raise HTTPException(status_code=403, detail="Solo disponible para cuentas de negocio")
+    
+    permission_descriptions = {
+        "view_dashboard": {"nombre": "Ver Dashboard", "categoria": "General"},
+        "edit_settings": {"nombre": "Editar Configuración", "categoria": "General"},
+        "manage_users": {"nombre": "Gestionar Usuarios", "categoria": "General"},
+        "view_clients": {"nombre": "Ver Clientes", "categoria": "Clientes"},
+        "create_clients": {"nombre": "Crear Clientes", "categoria": "Clientes"},
+        "edit_clients": {"nombre": "Editar Clientes", "categoria": "Clientes"},
+        "delete_clients": {"nombre": "Eliminar Clientes", "categoria": "Clientes"},
+        "view_products": {"nombre": "Ver Productos", "categoria": "Productos"},
+        "create_products": {"nombre": "Crear Productos", "categoria": "Productos"},
+        "edit_products": {"nombre": "Editar Productos", "categoria": "Productos"},
+        "delete_products": {"nombre": "Eliminar Productos", "categoria": "Productos"},
+        "view_services": {"nombre": "Ver Servicios", "categoria": "Servicios"},
+        "create_services": {"nombre": "Crear Servicios", "categoria": "Servicios"},
+        "edit_services": {"nombre": "Editar Servicios", "categoria": "Servicios"},
+        "delete_services": {"nombre": "Eliminar Servicios", "categoria": "Servicios"},
+        "view_appointments": {"nombre": "Ver Citas", "categoria": "Citas"},
+        "create_appointments": {"nombre": "Crear Citas", "categoria": "Citas"},
+        "edit_appointments": {"nombre": "Editar Citas", "categoria": "Citas"},
+        "delete_appointments": {"nombre": "Cancelar Citas", "categoria": "Citas"},
+        "view_invoices": {"nombre": "Ver Facturas", "categoria": "Facturación"},
+        "create_invoices": {"nombre": "Crear Facturas", "categoria": "Facturación"},
+        "edit_invoices": {"nombre": "Editar Facturas", "categoria": "Facturación"},
+        "delete_invoices": {"nombre": "Eliminar Facturas", "categoria": "Facturación"},
+        "view_reports": {"nombre": "Ver Reportes", "categoria": "Reportes"},
+        "export_data": {"nombre": "Exportar Datos", "categoria": "Reportes"},
+        "view_finances": {"nombre": "Ver Finanzas", "categoria": "Finanzas"},
+        "manage_inventory": {"nombre": "Gestionar Inventario", "categoria": "Inventario"},
+        "view_employees": {"nombre": "Ver Empleados", "categoria": "Personal"},
+        "manage_employees": {"nombre": "Gestionar Empleados", "categoria": "Personal"},
+        "view_payments": {"nombre": "Ver Pagos", "categoria": "Pagos"},
+        "manage_payments": {"nombre": "Gestionar Pagos", "categoria": "Pagos"}
+    }
+    
+    # Group by category
+    by_category = {}
+    for perm_id, info in permission_descriptions.items():
+        cat = info["categoria"]
+        if cat not in by_category:
+            by_category[cat] = []
+        by_category[cat].append({
+            "id": perm_id,
+            "nombre": info["nombre"]
+        })
+    
+    return {
+        "permissions": permission_descriptions,
+        "by_category": by_category
+    }
+
+@api_router.get("/business/my-permissions")
+async def get_my_permissions(current_user: dict = Depends(get_current_user)):
+    """Get current user's permissions"""
+    permissions = get_user_permissions(current_user)
+    
+    return {
+        "user_id": current_user.get("id"),
+        "role": current_user.get("business_role") or ("owner" if current_user.get("user_type") == "business" else "personal"),
+        "is_business_user": current_user.get("is_business_user", False),
+        "permissions": permissions,
+        "total_permissions": len(permissions)
+    }
+
+# ======================
 # ENDPOINTS - Inventory Alerts
 # ======================
 @api_router.get("/alertas-inventario")
@@ -1684,7 +2203,8 @@ async def get_tips_rentabilidad(current_user: dict = Depends(get_current_user)):
 # ======================
 @api_router.get("/productos", response_model=List[Producto])
 async def get_productos(current_user: dict = Depends(get_current_user)):
-    productos = await db.productos.find({"user_id": current_user["id"]}, {"_id": 0}).to_list(1000)
+    user_id = get_data_user_id(current_user)
+    productos = await db.productos.find({"user_id": user_id}, {"_id": 0}).to_list(1000)
     # Ensure cantidad_disponible exists (fallback to cantidad_comprada for legacy products)
     for p in productos:
         if p.get('cantidad_disponible') is None:
@@ -1695,8 +2215,9 @@ async def get_productos(current_user: dict = Depends(get_current_user)):
 
 @api_router.post("/productos", response_model=Producto)
 async def create_producto(producto: ProductoCreate, current_user: dict = Depends(get_current_user)):
+    user_id = get_data_user_id(current_user)
     # Check plan limit
-    count = await db.productos.count_documents({"user_id": current_user["id"]})
+    count = await db.productos.count_documents({"user_id": user_id})
     await check_plan_limit(current_user, "productos", count)
     
     producto_dict = producto.model_dump()
@@ -1707,16 +2228,17 @@ async def create_producto(producto: ProductoCreate, current_user: dict = Depends
     
     doc = producto_obj.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
-    doc['user_id'] = current_user["id"]
+    doc['user_id'] = user_id
     await db.productos.insert_one(doc)
     return producto_obj
 
 @api_router.get("/productos/compare-price/{nombre}")
 async def compare_product_price(nombre: str, new_price: float, current_user: dict = Depends(get_current_user)):
     """Compare new purchase price with last price for the same product"""
+    user_id = get_data_user_id(current_user)
     # Find existing product with same name
     existing = await db.productos.find_one(
-        {"user_id": current_user["id"], "nombre": {"$regex": f"^{nombre}$", "$options": "i"}},
+        {"user_id": user_id, "nombre": {"$regex": f"^{nombre}$", "$options": "i"}},
         {"_id": 0, "nombre": 1, "precio_compra": 1, "created_at": 1}
     )
     
@@ -1740,6 +2262,7 @@ async def compare_product_price(nombre: str, new_price: float, current_user: dic
 
 @api_router.put("/productos/{producto_id}", response_model=Producto)
 async def update_producto(producto_id: str, producto: ProductoCreate, current_user: dict = Depends(get_current_user)):
+    user_id = get_data_user_id(current_user)
     producto_dict = producto.model_dump()
     # Calcular costo unitario
     costo_unitario = 0.0
@@ -1749,7 +2272,7 @@ async def update_producto(producto_id: str, producto: ProductoCreate, current_us
     producto_dict['costo_unitario'] = costo_unitario
     
     result = await db.productos.update_one(
-        {"id": producto_id, "user_id": current_user["id"]},
+        {"id": producto_id, "user_id": user_id},
         {"$set": producto_dict}
     )
     if result.matched_count == 0:
@@ -1760,7 +2283,8 @@ async def update_producto(producto_id: str, producto: ProductoCreate, current_us
 
 @api_router.delete("/productos/{producto_id}")
 async def delete_producto(producto_id: str, current_user: dict = Depends(get_current_user)):
-    result = await db.productos.delete_one({"id": producto_id, "user_id": current_user["id"]})
+    user_id = get_data_user_id(current_user)
+    result = await db.productos.delete_one({"id": producto_id, "user_id": user_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
     return {"message": "Producto eliminado"}
@@ -1770,12 +2294,14 @@ async def delete_producto(producto_id: str, current_user: dict = Depends(get_cur
 # ======================
 @api_router.get("/estilos", response_model=List[Estilo])
 async def get_estilos(current_user: dict = Depends(get_current_user)):
-    estilos = await db.estilos.find({"user_id": current_user["id"]}, {"_id": 0}).to_list(1000)
+    user_id = get_data_user_id(current_user)
+    estilos = await db.estilos.find({"user_id": user_id}, {"_id": 0}).to_list(1000)
     return estilos
 
 @api_router.post("/estilos", response_model=Estilo)
 async def create_estilo(estilo: EstiloCreate, current_user: dict = Depends(get_current_user)):
-    count = await db.estilos.count_documents({"user_id": current_user["id"]})
+    user_id = get_data_user_id(current_user)
+    count = await db.estilos.count_documents({"user_id": user_id})
     await check_plan_limit(current_user, "estilos", count)
     
     estilo_dict = estilo.model_dump()
@@ -1784,31 +2310,32 @@ async def create_estilo(estilo: EstiloCreate, current_user: dict = Depends(get_c
     # Calcular costo de productos
     costo_total = 0.0
     for prod_uso in estilo_obj.productos_usados:
-        producto = await db.productos.find_one({"id": prod_uso.producto_id, "user_id": current_user["id"]}, {"_id": 0})
+        producto = await db.productos.find_one({"id": prod_uso.producto_id, "user_id": user_id}, {"_id": 0})
         if producto:
             costo_total += producto['costo_unitario'] * prod_uso.cantidad
     estilo_obj.costo_productos = costo_total
     
     doc = estilo_obj.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
-    doc['user_id'] = current_user["id"]
+    doc['user_id'] = user_id
     await db.estilos.insert_one(doc)
     return estilo_obj
 
 @api_router.put("/estilos/{estilo_id}", response_model=Estilo)
 async def update_estilo(estilo_id: str, estilo: EstiloCreate, current_user: dict = Depends(get_current_user)):
+    user_id = get_data_user_id(current_user)
     estilo_dict = estilo.model_dump()
     
     # Recalcular costo de productos
     costo_total = 0.0
     for prod_uso in estilo_dict['productos_usados']:
-        producto = await db.productos.find_one({"id": prod_uso['producto_id'], "user_id": current_user["id"]}, {"_id": 0})
+        producto = await db.productos.find_one({"id": prod_uso['producto_id'], "user_id": user_id}, {"_id": 0})
         if producto:
             costo_total += producto['costo_unitario'] * prod_uso['cantidad']
     estilo_dict['costo_productos'] = costo_total
     
     result = await db.estilos.update_one(
-        {"id": estilo_id, "user_id": current_user["id"]},
+        {"id": estilo_id, "user_id": user_id},
         {"$set": estilo_dict}
     )
     if result.matched_count == 0:
@@ -1819,7 +2346,8 @@ async def update_estilo(estilo_id: str, estilo: EstiloCreate, current_user: dict
 
 @api_router.delete("/estilos/{estilo_id}")
 async def delete_estilo(estilo_id: str, current_user: dict = Depends(get_current_user)):
-    result = await db.estilos.delete_one({"id": estilo_id, "user_id": current_user["id"]})
+    user_id = get_data_user_id(current_user)
+    result = await db.estilos.delete_one({"id": estilo_id, "user_id": user_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Estilo no encontrado")
     return {"message": "Estilo eliminado"}
@@ -1829,12 +2357,14 @@ async def delete_estilo(estilo_id: str, current_user: dict = Depends(get_current
 # ======================
 @api_router.get("/disenos", response_model=List[Diseno])
 async def get_disenos(current_user: dict = Depends(get_current_user)):
-    disenos = await db.disenos.find({"user_id": current_user["id"]}, {"_id": 0}).to_list(1000)
+    user_id = get_data_user_id(current_user)
+    disenos = await db.disenos.find({"user_id": user_id}, {"_id": 0}).to_list(1000)
     return disenos
 
 @api_router.post("/disenos", response_model=Diseno)
 async def create_diseno(diseno: DisenoCreate, current_user: dict = Depends(get_current_user)):
-    count = await db.disenos.count_documents({"user_id": current_user["id"]})
+    user_id = get_data_user_id(current_user)
+    count = await db.disenos.count_documents({"user_id": user_id})
     await check_plan_limit(current_user, "disenos", count)
     
     diseno_dict = diseno.model_dump()
@@ -1842,7 +2372,7 @@ async def create_diseno(diseno: DisenoCreate, current_user: dict = Depends(get_c
     
     doc = diseno_obj.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
-    doc['user_id'] = current_user["id"]
+    doc['user_id'] = user_id
     await db.disenos.insert_one(doc)
     return diseno_obj
 
@@ -2188,34 +2718,38 @@ async def seed_data(current_user: dict = Depends(get_current_user)):
 # ======================
 @api_router.get("/clientes", response_model=List[Cliente])
 async def get_clientes(current_user: dict = Depends(get_current_user)):
-    clientes = await db.clientes.find({"user_id": current_user["id"]}, {"_id": 0}).to_list(1000)
+    user_id = get_data_user_id(current_user)
+    clientes = await db.clientes.find({"user_id": user_id}, {"_id": 0}).to_list(1000)
     return clientes
 
 @api_router.get("/clientes/{cliente_id}", response_model=Cliente)
 async def get_cliente(cliente_id: str, current_user: dict = Depends(get_current_user)):
-    cliente = await db.clientes.find_one({"id": cliente_id, "user_id": current_user["id"]}, {"_id": 0})
+    user_id = get_data_user_id(current_user)
+    cliente = await db.clientes.find_one({"id": cliente_id, "user_id": user_id}, {"_id": 0})
     if not cliente:
         raise HTTPException(status_code=404, detail="Cliente no encontrado")
     return cliente
 
 @api_router.post("/clientes", response_model=Cliente)
 async def create_cliente(cliente: ClienteCreate, current_user: dict = Depends(get_current_user)):
-    count = await db.clientes.count_documents({"user_id": current_user["id"]})
+    user_id = get_data_user_id(current_user)
+    count = await db.clientes.count_documents({"user_id": user_id})
     await check_plan_limit(current_user, "clientes", count)
     
     cliente_dict = cliente.model_dump()
     cliente_obj = Cliente(**cliente_dict)
     doc = cliente_obj.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
-    doc['user_id'] = current_user["id"]
+    doc['user_id'] = user_id
     await db.clientes.insert_one(doc)
     return cliente_obj
 
 @api_router.put("/clientes/{cliente_id}", response_model=Cliente)
 async def update_cliente(cliente_id: str, cliente: ClienteCreate, current_user: dict = Depends(get_current_user)):
+    user_id = get_data_user_id(current_user)
     cliente_dict = cliente.model_dump()
     result = await db.clientes.update_one(
-        {"id": cliente_id, "user_id": current_user["id"]},
+        {"id": cliente_id, "user_id": user_id},
         {"$set": cliente_dict}
     )
     if result.matched_count == 0:
@@ -2225,7 +2759,8 @@ async def update_cliente(cliente_id: str, cliente: ClienteCreate, current_user: 
 
 @api_router.delete("/clientes/{cliente_id}")
 async def delete_cliente(cliente_id: str, current_user: dict = Depends(get_current_user)):
-    result = await db.clientes.delete_one({"id": cliente_id, "user_id": current_user["id"]})
+    user_id = get_data_user_id(current_user)
+    result = await db.clientes.delete_one({"id": cliente_id, "user_id": user_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Cliente no encontrado")
     return {"message": "Cliente eliminado"}
@@ -2235,7 +2770,8 @@ async def delete_cliente(cliente_id: str, current_user: dict = Depends(get_curre
 # ======================
 @api_router.get("/citas", response_model=List[Cita])
 async def get_citas(fecha_desde: Optional[str] = None, fecha_hasta: Optional[str] = None, current_user: dict = Depends(get_current_user)):
-    query = {"user_id": current_user["id"]}
+    user_id = get_data_user_id(current_user)
+    query = {"user_id": user_id}
     if fecha_desde:
         query["fecha"] = {"$gte": fecha_desde}
     if fecha_hasta:
@@ -2249,11 +2785,12 @@ async def get_citas(fecha_desde: Optional[str] = None, fecha_hasta: Optional[str
 @api_router.get("/citas/proximas")
 async def get_citas_proximas(current_user: dict = Depends(get_current_user)):
     """Obtener citas de hoy y mañana para alertas"""
+    user_id = get_data_user_id(current_user)
     hoy = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     manana = (datetime.now(timezone.utc) + timedelta(days=1)).strftime("%Y-%m-%d")
     
     citas = await db.citas.find({
-        "user_id": current_user["id"],
+        "user_id": user_id,
         "fecha": {"$in": [hoy, manana]},
         "estado": {"$in": ["pendiente", "confirmada"]}
     }, {"_id": 0}).sort([("fecha", 1), ("hora", 1)]).to_list(100)
@@ -2261,8 +2798,8 @@ async def get_citas_proximas(current_user: dict = Depends(get_current_user)):
     # Enrich with client and style info
     enriched = []
     for cita in citas:
-        cliente = await db.clientes.find_one({"id": cita.get("cliente_id"), "user_id": current_user["id"]}, {"_id": 0})
-        estilo = await db.estilos.find_one({"id": cita.get("estilo_id"), "user_id": current_user["id"]}, {"_id": 0})
+        cliente = await db.clientes.find_one({"id": cita.get("cliente_id"), "user_id": user_id}, {"_id": 0})
+        estilo = await db.estilos.find_one({"id": cita.get("estilo_id"), "user_id": user_id}, {"_id": 0})
         enriched.append({
             **cita,
             "cliente_nombre": cliente.get("nombre") if cliente else "Desconocido",
@@ -2272,22 +2809,24 @@ async def get_citas_proximas(current_user: dict = Depends(get_current_user)):
 
 @api_router.post("/citas", response_model=Cita)
 async def create_cita(cita: CitaCreate, current_user: dict = Depends(get_current_user)):
+    user_id = get_data_user_id(current_user)
     cita_dict = cita.model_dump()
     cita_obj = Cita(**cita_dict)
     doc = cita_obj.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
-    doc['user_id'] = current_user["id"]
+    doc['user_id'] = user_id
     await db.citas.insert_one(doc)
     return cita_obj
 
 @api_router.put("/citas/{cita_id}", response_model=Cita)
 async def update_cita(cita_id: str, cita: CitaUpdate, current_user: dict = Depends(get_current_user)):
+    user_id = get_data_user_id(current_user)
     update_data = {k: v for k, v in cita.model_dump().items() if v is not None}
     if not update_data:
         raise HTTPException(status_code=400, detail="No hay datos para actualizar")
     
     result = await db.citas.update_one(
-        {"id": cita_id, "user_id": current_user["id"]},
+        {"id": cita_id, "user_id": user_id},
         {"$set": update_data}
     )
     if result.matched_count == 0:
@@ -2297,7 +2836,8 @@ async def update_cita(cita_id: str, cita: CitaUpdate, current_user: dict = Depen
 
 @api_router.delete("/citas/{cita_id}")
 async def delete_cita(cita_id: str, current_user: dict = Depends(get_current_user)):
-    result = await db.citas.delete_one({"id": cita_id, "user_id": current_user["id"]})
+    user_id = get_data_user_id(current_user)
+    result = await db.citas.delete_one({"id": cita_id, "user_id": user_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Cita no encontrada")
     return {"message": "Cita eliminada"}
@@ -2307,7 +2847,8 @@ async def delete_cita(cita_id: str, current_user: dict = Depends(get_current_use
 # ======================
 @api_router.get("/servicios", response_model=List[ServicioRealizado])
 async def get_servicios(mes: Optional[str] = None, anio: Optional[str] = None, current_user: dict = Depends(get_current_user)):
-    query = {"user_id": current_user["id"]}
+    user_id = get_data_user_id(current_user)
+    query = {"user_id": user_id}
     if mes and anio:
         prefix = f"{anio}-{mes.zfill(2)}"
         query["fecha"] = {"$regex": f"^{prefix}"}
@@ -2316,18 +2857,19 @@ async def get_servicios(mes: Optional[str] = None, anio: Optional[str] = None, c
 
 @api_router.post("/servicios", response_model=ServicioRealizado)
 async def create_servicio(servicio: ServicioRealizadoCreate, current_user: dict = Depends(get_current_user)):
+    user_id = get_data_user_id(current_user)
     servicio_dict = servicio.model_dump()
     servicio_obj = ServicioRealizado(**servicio_dict)
     servicio_obj.ganancia = servicio_obj.precio_cobrado - servicio_obj.costo_real
     
     doc = servicio_obj.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
-    doc['user_id'] = current_user["id"]
+    doc['user_id'] = user_id
     await db.servicios_realizados.insert_one(doc)
     
     # Update client visit count
     await db.clientes.update_one(
-        {"id": servicio.cliente_id, "user_id": current_user["id"]},
+        {"id": servicio.cliente_id, "user_id": user_id},
         {
             "$inc": {"total_visitas": 1},
             "$set": {"ultima_visita": servicio.fecha}
