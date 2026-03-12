@@ -63,6 +63,55 @@
 
 ---
 
+### IMPLEMENTADO HOY (12 Mar 2026) - FASES 2, 3 y 5 ✅
+
+#### Fase 2: Frontend Gestión de Usuarios
+- **GestionUsuariosPage.jsx:** UI completa para administrar sub-usuarios
+  - Estadísticas (total, activos, admins, empleados)
+  - Lista de usuarios con búsqueda
+  - Modal de crear/editar usuario con:
+    - Campos: nombre, email, password, teléfono, especialidad, comisión
+    - Selector de rol (Administrador/Empleado)
+    - Toggle de permisos personalizados
+    - Checkboxes de permisos agrupados por categoría
+  - Acciones: toggle activo, reset password, editar, eliminar
+  - Vista responsiva móvil/desktop
+- **Ruta:** `/gestion-usuarios` agregada al router
+- **Menú:** Item "Usuarios" agregado bajo "Gestión" en ComercioLayout
+
+#### Fase 3: Middleware RBAC en Frontend
+- **usePermissions hook** (`/app/frontend/src/hooks/usePermissions.js`):
+  - `hasPermission(perm)` - Verificar permiso específico
+  - `hasAnyPermission([perms])` - Verificar cualquiera de varios
+  - `hasAllPermissions([perms])` - Verificar todos
+  - `canManageUsers()` - Solo owner
+  - `isAdminOrOwner()` - Admin o owner
+- **ProtectedAction component** (`/app/frontend/src/components/ProtectedAction.jsx`):
+  - Oculta/deshabilita/blur elementos según permisos
+  - `<OwnerOnly>` - Solo visible para owner
+  - `<AdminOrOwner>` - Visible para admin/owner
+- **PERMISSIONS constant** - Constantes de permisos para referencia
+
+#### Fase 5: Estabilidad
+- **ErrorBoundary** (`/app/frontend/src/components/ErrorBoundary.jsx`):
+  - Captura errores de React
+  - UI de fallback amigable con botones Recargar/Ir al Inicio
+  - Envuelve toda la app en App.js
+- **GlobalLoader** (`/app/frontend/src/components/GlobalLoader.jsx`):
+  - `FullPageLoader` - Carga de página completa
+  - `CardLoader` - Loader dentro de cards
+  - `InlineLoader` - Loader inline pequeño
+  - `SkeletonLoader` - Placeholder animado
+  - `TableSkeleton`, `CardGridSkeleton` - Skeletons específicos
+- **useDebounce hook** (`/app/frontend/src/hooks/useDebounce.js`):
+  - `useDebounce(value, delay)` - Debounce de valor
+  - `useDebouncedCallback(fn, delay)` - Debounce de función
+  - `useThrottle(value, delay)` - Throttle de valor
+
+**Testing:** 19/19 tests pasados (100%)
+
+---
+
 ### IMPLEMENTADO HOY (12 Mar 2026) - OPTIMIZACIÓN MÓVIL ✅
 
 #### Bottom Navigation para Comercio
@@ -190,7 +239,9 @@
 | **Multi-Usuario Backend** | ✅ |
 | **RBAC (Roles/Permisos)** | ✅ |
 | **Optimización Móvil** | ✅ |
-| Multi-Usuario Frontend | 🔄 Pendiente |
+| **Gestión de Usuarios UI** | ✅ |
+| **Permisos Frontend (RBAC)** | ✅ |
+| **Estabilidad (ErrorBoundary)** | ✅ |
 
 ---
 
@@ -228,31 +279,13 @@
 
 ## PRÓXIMOS PASOS
 
-### Proyecto Multi-Usuario & Optimización Móvil
-
-#### Fase 2: Frontend Gestión de Usuarios (P1 - Próximo)
-- [ ] Crear página `GestionUsuariosPage.jsx`
-- [ ] Panel de listado de sub-usuarios con estado
-- [ ] Modal para crear/editar usuarios
-- [ ] Selector de rol con permisos automáticos
-- [ ] Configuración de permisos personalizados
-- [ ] Integrar en menú lateral del Comercio
-
-#### Fase 3: Middleware RBAC en Frontend (P1)
-- [ ] Hook `usePermissions()` para verificar permisos
-- [ ] Componente `ProtectedAction` para botones/acciones
-- [ ] Ocultar elementos del menú según permisos
-- [ ] Mostrar mensaje de acceso denegado
-
-#### Fase 5: Estabilidad (P2)
-- [ ] Global loading states
-- [ ] Error boundaries
-- [ ] Debounce en búsquedas
-
 ### Backlog
 - [ ] "Ver más" en Recomendaciones Inteligentes
-- [ ] Videos tutoriales
+- [ ] Videos tutoriales  
 - [ ] Pasarela de pagos automática (Stripe)
+- [ ] Notificaciones push
+- [ ] Reportes avanzados con gráficos exportables
+- [ ] Integración con WhatsApp Business
 
 ---
 
