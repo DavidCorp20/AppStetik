@@ -74,14 +74,24 @@
 #### Vista de Cards Responsiva
 - **ClientesPage**: Cards en móvil (<768px), tabla en desktop
 - **ProductosPage**: Cards en móvil (<768px), tabla en desktop
+- **AgendaPage**: Lista vertical de días con citas expandidas en móvil, grid de 7 columnas en desktop
 - Cards muestran información condensada con acciones rápidas
 - Links clickeables para teléfono (tel:) y email (mailto:)
+
+#### Mejoras para Emprendedores (Persona)
+- **QuickActions** con tamaños responsivos (más pequeños en móvil)
+- **AgendaPage móvil**: Vista de lista por día en lugar de grid de 7 columnas
+  - Tarjetas de citas expandidas con hora, cliente, servicio, precio
+  - Botones de acción (completar/cancelar) con tamaño touch-friendly
+  - Indicador visual del día con contador de citas
+- **Resumen semanal** con grid de 3 columnas en móvil
 
 #### Estilos CSS Móviles
 - `.tap-effect`: Feedback visual en taps (scale + opacity)
 - `.safe-area-bottom`: Padding para iPhone X+ 
 - `.hide-scrollbar`: Ocultar scrollbar manteniendo scroll
 - `.line-clamp-1/2`: Truncar texto a 1-2 líneas
+- `.touch-target`: Mínimo 44x44px para elementos táctiles
 - Animaciones: slide-down, slide-up, fade-in
 
 ---

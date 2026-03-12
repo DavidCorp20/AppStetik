@@ -427,8 +427,100 @@ export default function AgendaPage() {
         </CardContent>
       </Card>
 
-      {/* Week View */}
-      <div className="grid grid-cols-7 gap-2" data-testid="week-view">
+      {/* Week View - Desktop Grid / Mobile List */}
+      {/* Mobile View - List of days with citas */}
+      <div className="md:hidden space-y-3" data-testid="mobile-week-view">
+        {weekDays.map((day, idx) => {
+          const dayCitas = getCitasForDate(day);
+          const isCurrentDay = isToday(day);
+          
+          return (
+            <Card 
+              key={idx} 
+              className={`bg-white border-stone-100 ${isCurrentDay ? 'ring-2 ring-stone-800' : ''}`}
+            >
+              <div className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-12 h-12 rounded-xl flex flex-col items-center justify-center ${isCurrentDay ? 'bg-stone-800 text-white' : 'bg-stone-100'}`}>
+                      <span className="text-[10px] uppercase font-medium">{dayNames[idx]}</span>
+                      <span className="text-lg font-bold">{day.getDate()}</span>
+                    </div>
+                    <div>
+                      <p className={`font-medium ${isCurrentDay ? 'text-stone-800' : 'text-stone-600'}`}>
+                        {day.toLocaleDateString('es-ES', { weekday: 'long' })}
+                      </p>
+                      <p className="text-sm text-stone-400">
+                        {dayCitas.length === 0 ? 'Sin citas' : `${dayCitas.length} cita${dayCitas.length > 1 ? 's' : ''}`}
+                      </p>
+                    </div>
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => handleOpenDialog(null, day)}
+                    className="h-10 w-10 rounded-full"
+                  >
+                    <Plus className="w-5 h-5" />
+                  </Button>
+                </div>
+                
+                {dayCitas.length > 0 && (
+                  <div className="space-y-2 pt-3 border-t border-stone-100">
+                    {dayCitas.map((cita) => {
+                      const cliente = clientes.find(c => c.id === cita.cliente_id);
+                      const estilo = estilos.find(e => e.id === cita.estilo_id);
+                      
+                      return (
+                        <div 
+                          key={cita.id}
+                          onClick={() => handleOpenDialog(cita)}
+                          className={`p-3 rounded-xl cursor-pointer border transition-all active:scale-[0.98] ${estadoColors[cita.estado]}`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                              <div className="flex items-center gap-1">
+                                <Clock className="w-4 h-4" />
+                                <span className="font-semibold">{cita.hora}</span>
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="font-medium truncate">{cliente?.nombre || 'Cliente'}</p>
+                                <p className="text-xs truncate opacity-75">{estilo?.nombre || 'Servicio'}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium">${cita.precio_estimado || 0}</span>
+                              <div className="flex gap-1">
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); handleStatusChange(cita.id, 'completada'); }}
+                                  className="p-2 hover:bg-white/50 rounded-full touch-target"
+                                  title="Completar"
+                                >
+                                  <CheckCircle className="w-5 h-5" />
+                                </button>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); handleStatusChange(cita.id, 'cancelada'); }}
+                                  className="p-2 hover:bg-white/50 rounded-full touch-target"
+                                  title="Cancelar"
+                                >
+                                  <XCircle className="w-5 h-5" />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Desktop View - 7-column Grid */}
+      <div className="hidden md:grid grid-cols-7 gap-2" data-testid="week-view">
         {weekDays.map((day, idx) => {
           const dayCitas = getCitasForDate(day);
           const isCurrentDay = isToday(day);
@@ -503,23 +595,23 @@ export default function AgendaPage() {
         })}
       </div>
 
-      {/* Today's Summary */}
+      {/* Today's Summary - Mobile optimized */}
       <Card className="bg-stone-800 text-white border-0">
         <CardContent className="p-4">
-          <div className="flex items-center justify-between">
+          <div className="grid grid-cols-3 gap-3 text-center">
             <div>
-              <p className="text-xs text-stone-300 uppercase tracking-wider">Citas de Hoy</p>
-              <p className="text-2xl font-bold">{getCitasForDate(new Date()).length}</p>
+              <p className="text-[10px] md:text-xs text-stone-300 uppercase tracking-wider">Hoy</p>
+              <p className="text-xl md:text-2xl font-bold">{getCitasForDate(new Date()).length}</p>
             </div>
             <div>
-              <p className="text-xs text-stone-300 uppercase tracking-wider">Esta Semana</p>
-              <p className="text-2xl font-bold">
+              <p className="text-[10px] md:text-xs text-stone-300 uppercase tracking-wider">Semana</p>
+              <p className="text-xl md:text-2xl font-bold">
                 {weekDays.reduce((sum, day) => sum + getCitasForDate(day).length, 0)}
               </p>
             </div>
             <div>
-              <p className="text-xs text-stone-300 uppercase tracking-wider">Ingresos Est.</p>
-              <p className="text-2xl font-bold">
+              <p className="text-[10px] md:text-xs text-stone-300 uppercase tracking-wider">Ingresos</p>
+              <p className="text-xl md:text-2xl font-bold">
                 ${weekDays.reduce((sum, day) => {
                   const dayCitas = getCitasForDate(day);
                   return sum + dayCitas.reduce((s, c) => s + (c.precio_estimado || 0), 0);

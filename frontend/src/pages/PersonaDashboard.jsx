@@ -166,13 +166,13 @@ const QuickAction = ({ icon: Icon, label, to, color = "rose", badge }) => {
 
   return (
     <Link to={to} className="block">
-      <div className="group bg-white rounded-2xl p-4 border border-[#FCE7F0] active:scale-95 transition-all hover:shadow-lg">
-        <div className={`w-12 h-12 mx-auto rounded-xl bg-gradient-to-br ${colors[color]} flex items-center justify-center shadow-md group-hover:scale-110 transition-transform`}>
-          <Icon className="w-6 h-6 text-white" />
+      <div className="group relative bg-white rounded-2xl p-3 sm:p-4 border border-[#FCE7F0] active:scale-95 transition-all hover:shadow-lg tap-effect">
+        <div className={`w-10 h-10 sm:w-12 sm:h-12 mx-auto rounded-xl bg-gradient-to-br ${colors[color]} flex items-center justify-center shadow-md group-hover:scale-110 transition-transform`}>
+          <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
         </div>
-        <p className="text-center text-xs font-medium text-[#1A1A2E] mt-2">{label}</p>
+        <p className="text-center text-[10px] sm:text-xs font-medium text-[#1A1A2E] mt-2 truncate">{label}</p>
         {badge && (
-          <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+          <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center animate-pulse">
             {badge}
           </span>
         )}
