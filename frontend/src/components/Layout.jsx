@@ -215,6 +215,7 @@ const comercioGestionGroup = {
     { to: "/agenda", icon: Calendar, label: "Agenda" },
     { to: "/clientes", icon: Users, label: "Clientes" },
     { to: "/empleados", icon: UserCheck, label: "Empleados" },
+    { to: "/gestion-usuarios", icon: Shield, label: "Usuarios" },
     { to: "/inventario", icon: Package, label: "Inventario" },
   ]
 };

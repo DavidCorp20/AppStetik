@@ -6,6 +6,7 @@ import { TutorialProvider } from "@/components/FeatureTutorial";
 import { Toaster } from "@/components/ui/sonner";
 import { Layout } from "@/components/Layout";
 import { NotificationManager } from "@/components/NotificationManager";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 // Dashboards
 import { PersonaDashboard } from "@/pages/PersonaDashboard";
@@ -35,6 +36,7 @@ import { TerminosPage } from "@/pages/TerminosPage";
 import { PrivacidadPage } from "@/pages/PrivacidadPage";
 import { ReportesFinancierosPage } from "@/pages/ReportesFinancierosPage";
 import { PagosPage } from "@/pages/PagosPage";
+import { GestionUsuariosPage } from "@/pages/GestionUsuariosPage";
 import { Loader2 } from "lucide-react";
 
 // Dashboard Router - selects based on user type and redirects admin
@@ -137,6 +139,7 @@ function AppRoutes() {
           <Route path="facturacion" element={<FacturacionPage />} />
           <Route path="reportes-financieros" element={<ReportesFinancierosPage />} />
           <Route path="pagos" element={<PagosPage />} />
+          <Route path="gestion-usuarios" element={<GestionUsuariosPage />} />
         </Route>
       </Route>
 
@@ -148,17 +151,19 @@ function AppRoutes() {
 
 function App() {
   return (
-    <AuthProvider>
-      <AppProvider>
-        <TutorialProvider>
-          <BrowserRouter>
-            <AppRoutes />
-            <NotificationManager />
-          </BrowserRouter>
-          <Toaster position="top-right" richColors />
-        </TutorialProvider>
-      </AppProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <AppProvider>
+          <TutorialProvider>
+            <BrowserRouter>
+              <AppRoutes />
+              <NotificationManager />
+            </BrowserRouter>
+            <Toaster position="top-right" richColors />
+          </TutorialProvider>
+        </AppProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 
