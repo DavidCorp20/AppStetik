@@ -1,7 +1,6 @@
-import os
 from datetime import datetime, timedelta, timezone
 
-from backend.production_app import _subscription_is_valid
+from backend.production_app import _subscription_is_valid, _validate_invoice_payload
 
 
 def _future(days=1):
@@ -64,3 +63,46 @@ def test_legacy_access_requires_explicit_flag(monkeypatch):
     assert ok is True
     assert reason == "legacy_access"
     monkeypatch.delenv("STETIK_ALLOW_UNSUBSCRIBED_ACCESS", raising=False)
+
+
+def test_invoice_total_matches_items():
+    payload = {
+        "items": [
+            {"descripcion": "Servicio", "cantidad": 2, "precio_unitario": 25},
+            {"descripcion": "Diseño", "cantidad": 1, "precio_unitario": 10},
+        ],
+        "subtotal": 60,
+        "descuento": 5,
+        "total": 55,
+    }
+    assert _validate_invoice_payload(payload) is None
+
+
+def test_invoice_rejects_tampered_subtotal():
+    payload = {
+        "items": [{"descripcion": "Servicio", "cantidad": 2, "precio_unitario": 25}],
+        "subtotal": 1,
+        "descuento": 0,
+        "total": 50,
+    }
+    assert _validate_invoice_payload(payload) == "El subtotal no coincide con los items"
+
+
+def test_invoice_rejects_tampered_total():
+    payload = {
+        "items": [{"descripcion": "Servicio", "cantidad": 2, "precio_unitario": 25}],
+        "subtotal": 50,
+        "descuento": 0,
+        "total": 1,
+    }
+    assert _validate_invoice_payload(payload) == "El total no coincide con los items y el descuento"
+
+
+def test_invoice_rejects_invalid_discount():
+    payload = {
+        "items": [{"descripcion": "Servicio", "cantidad": 1, "precio_unitario": 25}],
+        "subtotal": 25,
+        "descuento": 30,
+        "total": -5,
+    }
+    assert _validate_invoice_payload(payload) == "El descuento está fuera de rango"
