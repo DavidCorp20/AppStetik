@@ -29,10 +29,9 @@ app = server.app
 class TenantAwareUser(dict):
     """Compatibility view for business sub-users.
 
-    The original MVP has legacy endpoints that use ``current_user['id']`` for
-    business-owned data. For production, those endpoints must resolve to the
-    business owner while the authenticated sub-user identity remains available
-    as ``identity_id``.
+    Legacy MVP endpoints use ``current_user['id']`` for business-owned data.
+    Production maps that id to the business owner while preserving the real
+    authenticated sub-user identity in ``identity_id``.
     """
 
     def __init__(self, data: dict[str, Any], data_owner_id: str):
@@ -109,8 +108,100 @@ async def _hardened_current_user(
         )
 
     if user.get("is_business_user"):
-        return TenantAwareUser(user, data_owner_id)
+        # Keep the business account's subscription state in the compatibility
+        # view so /auth/me and authorization use the same source of truth.
+        enriched_user = {
+            **user,
+            "account_status": account.get("account_status", "active"),
+            "trial_ends_at": account.get("trial_ends_at"),
+            "subscription_starts_at": account.get("subscription_starts_at"),
+            "subscription_ends_at": account.get("subscription_ends_at"),
+            "plan": account.get("plan", "free"),
+            "nombre_negocio": account.get("nombre_negocio", ""),
+        }
+        return TenantAwareUser(enriched_user, data_owner_id)
     return user
+
+
+def _build_user_response(current_user: dict[str, Any]) -> Any:
+    """Build a consistent auth response without losing trial/subscription fields."""
+    identity_id = current_user.get("identity_id") or current_user.get("id")
+    return server.UserResponse(
+        id=identity_id,
+        email=current_user.get("email", ""),
+        nombre=current_user.get("nombre", ""),
+        nombre_negocio=current_user.get("nombre_negocio", ""),
+        telefono=current_user.get("telefono", ""),
+        plan=current_user.get("plan", "free"),
+        role=current_user.get("role", "user"),
+        user_type=current_user.get("user_type", "personal"),
+        created_at=current_user.get("created_at", ""),
+        account_status=current_user.get("account_status", "active"),
+        trial_ends_at=current_user.get("trial_ends_at"),
+        subscription_starts_at=current_user.get("subscription_starts_at"),
+        subscription_ends_at=current_user.get("subscription_ends_at"),
+    )
+
+
+async def _production_get_me(current_user: dict = Depends(_hardened_current_user)):
+    return _build_user_response(current_user)
+
+
+async def _production_update_profile(
+    nombre: str | None = None,
+    nombre_negocio: str | None = None,
+    telefono: str | None = None,
+    current_user: dict = Depends(_hardened_current_user),
+):
+    """Update the authenticated identity, never the tenant owner by accident."""
+    identity_id = current_user.get("identity_id") or current_user.get("id")
+    update_data: dict[str, str] = {}
+    if nombre:
+        update_data["nombre"] = server.sanitize_string(nombre)
+    if nombre_negocio is not None and not current_user.get("is_business_user"):
+        update_data["nombre_negocio"] = server.sanitize_string(nombre_negocio)
+    if telefono is not None:
+        update_data["telefono"] = server.sanitize_string(telefono)
+
+    if update_data:
+        collection = server.db.business_users if current_user.get("is_business_user") else server.db.users
+        await collection.update_one({"id": identity_id}, {"$set": update_data})
+
+    if current_user.get("is_business_user"):
+        updated = await server.db.business_users.find_one(
+            {"id": identity_id}, {"_id": 0, "password": 0}
+        )
+        business = await server.db.users.find_one(
+            {"id": current_user.get("business_id")}, {"_id": 0, "password": 0}
+        )
+        if updated:
+            merged = {**updated, **{
+                "nombre_negocio": (business or {}).get("nombre_negocio", ""),
+                "plan": (business or {}).get("plan", "free"),
+                "user_type": "business",
+                "account_status": (business or {}).get("account_status", "active"),
+                "trial_ends_at": (business or {}).get("trial_ends_at"),
+                "subscription_starts_at": (business or {}).get("subscription_starts_at"),
+                "subscription_ends_at": (business or {}).get("subscription_ends_at"),
+            }}
+            return _build_user_response(merged)
+
+    updated = await server.db.users.find_one({"id": identity_id}, {"_id": 0, "password": 0})
+    return _build_user_response(updated or current_user)
+
+
+async def _production_my_permissions(current_user: dict = Depends(_hardened_current_user)):
+    permissions = server.get_user_permissions(current_user)
+    identity_id = current_user.get("identity_id") or current_user.get("id")
+    return {
+        "user_id": identity_id,
+        "role": current_user.get("business_role") or (
+            "owner" if current_user.get("user_type") == "business" else "personal"
+        ),
+        "is_business_user": current_user.get("is_business_user", False),
+        "permissions": permissions,
+        "total_permissions": len(permissions),
+    }
 
 
 async def _secure_forgot_password(data: server.PasswordResetRequest):
@@ -120,7 +211,7 @@ async def _secure_forgot_password(data: server.PasswordResetRequest):
     exposes that token through the API response or application logs.
     """
     user = await server.db.users.find_one({"email": data.email.lower()})
-    message = "Si el email existe, recibirás instrucciones para restablecer tu contraseña"
+    message = "Si el email existe, recibirás instrucciones para restablecer su contraseña"
     if not user:
         return {"message": message}
 
@@ -132,19 +223,22 @@ async def _secure_forgot_password(data: server.PasswordResetRequest):
         "expires_at": expires.isoformat(),
         "used": False,
     })
-
-    # Email delivery is intentionally left to the future mail provider
-    # integration. The token is never returned by this production endpoint.
     return {"message": message}
 
 
-# Replace only the legacy password-reset request handler. Other MVP routes are
-# left untouched and continue to use the existing implementation.
+# Replace selected legacy handlers in production while leaving the MVP server
+# available for development/rollback.
+_ROUTE_REPLACEMENTS = {
+    "/api/auth/forgot-password": _secure_forgot_password,
+    "/api/auth/me": _production_get_me,
+    "/api/auth/profile": _production_update_profile,
+    "/api/business/my-permissions": _production_my_permissions,
+}
 for _route in app.routes:
-    if isinstance(_route, APIRoute) and _route.path == "/api/auth/forgot-password" and "POST" in _route.methods:
-        _route.endpoint = _secure_forgot_password
-        _route.dependant = get_dependant(path=_route.path, call=_secure_forgot_password)
-        break
+    if isinstance(_route, APIRoute) and _route.path in _ROUTE_REPLACEMENTS:
+        _endpoint = _ROUTE_REPLACEMENTS[_route.path]
+        _route.endpoint = _endpoint
+        _route.dependant = get_dependant(path=_route.path, call=_endpoint)
 
 
 app.dependency_overrides[server.get_current_user] = _hardened_current_user
