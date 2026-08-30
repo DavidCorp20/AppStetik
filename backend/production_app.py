@@ -15,8 +15,10 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 try:
     import server
+    from indexes import ensure_indexes
 except ModuleNotFoundError:
     from backend import server
+    from backend.indexes import ensure_indexes
 
 app = server.app
 
@@ -77,6 +79,23 @@ async def _hardened_current_user(
 
 
 app.dependency_overrides[server.get_current_user] = _hardened_current_user
+
+
+@app.on_event("startup")
+async def production_startup() -> None:
+    """Create safe, repeatable MongoDB indexes and verify connectivity."""
+    await server.db.command("ping")
+    await ensure_indexes(server.db)
+
+
+@app.get("/health", include_in_schema=False)
+async def health() -> dict[str, str]:
+    """Lightweight health endpoint for Render and uptime monitors."""
+    try:
+        await server.db.command("ping")
+        return {"status": "ok", "database": "ok"}
+    except Exception:
+        raise HTTPException(status_code=503, detail="Database unavailable")
 
 
 async def _read_and_restore_body(request: Request) -> bytes:
