@@ -8,7 +8,7 @@ import os
 from datetime import datetime, timezone
 from typing import Any
 
-from fastapi import HTTPException, Request
+from fastapi import Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -52,17 +52,13 @@ def _subscription_is_valid(account: dict[str, Any]) -> tuple[bool, str]:
     return False, "Cuenta sin trial o suscripción activa"
 
 
-async def hardened_current_user(credentials=server.HTTPAuthorizationCredentials):
-    """Central authentication + subscription gate for every protected route."""
-    # This function is replaced below with the dependency-compatible version.
-    raise RuntimeError("Dependency placeholder was not replaced")
-
-
-async def _hardened_current_user(credentials):
+async def _hardened_current_user(
+    credentials: server.HTTPAuthorizationCredentials = Depends(server.security),
+):
     user = await server.get_current_user(credentials)
 
     # server.get_current_user already validates JWT, user existence and
-    # business-sub-user activity. We only centralize account entitlement here.
+    # business-sub-user activity. We centralize account entitlement here.
     account = user
     if user.get("is_business_user") and user.get("business_id"):
         account = await server.db.users.find_one(
@@ -82,8 +78,8 @@ async def _hardened_current_user(credentials):
     return user
 
 
-# FastAPI dependency overrides are applied to every route that depends on the
-# original get_current_user function, including routes added in the future.
+# FastAPI dependency overrides apply to every route that depends on the
+# original get_current_user function, including routes added later.
 app.dependency_overrides[server.get_current_user] = _hardened_current_user
 
 
