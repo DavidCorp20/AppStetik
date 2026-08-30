@@ -4,6 +4,7 @@ Use this module for production deployments instead of ``server:app``.
 It keeps the existing MVP routes intact while adding a central security layer.
 """
 
+import json
 import os
 from datetime import datetime, timezone
 from typing import Any
@@ -47,8 +48,6 @@ def _subscription_is_valid(account: dict[str, Any]) -> tuple[bool, str]:
     if account.get("role") == "admin":
         return True, "admin"
 
-    # Deliberately opt-in: production should not silently grant access to
-    # accounts that have neither a trial nor a paid subscription.
     if os.getenv("STETIK_ALLOW_UNSUBSCRIBED_ACCESS", "false").lower() == "true":
         return True, "legacy_access"
 
@@ -59,9 +58,6 @@ async def _hardened_current_user(
     credentials: server.HTTPAuthorizationCredentials = Depends(server.security),
 ):
     user = await server.get_current_user(credentials)
-
-    # server.get_current_user already validates JWT, user existence and
-    # business-sub-user activity. We centralize account entitlement here.
     account = user
     if user.get("is_business_user") and user.get("business_id"):
         account = await server.db.users.find_one(
@@ -77,20 +73,64 @@ async def _hardened_current_user(
             detail=reason,
             headers={"X-Stetik-Code": "SUBSCRIPTION_REQUIRED"},
         )
-
     return user
 
 
-# FastAPI dependency overrides apply to every route that depends on the
-# original get_current_user function, including routes added later.
 app.dependency_overrides[server.get_current_user] = _hardened_current_user
+
+
+async def _read_and_restore_body(request: Request) -> bytes:
+    body = await request.body()
+
+    async def receive():
+        return {"type": "http.request", "body": body, "more_body": False}
+
+    request._receive = receive
+    return body
+
+
+def _validate_invoice_payload(payload: dict[str, Any]) -> str | None:
+    items = payload.get("items") or []
+    if not items:
+        return "La factura debe contener al menos un item"
+
+    subtotal = 0.0
+    for item in items:
+        try:
+            quantity = float(item.get("cantidad", 0))
+            unit_price = float(item.get("precio_unitario", 0))
+        except (TypeError, ValueError):
+            return "Cantidad y precio unitario deben ser numéricos"
+        if quantity <= 0:
+            return "La cantidad de cada item debe ser mayor que cero"
+        if unit_price < 0:
+            return "El precio unitario no puede ser negativo"
+        subtotal += quantity * unit_price
+
+    try:
+        client_subtotal = float(payload.get("subtotal", 0))
+        discount = float(payload.get("descuento", 0))
+        client_total = float(payload.get("total", 0))
+    except (TypeError, ValueError):
+        return "Subtotal, descuento y total deben ser numéricos"
+
+    if discount < 0 or discount > subtotal:
+        return "El descuento está fuera de rango"
+
+    expected_total = subtotal - discount
+    tolerance = 0.01
+    if abs(client_subtotal - subtotal) > tolerance:
+        return "El subtotal no coincide con los items"
+    if abs(client_total - expected_total) > tolerance:
+        return "El total no coincide con los items y el descuento"
+
+    return None
 
 
 class ProductionHardeningMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         path = request.url.path
 
-        # Development/manual payment shortcut: never expose it in production.
         if (
             path.rstrip("/") == "/api/auth/upgrade"
             and os.getenv("STETIK_ALLOW_LEGACY_UPGRADE", "false").lower() != "true"
@@ -102,12 +142,21 @@ class ProductionHardeningMiddleware(BaseHTTPMiddleware):
                 },
             )
 
-        # Never expose development password-reset/debug token routes.
         if (
             "debug_token" in path
             or path.rstrip("/").endswith("/auth/debug")
         ) and os.getenv("STETIK_ALLOW_DEBUG_ENDPOINTS", "false").lower() != "true":
             return JSONResponse(status_code=404, content={"detail": "Not found"})
+
+        if request.method == "POST" and path.rstrip("/") == "/api/facturas":
+            try:
+                raw = await _read_and_restore_body(request)
+                payload = json.loads(raw.decode("utf-8"))
+                error = _validate_invoice_payload(payload)
+                if error:
+                    return JSONResponse(status_code=422, content={"detail": error})
+            except (UnicodeDecodeError, json.JSONDecodeError):
+                return JSONResponse(status_code=422, content={"detail": "JSON inválido"})
 
         response = await call_next(request)
         response.headers["X-Content-Type-Options"] = "nosniff"
