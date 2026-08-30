@@ -1,2 +1,0 @@
-[tool.fastapi]
-entrypoint = "production_app:app"
