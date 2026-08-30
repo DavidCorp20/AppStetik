@@ -6,11 +6,14 @@ It keeps the existing MVP routes intact while adding a central security layer.
 
 import json
 import os
-from datetime import datetime, timezone
+import secrets
+from datetime import datetime, timezone, timedelta
 from typing import Any
 
 from fastapi import Depends, HTTPException, Request
+from fastapi.dependencies.utils import get_dependant
 from fastapi.responses import JSONResponse
+from fastapi.routing import APIRoute
 from starlette.middleware.base import BaseHTTPMiddleware
 
 try:
@@ -108,6 +111,40 @@ async def _hardened_current_user(
     if user.get("is_business_user"):
         return TenantAwareUser(user, data_owner_id)
     return user
+
+
+async def _secure_forgot_password(data: server.PasswordResetRequest):
+    """Production-safe password recovery.
+
+    The legacy endpoint printed and returned the reset token. Production never
+    exposes that token through the API response or application logs.
+    """
+    user = await server.db.users.find_one({"email": data.email.lower()})
+    message = "Si el email existe, recibirás instrucciones para restablecer tu contraseña"
+    if not user:
+        return {"message": message}
+
+    reset_token = secrets.token_urlsafe(32)
+    expires = datetime.now(timezone.utc) + timedelta(hours=1)
+    await server.db.password_resets.insert_one({
+        "email": data.email.lower(),
+        "token": reset_token,
+        "expires_at": expires.isoformat(),
+        "used": False,
+    })
+
+    # Email delivery is intentionally left to the future mail provider
+    # integration. The token is never returned by this production endpoint.
+    return {"message": message}
+
+
+# Replace only the legacy password-reset request handler. Other MVP routes are
+# left untouched and continue to use the existing implementation.
+for _route in app.routes:
+    if isinstance(_route, APIRoute) and _route.path == "/api/auth/forgot-password" and "POST" in _route.methods:
+        _route.endpoint = _secure_forgot_password
+        _route.dependant = get_dependant(path=_route.path, call=_secure_forgot_password)
+        break
 
 
 app.dependency_overrides[server.get_current_user] = _hardened_current_user
