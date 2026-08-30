@@ -16,6 +16,12 @@ jobs:
       MONGO_URL: mongodb://localhost:27017
       DB_NAME: stetik_test
       JWT_SECRET: ci-only-secret-change-me
+      ADMIN_EMAIL: ci-admin@stetik.test
+      ADMIN_PASSWORD: ci-only-admin-password-change-me
+      CORS_ORIGINS: http://localhost:3000
+      STETIK_ALLOW_UNSUBSCRIBED_ACCESS: "false"
+      STETIK_ALLOW_LEGACY_UPGRADE: "false"
+      STETIK_ALLOW_DEBUG_ENDPOINTS: "false"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -23,5 +29,5 @@ jobs:
           python-version: '3.12'
       - name: Install dependencies
         run: pip install -r requirements.txt
-      - name: Run tests
-        run: python -m pytest ../tests -q
+      - name: Run production hardening tests
+        run: python -m pytest ../tests/test_production_hardening.py -q
