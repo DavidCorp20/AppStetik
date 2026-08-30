@@ -23,6 +23,32 @@ except ModuleNotFoundError:
 app = server.app
 
 
+class TenantAwareUser(dict):
+    """Compatibility view for business sub-users.
+
+    The original MVP has legacy endpoints that use ``current_user['id']`` for
+    business-owned data. For production, those endpoints must resolve to the
+    business owner while the authenticated sub-user identity remains available
+    as ``identity_id``.
+    """
+
+    def __init__(self, data: dict[str, Any], data_owner_id: str):
+        super().__init__(data)
+        self._data_owner_id = data_owner_id
+        super().__setitem__("identity_id", data.get("id"))
+        super().__setitem__("effective_user_id", data_owner_id)
+
+    def __getitem__(self, key: str):
+        if key == "id":
+            return self._data_owner_id
+        return super().__getitem__(key)
+
+    def get(self, key: str, default: Any = None):
+        if key == "id":
+            return self._data_owner_id
+        return super().get(key, default)
+
+
 def _parse_iso(value: str | None) -> datetime | None:
     if not value:
         return None
@@ -61,9 +87,12 @@ async def _hardened_current_user(
 ):
     user = await server.get_current_user(credentials)
     account = user
+    data_owner_id = user.get("effective_user_id") or user.get("id")
+
     if user.get("is_business_user") and user.get("business_id"):
+        data_owner_id = user["business_id"]
         account = await server.db.users.find_one(
-            {"id": user["business_id"]}, {"_id": 0, "password": 0}
+            {"id": data_owner_id}, {"_id": 0, "password": 0}
         )
         if account is None:
             raise HTTPException(status_code=401, detail="Cuenta de negocio no encontrada")
@@ -75,6 +104,9 @@ async def _hardened_current_user(
             detail=reason,
             headers={"X-Stetik-Code": "SUBSCRIPTION_REQUIRED"},
         )
+
+    if user.get("is_business_user"):
+        return TenantAwareUser(user, data_owner_id)
     return user
 
 
