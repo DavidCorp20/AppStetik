@@ -22,6 +22,7 @@ jobs:
       STETIK_ALLOW_UNSUBSCRIBED_ACCESS: "false"
       STETIK_ALLOW_LEGACY_UPGRADE: "false"
       STETIK_ALLOW_DEBUG_ENDPOINTS: "false"
+      PYTHONPATH: ${{ github.workspace }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
