@@ -1,23 +1,14 @@
 """Production entrypoint for Stetik.
 
-This module wraps the existing FastAPI application without changing the MVP
-routes. Use this entrypoint for production deployments instead of server:app.
-
-Hardening included:
-- Central subscription/account-status enforcement for authenticated API calls.
-- Business sub-user subscription enforcement against the business owner.
-- Legacy unauthorised Premium upgrade endpoint disabled by default.
-- Debug password-reset token endpoints disabled by default.
-- Security response headers.
-
-The original backend remains intact so the MVP can be rolled back easily.
+Use this module for production deployments instead of ``server:app``.
+It keeps the existing MVP routes intact while adding a central security layer.
 """
 
 import os
 from datetime import datetime, timezone
 from typing import Any
 
-from fastapi import Request
+from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -36,7 +27,6 @@ def _parse_iso(value: str | None) -> datetime | None:
 
 
 def _subscription_is_valid(account: dict[str, Any]) -> tuple[bool, str]:
-    """Return whether an account may access authenticated application APIs."""
     status = account.get("account_status", "active")
     if status in {"pending", "suspended", "disabled", "inactive"}:
         return False, f"Cuenta no activa ({status})"
@@ -46,91 +36,79 @@ def _subscription_is_valid(account: dict[str, Any]) -> tuple[bool, str]:
     trial_end = _parse_iso(account.get("trial_ends_at"))
 
     if subscription_end is not None:
-        if subscription_end > now:
-            return True, "active_subscription"
-        return False, "Suscripción vencida"
+        return (True, "active_subscription") if subscription_end > now else (False, "Suscripción vencida")
 
     if trial_end is not None:
-        if trial_end > now:
-            return True, "active_trial"
-        return False, "Período de prueba vencido"
+        return (True, "active_trial") if trial_end > now else (False, "Período de prueba vencido")
 
     if account.get("role") == "admin":
         return True, "admin"
 
+    # Deliberately opt-in: production should not silently grant access to
+    # accounts that have neither a trial nor a paid subscription.
     if os.getenv("STETIK_ALLOW_UNSUBSCRIBED_ACCESS", "false").lower() == "true":
         return True, "legacy_access"
 
     return False, "Cuenta sin trial o suscripción activa"
 
 
-async def _load_authenticated_account(request: Request) -> dict[str, Any] | None:
-    """Resolve the account represented by the request Bearer token."""
-    auth = request.headers.get("authorization", "")
-    if not auth.lower().startswith("bearer "):
-        return None
+async def hardened_current_user(credentials=server.HTTPAuthorizationCredentials):
+    """Central authentication + subscription gate for every protected route."""
+    # This function is replaced below with the dependency-compatible version.
+    raise RuntimeError("Dependency placeholder was not replaced")
 
-    token = auth.split(" ", 1)[1].strip()
-    try:
-        payload = server.jwt.decode(token, server.SECRET_KEY, algorithms=[server.ALGORITHM])
-    except Exception:
-        return None
 
-    user_id = payload.get("sub")
-    token_type = payload.get("type", "user")
-    business_id = payload.get("business_id")
-    if not user_id:
-        return None
+async def _hardened_current_user(credentials):
+    user = await server.get_current_user(credentials)
 
-    if token_type == "business_user" and business_id:
-        account = await server.db.users.find_one({"id": business_id}, {"_id": 0, "password": 0})
+    # server.get_current_user already validates JWT, user existence and
+    # business-sub-user activity. We only centralize account entitlement here.
+    account = user
+    if user.get("is_business_user") and user.get("business_id"):
+        account = await server.db.users.find_one(
+            {"id": user["business_id"]}, {"_id": 0, "password": 0}
+        )
         if account is None:
-            raise ValueError("Cuenta de negocio no encontrada")
-        business_user = await server.db.business_users.find_one({"id": user_id}, {"_id": 0, "password": 0})
-        if business_user is None or not business_user.get("activo", True):
-            raise ValueError("Usuario de negocio inactivo")
-        return account
+            raise HTTPException(status_code=401, detail="Cuenta de negocio no encontrada")
 
-    return await server.db.users.find_one({"id": user_id}, {"_id": 0, "password": 0})
+    allowed, reason = _subscription_is_valid(account)
+    if not allowed:
+        raise HTTPException(
+            status_code=403,
+            detail=reason,
+            headers={"X-Stetik-Code": "SUBSCRIPTION_REQUIRED"},
+        )
+
+    return user
+
+
+# FastAPI dependency overrides are applied to every route that depends on the
+# original get_current_user function, including routes added in the future.
+app.dependency_overrides[server.get_current_user] = _hardened_current_user
 
 
 class ProductionHardeningMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         path = request.url.path
 
-        if path.rstrip("/") == "/api/auth/upgrade" and os.getenv("STETIK_ALLOW_LEGACY_UPGRADE", "false").lower() != "true":
+        # Development/manual payment shortcut: never expose it in production.
+        if (
+            path.rstrip("/") == "/api/auth/upgrade"
+            and os.getenv("STETIK_ALLOW_LEGACY_UPGRADE", "false").lower() != "true"
+        ):
             return JSONResponse(
                 status_code=410,
-                content={"detail": "El upgrade directo está deshabilitado. La activación se realiza mediante el flujo de pago."},
+                content={
+                    "detail": "El upgrade directo está deshabilitado. La activación se realiza mediante el flujo de pago."
+                },
             )
 
-        if ("debug_token" in path or path.rstrip("/").endswith("/auth/debug")) and os.getenv("STETIK_ALLOW_DEBUG_ENDPOINTS", "false").lower() != "true":
+        # Never expose development password-reset/debug token routes.
+        if (
+            "debug_token" in path
+            or path.rstrip("/").endswith("/auth/debug")
+        ) and os.getenv("STETIK_ALLOW_DEBUG_ENDPOINTS", "false").lower() != "true":
             return JSONResponse(status_code=404, content={"detail": "Not found"})
-
-        public_prefixes = (
-            "/api/auth/register",
-            "/api/auth/login",
-            "/api/auth/forgot-password",
-            "/api/auth/reset-password",
-            "/api/health",
-        )
-        if path.startswith("/api/") and not any(path.startswith(p) for p in public_prefixes):
-            try:
-                account = await _load_authenticated_account(request)
-            except ValueError as exc:
-                return JSONResponse(status_code=401, content={"detail": str(exc)})
-
-            if account is not None:
-                allowed, reason = _subscription_is_valid(account)
-                if not allowed:
-                    return JSONResponse(
-                        status_code=403,
-                        content={
-                            "detail": reason,
-                            "code": "SUBSCRIPTION_REQUIRED",
-                            "account_status": account.get("account_status", "unknown"),
-                        },
-                    )
 
         response = await call_next(request)
         response.headers["X-Content-Type-Options"] = "nosniff"
