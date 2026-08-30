@@ -12,7 +12,10 @@ from fastapi import Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
-import server
+try:
+    import server
+except ModuleNotFoundError:
+    from backend import server
 
 app = server.app
 
