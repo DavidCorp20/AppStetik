@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: stetik-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn production_app:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: MONGO_URL
+        sync: false
+      - key: DB_NAME
+        value: stetik_pro
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGINS
+        sync: false
+      - key: STETIK_ALLOW_UNSUBSCRIBED_ACCESS
+        value: "false"
+      - key: STETIK_ALLOW_LEGACY_UPGRADE
+        value: "false"
+      - key: STETIK_ALLOW_DEBUG_ENDPOINTS
+        value: "false"
+
+  - type: web
+    name: stetik-web
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install --legacy-peer-deps && npm run build
+    staticPublishPath: build
+    envVars:
+      - key: REACT_APP_BACKEND_URL
+        fromService:
+          type: web
+          name: stetik-api
+          envVarKey: RENDER_EXTERNAL_URL
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

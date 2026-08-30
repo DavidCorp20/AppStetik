@@ -1,143 +1,151 @@
-# Guía de Lanzamiento - NailCost Pro
+# Guía de Lanzamiento - Stetik
 
-## ✅ Lo que ya está listo
+## Estado del MVP
 
 | Componente | Estado |
-|------------|--------|
-| Sistema de autenticación completo | ✅ |
-| Dual UX (Persona/Comercio) | ✅ |
-| Panel Admin especializado | ✅ |
-| Sistema de activación de usuarios | ✅ |
+|---|---|
+| Autenticación | ✅ |
+| UX Persona/Comercio | ✅ |
+| Panel Admin | ✅ |
+| Activación de usuarios | ✅ |
 | Trial 15 días | ✅ |
-| Control de suscripciones | ✅ |
-| Bloqueo por suscripción vencida | ✅ |
-| Facturación usuarios | ✅ |
-| Facturación admin | ✅ |
-| Reportes financieros | ✅ |
+| Suscripciones | ✅ |
 | Inventario | ✅ |
-| MongoDB Atlas (producción) | ✅ |
+| Facturación | ✅ |
+| Reportes | ✅ |
+| MongoDB Atlas | ✅ |
+| Entrypoint de producción endurecido | ✅ |
 
----
+> El branch `hardening/mvp-production` agrega una capa de producción sin reemplazar el MVP existente.
 
-## 📋 Pasos para Lanzar
+## 1. Variables de producción
 
-### PASO 1: Configurar Dominio Personalizado
-1. Compra un dominio (ej: nailcost.pro, nailcostpro.com)
-   - Recomendado: Namecheap, GoDaddy, Google Domains
-   - Costo: ~$10-15/año
+Configura las siguientes variables **en el proveedor de hosting**, no dentro de Git:
 
-2. Opciones de hosting:
-   - **Opción A: Emergent Deploy** (más fácil)
-     - Click en "Deploy" en Emergent
-     - Configura tu dominio personalizado
-   
-   - **Opción B: Hosting propio** (más control)
-     - Railway.app, Render.com, o DigitalOcean
-     - Costo: $5-20/mes
-
-### PASO 2: Configurar Variables de Producción
 ```env
-# backend/.env (PRODUCCIÓN)
-MONGO_URL="mongodb+srv://arenasdavid1_db_user:***@cluster0.s2mz4tv.mongodb.net/?retryWrites=true&w=majority"
-DB_NAME="nailcost_pro"
-JWT_SECRET="[genera una clave de 64+ caracteres]"
-CORS_ORIGINS="https://tudominio.com"
+MONGO_URL="mongodb+srv://<usuario>:<password>@<cluster>/?retryWrites=true&w=majority"
+DB_NAME="stetik_pro"
+JWT_SECRET="<clave aleatoria de al menos 64 caracteres>"
+CORS_ORIGINS="https://tu-dominio.com"
+STETIK_ALLOW_UNSUBSCRIBED_ACCESS="false"
+STETIK_ALLOW_LEGACY_UPGRADE="false"
+STETIK_ALLOW_DEBUG_ENDPOINTS="false"
 ```
 
-### PASO 3: Seguridad
-- [ ] Cambiar JWT_SECRET a una clave única y segura
-- [ ] Configurar CORS solo para tu dominio
-- [ ] Habilitar HTTPS (automático en la mayoría de hosts)
-- [ ] Cambiar contraseña de admin después del primer login
+### Reglas
 
-### PASO 4: Configurar Pagos
-**Opción actual (manual):**
-- Clientes pagan por Pago Móvil, Zelle, Transferencia
-- Tú activas su suscripción desde el Panel Admin
-- Generas factura desde Admin
+- Nunca commits de `MONGO_URL`, contraseñas o JWT secrets.
+- Rota cualquier credencial que haya estado previamente en el repositorio.
+- Usa un usuario MongoDB exclusivo para producción.
+- Restringe MongoDB a las redes necesarias.
+- HTTPS obligatorio en producción.
 
-**Opción futura (automático):**
-- Integrar Stripe para cobros automáticos
-- Renovación automática mensual
+## 2. Backend de producción
 
-### PASO 5: Marketing Inicial
-1. **Crea contenido en redes:**
-   - Instagram: antes/después, tips de precios
-   - TikTok: tutoriales cortos
-   - WhatsApp: grupo de comunidad
+El branch incluye:
 
-2. **Ofrece trial extendido a primeros usuarios:**
-   - 30 días en lugar de 15
-   - Feedback a cambio de descuento
-
-3. **Pricing sugerido Venezuela:**
-   - Personal Básico: $5/mes
-   - Personal Premium: $10/mes
-   - Comercio Básico: $15/mes
-   - Comercio Premium: $20/mes
-
----
-
-## 🔐 Credenciales Admin
-
-| Email | Password |
-|-------|----------|
-| admin@nailcost.pro | NailCost@Adm1n#2024Secure |
-
-> ⚠️ Cambia esta contraseña después del primer login en producción
-
----
-
-## 📱 Flujo del Usuario
-
-```
-1. Usuario se registra → Estado: PENDIENTE
-2. Admin activa la cuenta → Inicia TRIAL 15 días
-3. Usuario usa la app durante el trial
-4. Trial vence → Usuario ve mensaje de pago
-5. Usuario paga (Pago Móvil/Zelle/Transferencia)
-6. Usuario contacta al admin
-7. Admin registra pago → Activa suscripción
-8. Usuario puede usar la app
-9. Al mes siguiente → repetir desde paso 4
+```text
+backend/production_app.py
+backend/Procfile
+Procfile
 ```
 
----
+El arranque recomendado es:
 
-## 📊 Panel Admin - Funciones
+```bash
+cd backend
+uvicorn production_app:app --host 0.0.0.0 --port $PORT
+```
 
-| Sección | Descripción |
-|---------|-------------|
-| Pendientes Activación | Usuarios nuevos esperando aprobación |
-| Vencidos/Espera Pago | Usuarios cuya suscripción venció |
-| Usuarios Activos | Usuarios con suscripción activa |
-| Facturas Pendientes | Facturas por cobrar |
-| Todas las Facturas | Historial completo |
+El wrapper añade:
 
-**Acciones disponibles:**
-- ✅ Activar usuario (inicia trial)
-- ✅ Registrar pago (activa suscripción)
-- ✅ Generar factura
-- ✅ Blanquear contraseña
-- ✅ Suspender usuario
+- Validación centralizada de cuenta/trial/suscripción.
+- Validación de la suscripción del comercio para empleados.
+- Bloqueo del endpoint de upgrade directo sin pago.
+- Bloqueo de endpoints de debug de recuperación de contraseña.
+- Headers de seguridad HTTP.
 
----
+El `server.py` original se mantiene para facilitar rollback y desarrollo.
 
-## 💡 Consejos para Crecer
+## 3. Flujo comercial seguro
 
-1. **Primeros 10 usuarios gratis** → testimonios y feedback
-2. **Programa de referidos** → 1 mes gratis por cada referido
-3. **Contenido educativo** → blog/videos sobre pricing para uñas
-4. **Soporte WhatsApp** → respuesta rápida = clientes felices
-5. **Actualizaciones mensuales** → mantén la app fresca
+```text
+Registro
+   ↓
+PENDING
+   ↓
+Admin activa
+   ↓
+TRIAL 15 días
+   ↓
+Pago manual / futuro gateway
+   ↓
+Admin registra pago
+   ↓
+Suscripción activa
+   ↓
+Acceso
+   ↓
+Vencimiento
+   ↓
+Bloqueo de API
+```
 
----
+El endpoint de upgrade directo de desarrollo permanece deshabilitado en producción.
 
-## 🆘 Soporte
+## 4. Pagos
 
-Si necesitas ayuda:
-1. Revisa esta guía
-2. Contacta por el canal de soporte de Emergent
-3. Para cambios en la app, crea un nuevo job
+### Etapa MVP
 
-¡Éxito con tu lanzamiento! 🚀
+- Pago Móvil
+- Zelle
+- Transferencia
+- Activación manual desde Admin
+
+### Etapa posterior
+
+Integrar gateway de pago y activar la suscripción solamente después de confirmar el pago mediante webhook o mecanismo equivalente.
+
+## 5. Pricing inicial
+
+- Personal Básico: $5/mes
+- Personal Premium: $10/mes
+- Comercio Básico: $15/mes
+- Comercio Premium: $20/mes
+
+Los precios son comerciales; la lógica técnica de suscripción debe seguir siendo la autoridad del backend.
+
+## 6. Checklist antes de producción
+
+- [ ] Rotar JWT_SECRET
+- [ ] Rotar credenciales MongoDB si fueron usadas anteriormente en documentación
+- [ ] Configurar CORS con dominios reales
+- [ ] Configurar HTTPS
+- [ ] Configurar `production_app:app`
+- [ ] Verificar trial expirado → API devuelve 403
+- [ ] Verificar suscripción vencida → API devuelve 403
+- [ ] Verificar empleado con comercio vencido → API devuelve 403
+- [ ] Verificar upgrade directo → 410
+- [ ] Verificar endpoints debug → 404
+- [ ] Probar aislamiento Comercio A vs Comercio B
+- [ ] Probar owner/admin/empleado
+- [ ] Hacer backup inicial de MongoDB
+- [ ] Confirmar logs y monitoreo
+
+## 7. Credenciales administrativas
+
+**No se almacenan credenciales administrativas en este repositorio.**
+
+Crea o rota el usuario administrador directamente en el entorno de producción y guarda sus credenciales en un gestor seguro.
+
+## 8. Rollback
+
+El MVP original continúa disponible mediante `backend/server.py`.
+
+Si el proveedor no soporta el `Procfile`, configura manualmente el start command:
+
+```bash
+cd backend && uvicorn production_app:app --host 0.0.0.0 --port $PORT
+```
+
+No cambies la arquitectura del MVP para resolver problemas de despliegue; primero verifica variables de entorno, root directory y start command.
