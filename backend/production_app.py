@@ -27,12 +27,7 @@ app = server.app
 
 
 class TenantAwareUser(dict):
-    """Compatibility view for business sub-users.
-
-    Legacy MVP endpoints use ``current_user['id']`` for business-owned data.
-    Production maps that id to the business owner while preserving the real
-    authenticated sub-user identity in ``identity_id``.
-    """
+    """Compatibility view for business sub-users."""
 
     def __init__(self, data: dict[str, Any], data_owner_id: str):
         super().__init__(data)
@@ -98,6 +93,16 @@ async def _hardened_current_user(
         )
         if account is None:
             raise HTTPException(status_code=401, detail="Cuenta de negocio no encontrada")
+    else:
+        # Always read the canonical user document so trial/subscription state
+        # returned by /auth/me and used for authorization cannot become stale.
+        fresh_account = await server.db.users.find_one(
+            {"id": user.get("id")}, {"_id": 0, "password": 0}
+        )
+        if fresh_account is None:
+            raise HTTPException(status_code=401, detail="Usuario no encontrado")
+        account = fresh_account
+        user = {**user, **fresh_account}
 
     allowed, reason = _subscription_is_valid(account)
     if not allowed:
@@ -108,8 +113,6 @@ async def _hardened_current_user(
         )
 
     if user.get("is_business_user"):
-        # Keep the business account's subscription state in the compatibility
-        # view so /auth/me and authorization use the same source of truth.
         enriched_user = {
             **user,
             "account_status": account.get("account_status", "active"),
@@ -205,11 +208,7 @@ async def _production_my_permissions(current_user: dict = Depends(_hardened_curr
 
 
 async def _secure_forgot_password(data: server.PasswordResetRequest):
-    """Production-safe password recovery.
-
-    The legacy endpoint printed and returned the reset token. Production never
-    exposes that token through the API response or application logs.
-    """
+    """Production-safe password recovery without exposing reset tokens."""
     user = await server.db.users.find_one({"email": data.email.lower()})
     message = "Si el email existe, recibirás instrucciones para restablecer su contraseña"
     if not user:
@@ -226,8 +225,6 @@ async def _secure_forgot_password(data: server.PasswordResetRequest):
     return {"message": message}
 
 
-# Replace selected legacy handlers in production while leaving the MVP server
-# available for development/rollback.
 _ROUTE_REPLACEMENTS = {
     "/api/auth/forgot-password": _secure_forgot_password,
     "/api/auth/me": _production_get_me,
@@ -246,14 +243,12 @@ app.dependency_overrides[server.get_current_user] = _hardened_current_user
 
 @app.on_event("startup")
 async def production_startup() -> None:
-    """Create safe, repeatable MongoDB indexes and verify connectivity."""
     await server.db.command("ping")
     await ensure_indexes(server.db)
 
 
 @app.get("/health", include_in_schema=False)
 async def health() -> dict[str, str]:
-    """Lightweight health endpoint for Render and uptime monitors."""
     try:
         await server.db.command("ping")
         return {"status": "ok", "database": "ok"}
