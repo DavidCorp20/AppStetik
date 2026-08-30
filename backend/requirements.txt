@@ -13,6 +13,7 @@ dnspython==2.8.0
 ecdsa==0.19.1
 email-validator==2.3.0
 fastapi==0.110.1
+fastapi-cli==0.0.5
 frozenlist==1.8.0
 h11==0.16.0
 httpcore==1.0.9
@@ -21,7 +22,7 @@ idna==3.11
 Jinja2==3.1.6
 jmespath==1.1.0
 MarkupSafe==3.0.3
-motor==3.3.1
+motor==3.7.1
 multidict==6.7.1
 numpy==2.4.2
 openpyxl==3.1.5
@@ -34,7 +35,7 @@ propcache==0.4.1
 pydantic==2.12.5
 pydantic_core==2.41.5
 PyJWT==2.11.0
-pymongo==4.5.0
+pymongo==4.17.0
 pytest==8.4.2
 python-dateutil==2.9.0.post0
 python-dotenv==1.2.1
