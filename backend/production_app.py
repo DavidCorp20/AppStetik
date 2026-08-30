@@ -79,10 +79,48 @@ def _subscription_is_valid(account: dict[str, Any]) -> tuple[bool, str]:
     return False, "Cuenta sin trial o suscripción activa"
 
 
+async def _canonical_current_user(
+    credentials: server.HTTPAuthorizationCredentials = Depends(server.security),
+):
+    """Resolve the JWT identity against the current MongoDB document.
+
+    This dependency intentionally does not enforce subscription state. It is
+    used by identity endpoints such as /auth/me so an expired/pending account
+    can still retrieve its canonical account status and show the proper UI.
+    """
+    user = await server.get_current_user(credentials)
+    data_owner_id = user.get("effective_user_id") or user.get("id")
+
+    if user.get("is_business_user") and user.get("business_id"):
+        data_owner_id = user["business_id"]
+        account = await server.db.users.find_one(
+            {"id": data_owner_id}, {"_id": 0, "password": 0}
+        )
+        if account is None:
+            raise HTTPException(status_code=401, detail="Cuenta de negocio no encontrada")
+        enriched_user = {
+            **user,
+            "account_status": account.get("account_status", "active"),
+            "trial_ends_at": account.get("trial_ends_at"),
+            "subscription_starts_at": account.get("subscription_starts_at"),
+            "subscription_ends_at": account.get("subscription_ends_at"),
+            "plan": account.get("plan", "free"),
+            "nombre_negocio": account.get("nombre_negocio", ""),
+        }
+        return TenantAwareUser(enriched_user, data_owner_id)
+
+    account = await server.db.users.find_one(
+        {"id": user.get("id")}, {"_id": 0, "password": 0}
+    )
+    if account is None:
+        raise HTTPException(status_code=401, detail="Usuario no encontrado")
+    return {**user, **account}
+
+
 async def _hardened_current_user(
     credentials: server.HTTPAuthorizationCredentials = Depends(server.security),
 ):
-    user = await server.get_current_user(credentials)
+    user = await _canonical_current_user(credentials)
     account = user
     data_owner_id = user.get("effective_user_id") or user.get("id")
 
@@ -94,15 +132,7 @@ async def _hardened_current_user(
         if account is None:
             raise HTTPException(status_code=401, detail="Cuenta de negocio no encontrada")
     else:
-        # Always read the canonical user document so trial/subscription state
-        # returned by /auth/me and used for authorization cannot become stale.
-        fresh_account = await server.db.users.find_one(
-            {"id": user.get("id")}, {"_id": 0, "password": 0}
-        )
-        if fresh_account is None:
-            raise HTTPException(status_code=401, detail="Usuario no encontrado")
-        account = fresh_account
-        user = {**user, **fresh_account}
+        account = user
 
     allowed, reason = _subscription_is_valid(account)
     if not allowed:
@@ -146,7 +176,7 @@ def _build_user_response(current_user: dict[str, Any]) -> Any:
     )
 
 
-async def _production_get_me(current_user: dict = Depends(_hardened_current_user)):
+async def _production_get_me(current_user: dict = Depends(_canonical_current_user)):
     return _build_user_response(current_user)
 
 
