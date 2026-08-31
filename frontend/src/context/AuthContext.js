@@ -1,7 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+// Vercel does not load .env.example. Keep a production fallback so a missing
+// REACT_APP_BACKEND_URL can never turn the API base into "undefined/api".
+const BACKEND_URL = (process.env.REACT_APP_BACKEND_URL || 'https://appstetik.fastapicloud.dev').replace(/\/$/, '');
 const API = `${BACKEND_URL}/api`;
 
 const AuthContext = createContext(null);
@@ -14,7 +16,6 @@ export const useAuth = () => {
   return context;
 };
 
-// Create axios instance with auth interceptor
 export const authAxios = axios.create();
 
 export const AuthProvider = ({ children }) => {
@@ -23,7 +24,6 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [planLimits, setPlanLimits] = useState(null);
 
-  // Configure axios interceptor
   useEffect(() => {
     const interceptor = authAxios.interceptors.request.use(
       (config) => {
@@ -36,12 +36,9 @@ export const AuthProvider = ({ children }) => {
       (error) => Promise.reject(error)
     );
 
-    return () => {
-      authAxios.interceptors.request.eject(interceptor);
-    };
+    return () => authAxios.interceptors.request.eject(interceptor);
   }, []);
 
-  // Check auth on load
   const checkAuth = useCallback(async () => {
     const storedToken = localStorage.getItem('nailcost_token');
     if (!storedToken) {
@@ -55,8 +52,7 @@ export const AuthProvider = ({ children }) => {
       });
       setUser(res.data);
       setToken(storedToken);
-      
-      // Fetch plan limits
+
       const limitsRes = await axios.get(`${API}/auth/plan-limits`, {
         headers: { Authorization: `Bearer ${storedToken}` }
       });
@@ -78,34 +74,32 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     const res = await axios.post(`${API}/auth/login`, { email, password });
     const { access_token, user: userData } = res.data;
-    
+
     localStorage.setItem('nailcost_token', access_token);
     setToken(access_token);
     setUser(userData);
-    
-    // Fetch plan limits
+
     const limitsRes = await axios.get(`${API}/auth/plan-limits`, {
       headers: { Authorization: `Bearer ${access_token}` }
     });
     setPlanLimits(limitsRes.data);
-    
+
     return userData;
   };
 
   const register = async (userData) => {
     const res = await axios.post(`${API}/auth/register`, userData);
     const { access_token, user: newUser } = res.data;
-    
+
     localStorage.setItem('nailcost_token', access_token);
     setToken(access_token);
     setUser(newUser);
-    
-    // Fetch plan limits
+
     const limitsRes = await axios.get(`${API}/auth/plan-limits`, {
       headers: { Authorization: `Bearer ${access_token}` }
     });
     setPlanLimits(limitsRes.data);
-    
+
     return newUser;
   };
 
