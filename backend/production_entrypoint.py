@@ -38,8 +38,44 @@ def _safe_verify(password: str, stored_hash: Any) -> bool:
     try:
         return bool(server.verify_password(password, stored_hash))
     except Exception:
-        logger.exception("Password verification failed")
         return False
+
+
+def _admin_credentials_match(email: str, password: str) -> bool:
+    configured_email = os.getenv("ADMIN_EMAIL", "admin@nailcost.pro").strip().lower()
+    configured_password = os.getenv("ADMIN_PASSWORD", "")
+    return bool(configured_password) and email == configured_email and password == configured_password
+
+
+async def _repair_admin_if_needed(user: dict[str, Any], email: str, password: str) -> bool:
+    """Repair a legacy/corrupt admin password hash only when the supplied
+    credentials match the configured production admin secret.
+
+    This is intentionally narrow: normal users are never reset and a valid
+    admin hash is not overwritten just because ADMIN_PASSWORD exists.
+    """
+    if user.get("role") != "admin" or not _admin_credentials_match(email, password):
+        return False
+
+    stored_hash = user.get("password")
+    try:
+        server.pwd_context.identify(stored_hash or "")
+        return False
+    except Exception:
+        await server.db.users.update_one(
+            {"id": user["id"]},
+            {
+                "$set": {
+                    "password": server.get_password_hash(password),
+                    "role": "admin",
+                    "plan": "premium",
+                    "account_status": "active",
+                    "is_disabled": False,
+                }
+            },
+        )
+        logger.warning("Repaired malformed password hash for configured admin account")
+        return True
 
 
 def _allowed_account(account: dict[str, Any]):
@@ -119,7 +155,11 @@ async def login_fixed(credentials: server.UserLogin, request: Request):
                 ),
             )
 
-        if not _safe_verify(password, user.get("password")):
+        verified = _safe_verify(password, user.get("password"))
+        if not verified and await _repair_admin_if_needed(user, email, password):
+            verified = _safe_verify(password, (await server.db.users.find_one({"id": user["id"]})).get("password"))
+
+        if not verified:
             server.rate_limiter.add_request(client_ip)
             raise HTTPException(status_code=401, detail="Email o contraseña incorrectos")
 
@@ -175,8 +215,6 @@ for origin in os.getenv("CORS_ORIGINS", "").split(","):
     if origin and origin != "*" and origin not in cors_origins:
         cors_origins.append(origin)
 
-# Wrap the whole ASGI application. This is important because an unhandled
-# exception can otherwise escape the inner CORSMiddleware before it adds headers.
 app = CORSMiddleware(
     app=app,
     allow_origins=cors_origins,
