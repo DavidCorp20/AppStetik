@@ -1,7 +1,7 @@
 {
-  "short_name": "NailCost",
-  "name": "NailCost Pro - Calculadora de Costos para Uñas",
-  "description": "Sistema profesional de cálculo de costos y precios para servicios de uñas",
+  "short_name": "AppStetik",
+  "name": "AppStetik",
+  "description": "Tú haces crecer tu negocio. AppStetik te ayuda a entender tus números, organizar tu día y tomar decisiones con confianza.",
   "icons": [
     {
       "src": "favicon.ico",
