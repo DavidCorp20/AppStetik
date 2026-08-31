@@ -1,10 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { useContext, useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 
 const BACKEND_URL = (process.env.REACT_APP_BACKEND_URL || 'https://appstetik.fastapicloud.dev').replace(/\/$/, '');
 const API = `${BACKEND_URL}/api`;
 
-const AuthContext = createContext(null);
+const AuthContext = React.createContext(null);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -24,6 +24,10 @@ const PREMIUM_PLAN_LIMITS = {
 };
 const fallbackPlanLimits = (user) => user?.plan === 'premium' ? PREMIUM_PLAN_LIMITS : DEFAULT_PLAN_LIMITS;
 
+const clearStoredSession = () => {
+  localStorage.removeItem('nailcost_token');
+};
+
 const fetchPlanLimitsSafely = async (accessToken, user) => {
   try {
     const response = await axios.get(`${API}/auth/plan-limits`, {
@@ -34,6 +38,23 @@ const fetchPlanLimitsSafely = async (accessToken, user) => {
     if (error?.response?.status !== 403) console.warn('Plan limits unavailable:', error);
     return fallbackPlanLimits(user);
   }
+};
+
+const isInactiveAccount = (user) => {
+  const status = user?.account_status;
+  return status === 'pending' || status === 'suspended' || user?.is_disabled === true;
+};
+
+const inactiveAccountError = (user) => {
+  const status = user?.account_status;
+  const detail = status === 'suspended'
+    ? 'Tu cuenta ha sido suspendida. Contacta al administrador.'
+    : status === 'pending'
+      ? 'Tu cuenta está pendiente de activación. Contacta al administrador para activarla.'
+      : 'Tu cuenta ha sido deshabilitada. Contacta al administrador.';
+  const error = new Error(detail);
+  error.response = { data: { detail }, status: 403 };
+  return error;
 };
 
 export const AuthProvider = ({ children }) => {
@@ -57,33 +78,55 @@ export const AuthProvider = ({ children }) => {
 
     try {
       const res = await axios.get(`${API}/auth/me`, { headers: { Authorization: `Bearer ${storedToken}` } });
+      const currentUser = res.data;
 
-      // Production backend intentionally creates registrations as pending and
-      // rejects pending accounts from protected endpoints. A pending JWT is
-      // therefore not an authenticated application session.
-      if (res.data?.account_status !== 'active' && res.data?.role !== 'admin') {
-        localStorage.removeItem('nailcost_token');
+      // Never let pending/suspended accounts enter the protected React tree.
+      // The backend correctly returns 403 for these accounts; clearing the
+      // token here prevents a partial dashboard from rendering with missing data.
+      if (isInactiveAccount(currentUser)) {
+        clearStoredSession();
         setToken(null);
         setUser(null);
-        setPlanLimits(fallbackPlanLimits(res.data));
+        setPlanLimits(null);
         return;
       }
 
-      setUser(res.data);
+      setUser(currentUser);
       setToken(storedToken);
-      setPlanLimits(await fetchPlanLimitsSafely(storedToken, res.data));
+      setPlanLimits(await fetchPlanLimitsSafely(storedToken, currentUser));
     } catch (err) {
       console.error('Auth check failed:', err);
-      localStorage.removeItem('nailcost_token');
-      setToken(null); setUser(null); setPlanLimits(null);
-    } finally { setLoading(false); }
+      clearStoredSession();
+      setToken(null);
+      setUser(null);
+      setPlanLimits(null);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => { checkAuth(); }, [checkAuth]);
 
   const login = async (email, password) => {
     const res = await axios.post(`${API}/auth/login`, { email, password });
-    const { access_token, user: userData } = res.data;
+    const { access_token, user: userData } = res.data || {};
+
+    if (!access_token || !userData) {
+      clearStoredSession();
+      setToken(null); setUser(null); setPlanLimits(null);
+      const error = new Error('Respuesta de autenticación inválida.');
+      error.response = { data: { detail: 'Respuesta de autenticación inválida.' }, status: 500 };
+      throw error;
+    }
+
+    // Important: login may currently return a JWT for a pending account.
+    // Do not persist that token or mount the protected application in that case.
+    if (isInactiveAccount(userData)) {
+      clearStoredSession();
+      setToken(null); setUser(null); setPlanLimits(null);
+      throw inactiveAccountError(userData);
+    }
+
     localStorage.setItem('nailcost_token', access_token);
     setToken(access_token);
     setUser(userData);
@@ -92,14 +135,13 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (userData) => {
-    // Registration creates a pending account. Do not store its JWT: the backend
-    // will correctly reject login/protected resources until an admin activates it.
+    // Registration creates a pending account. Do not store its JWT.
     const res = await axios.post(`${API}/auth/register`, userData);
     return res.data?.user || res.data;
   };
 
   const logout = () => {
-    localStorage.removeItem('nailcost_token');
+    clearStoredSession();
     setToken(null); setUser(null); setPlanLimits(null);
   };
 
@@ -111,8 +153,9 @@ export const AuthProvider = ({ children }) => {
 
   const refreshPlanLimits = async () => {
     if (!token || !user) return;
-    if (user.account_status !== 'active' && user.role !== 'admin') {
-      setPlanLimits(fallbackPlanLimits(user));
+    if (isInactiveAccount(user)) {
+      clearStoredSession();
+      setToken(null); setUser(null); setPlanLimits(null);
       return;
     }
     setPlanLimits(await fetchPlanLimitsSafely(token, user));
@@ -123,6 +166,11 @@ export const AuthProvider = ({ children }) => {
   const isPersonalUser = user?.user_type === 'personal' || !user?.user_type;
   const isAdmin = user?.role === 'admin';
 
-  const value = { user, token, loading, planLimits, isPremium, isBusinessUser, isPersonalUser, isAdmin, login, register, logout, updateProfile, refreshPlanLimits, isAuthenticated: !!token && !!user };
+  const value = {
+    user, token, loading, planLimits, isPremium, isBusinessUser, isPersonalUser,
+    isAdmin, login, register, logout, updateProfile, refreshPlanLimits,
+    isAuthenticated: !!token && !!user,
+  };
+
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
