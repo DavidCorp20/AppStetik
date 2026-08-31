@@ -10,7 +10,6 @@ export const useAuth = () => {
   if (!context) throw new Error('useAuth must be used within AuthProvider');
   return context;
 };
-
 export const authAxios = axios.create();
 
 const DEFAULT_PLAN_LIMITS = { max_productos: 10, max_estilos: 5, max_disenos: 5, max_clientes: 20, can_export: false, can_simulate: false, can_view_reports: false };
@@ -18,21 +17,19 @@ const PREMIUM_PLAN_LIMITS = { max_productos: 999, max_estilos: 999, max_disenos:
 const fallbackPlanLimits = (user) => user?.plan === 'premium' ? PREMIUM_PLAN_LIMITS : DEFAULT_PLAN_LIMITS;
 const clearStoredSession = () => localStorage.removeItem('nailcost_token');
 
-// Normalize known collection-shaped admin responses at the HTTP boundary.
-// AdminPage historically assumes these properties are arrays and calls .filter()
-// immediately after a successful response. A malformed/empty API payload must
-// never be allowed to turn that assumption into a render-time crash.
 const normalizeResponse = (response) => {
   const url = response?.config?.url || '';
   const data = response?.data;
   if (url.includes('/admin/subscriptions')) {
     const source = data && typeof data === 'object' && !Array.isArray(data) ? data : {};
-    response.data = { ...source, subscriptions: Array.isArray(source.subscriptions) ? source.subscriptions : [], summary: source.summary && typeof source.summary === 'object' ? source.summary : {} };
+    const list = Array.isArray(data) ? data : Array.isArray(source.subscriptions) ? source.subscriptions : Array.isArray(source.users) ? source.users : Array.isArray(source.usuarios) ? source.usuarios : Array.isArray(source.data) ? source.data : Array.isArray(source.data?.subscriptions) ? source.data.subscriptions : Array.isArray(source.data?.users) ? source.data.users : [];
+    const summary = source.summary && typeof source.summary === 'object' ? source.summary : source.data?.summary && typeof source.data.summary === 'object' ? source.data.summary : {};
+    response.data = { ...source, subscriptions: list, summary };
   } else if (url.includes('/admin/invoices')) {
     const source = data && typeof data === 'object' && !Array.isArray(data) ? data : {};
-    response.data = { ...source, invoices: Array.isArray(source.invoices) ? source.invoices : [], summary: source.summary && typeof source.summary === 'object' ? source.summary : {} };
-  } else if (Array.isArray(data)) {
-    response.data = data;
+    const list = Array.isArray(data) ? data : Array.isArray(source.invoices) ? source.invoices : Array.isArray(source.facturas) ? source.facturas : Array.isArray(source.data) ? source.data : Array.isArray(source.data?.invoices) ? source.data.invoices : Array.isArray(source.data?.facturas) ? source.data.facturas : [];
+    const summary = source.summary && typeof source.summary === 'object' ? source.summary : source.data?.summary && typeof source.data.summary === 'object' ? source.data.summary : {};
+    response.data = { ...source, invoices: list, summary };
   }
   return response;
 };
@@ -46,18 +43,11 @@ const fetchPlanLimitsSafely = async (accessToken, user) => {
     return fallbackPlanLimits(user);
   }
 };
-
-const isInactiveAccount = (user) => {
-  const status = user?.account_status;
-  return status === 'pending' || status === 'suspended' || user?.is_disabled === true;
-};
-
+const isInactiveAccount = (user) => user?.account_status === 'pending' || user?.account_status === 'suspended' || user?.is_disabled === true;
 const inactiveAccountError = (user) => {
   const status = user?.account_status;
   const detail = status === 'suspended' ? 'Tu cuenta ha sido suspendida. Contacta al administrador.' : status === 'pending' ? 'Tu cuenta está pendiente de activación. Contacta al administrador para activarla.' : 'Tu cuenta ha sido deshabilitada. Contacta al administrador.';
-  const error = new Error(detail);
-  error.response = { data: { detail }, status: 403 };
-  return error;
+  const error = new Error(detail); error.response = { data: { detail }, status: 403 }; return error;
 };
 
 export const AuthProvider = ({ children }) => {
@@ -73,10 +63,7 @@ export const AuthProvider = ({ children }) => {
       return config;
     });
     const responseInterceptor = authAxios.interceptors.response.use(normalizeResponse, (error) => Promise.reject(error));
-    return () => {
-      authAxios.interceptors.request.eject(requestInterceptor);
-      authAxios.interceptors.response.eject(responseInterceptor);
-    };
+    return () => { authAxios.interceptors.request.eject(requestInterceptor); authAxios.interceptors.response.eject(responseInterceptor); };
   }, []);
 
   const checkAuth = useCallback(async () => {
@@ -85,50 +72,25 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await axios.get(`${API}/auth/me`, { headers: { Authorization: `Bearer ${storedToken}` } });
       const currentUser = res.data;
-      if (isInactiveAccount(currentUser)) {
-        clearStoredSession(); setToken(null); setUser(null); setPlanLimits(null); return;
-      }
-      setUser(currentUser); setToken(storedToken);
-      setPlanLimits(await fetchPlanLimitsSafely(storedToken, currentUser));
+      if (isInactiveAccount(currentUser)) { clearStoredSession(); setToken(null); setUser(null); setPlanLimits(null); return; }
+      setUser(currentUser); setToken(storedToken); setPlanLimits(await fetchPlanLimitsSafely(storedToken, currentUser));
     } catch (err) {
-      console.error('Auth check failed:', err);
-      clearStoredSession(); setToken(null); setUser(null); setPlanLimits(null);
+      console.error('Auth check failed:', err); clearStoredSession(); setToken(null); setUser(null); setPlanLimits(null);
     } finally { setLoading(false); }
   }, []);
-
   useEffect(() => { checkAuth(); }, [checkAuth]);
 
   const login = async (email, password) => {
     const res = await axios.post(`${API}/auth/login`, { email, password });
     const { access_token, user: userData } = res.data || {};
-    if (!access_token || !userData) {
-      clearStoredSession(); setToken(null); setUser(null); setPlanLimits(null);
-      const error = new Error('Respuesta de autenticación inválida.');
-      error.response = { data: { detail: 'Respuesta de autenticación inválida.' }, status: 500 };
-      throw error;
-    }
-    if (isInactiveAccount(userData)) {
-      clearStoredSession(); setToken(null); setUser(null); setPlanLimits(null);
-      throw inactiveAccountError(userData);
-    }
-    localStorage.setItem('nailcost_token', access_token);
-    setToken(access_token); setUser(userData);
-    setPlanLimits(await fetchPlanLimitsSafely(access_token, userData));
-    return userData;
+    if (!access_token || !userData) { clearStoredSession(); setToken(null); setUser(null); setPlanLimits(null); const error = new Error('Respuesta de autenticación inválida.'); error.response = { data: { detail: 'Respuesta de autenticación inválida.' }, status: 500 }; throw error; }
+    if (isInactiveAccount(userData)) { clearStoredSession(); setToken(null); setUser(null); setPlanLimits(null); throw inactiveAccountError(userData); }
+    localStorage.setItem('nailcost_token', access_token); setToken(access_token); setUser(userData); setPlanLimits(await fetchPlanLimitsSafely(access_token, userData)); return userData;
   };
-
-  const register = async (userData) => {
-    const res = await axios.post(`${API}/auth/register`, userData);
-    return res.data?.user || res.data;
-  };
+  const register = async (userData) => { const res = await axios.post(`${API}/auth/register`, userData); return res.data?.user || res.data; };
   const logout = () => { clearStoredSession(); setToken(null); setUser(null); setPlanLimits(null); };
   const updateProfile = async (profileData) => { const res = await authAxios.put(`${API}/auth/profile`, null, { params: profileData }); setUser(prev => ({ ...prev, ...res.data })); return res.data; };
-  const refreshPlanLimits = async () => {
-    if (!token || !user) return;
-    if (isInactiveAccount(user)) { clearStoredSession(); setToken(null); setUser(null); setPlanLimits(null); return; }
-    setPlanLimits(await fetchPlanLimitsSafely(token, user));
-  };
-
+  const refreshPlanLimits = async () => { if (!token || !user) return; if (isInactiveAccount(user)) { logout(); return; } setPlanLimits(await fetchPlanLimitsSafely(token, user)); };
   const isPremium = user?.plan === 'premium';
   const isBusinessUser = user?.user_type === 'business';
   const isPersonalUser = user?.user_type === 'personal' || !user?.user_type;
