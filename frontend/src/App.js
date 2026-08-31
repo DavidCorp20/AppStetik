@@ -7,7 +7,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { Layout } from "@/components/Layout";
 import { NotificationManager } from "@/components/NotificationManager";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { PersonaDashboard } from "@/pages/PersonaDashboard";
+import { Dashboard } from "@/pages/Dashboard";
 import { ComercioDashboard } from "@/pages/ComercioDashboard";
 import { ProductosPage } from "@/pages/ProductosPage";
 import { EstilosPage } from "@/pages/EstilosPage";
@@ -52,7 +52,10 @@ function DashboardRouter() {
   const { isBusinessUser, isAdmin } = useAuth();
   if (isAdmin) return <Navigate to="/admin" replace />;
   if (isBusinessUser) return <ComercioDashboard />;
-  return <PersonaDashboard />;
+  // Use the stable personal dashboard while PersonaDashboard is being hardened.
+  // The legacy Dashboard has the same core personal workflows but does not
+  // assume API history responses are arrays before validating them.
+  return <Dashboard />;
 }
 
 function ProtectedRoute() {
