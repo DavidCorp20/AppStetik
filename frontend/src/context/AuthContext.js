@@ -54,17 +54,24 @@ export const AuthProvider = ({ children }) => {
   const checkAuth = useCallback(async () => {
     const storedToken = localStorage.getItem('nailcost_token');
     if (!storedToken) { setLoading(false); return; }
+
     try {
       const res = await axios.get(`${API}/auth/me`, { headers: { Authorization: `Bearer ${storedToken}` } });
+
+      // Production backend intentionally creates registrations as pending and
+      // rejects pending accounts from protected endpoints. A pending JWT is
+      // therefore not an authenticated application session.
+      if (res.data?.account_status !== 'active' && res.data?.role !== 'admin') {
+        localStorage.removeItem('nailcost_token');
+        setToken(null);
+        setUser(null);
+        setPlanLimits(fallbackPlanLimits(res.data));
+        return;
+      }
+
       setUser(res.data);
       setToken(storedToken);
-      // Pending accounts are intentionally blocked by production hardening.
-      // Do not call a protected endpoint while the account is pending.
-      if (res.data?.account_status === 'active' || res.data?.role === 'admin') {
-        setPlanLimits(await fetchPlanLimitsSafely(storedToken, res.data));
-      } else {
-        setPlanLimits(fallbackPlanLimits(res.data));
-      }
+      setPlanLimits(await fetchPlanLimitsSafely(storedToken, res.data));
     } catch (err) {
       console.error('Auth check failed:', err);
       localStorage.removeItem('nailcost_token');
@@ -85,8 +92,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (userData) => {
-    // The backend creates new accounts as pending. Registration must NOT
-    // authenticate the pending account or request protected endpoints.
+    // Registration creates a pending account. Do not store its JWT: the backend
+    // will correctly reject login/protected resources until an admin activates it.
     const res = await axios.post(`${API}/auth/register`, userData);
     return res.data?.user || res.data;
   };
