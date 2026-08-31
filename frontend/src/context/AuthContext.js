@@ -18,6 +18,48 @@ export const useAuth = () => {
 
 export const authAxios = axios.create();
 
+const DEFAULT_PLAN_LIMITS = {
+  max_productos: 10,
+  max_estilos: 5,
+  max_disenos: 5,
+  max_clientes: 20,
+  can_export: false,
+  can_simulate: false,
+  can_view_reports: false,
+};
+
+const PREMIUM_PLAN_LIMITS = {
+  max_productos: 999,
+  max_estilos: 999,
+  max_disenos: 999,
+  max_clientes: 999,
+  can_export: true,
+  can_simulate: true,
+  can_view_reports: true,
+};
+
+const fallbackPlanLimits = (user) =>
+  user?.plan === 'premium' ? PREMIUM_PLAN_LIMITS : DEFAULT_PLAN_LIMITS;
+
+const fetchPlanLimitsSafely = async (accessToken, user) => {
+  try {
+    const response = await axios.get(`${API}/auth/plan-limits`, {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+    if (response.data && typeof response.data === 'object') {
+      return response.data;
+    }
+  } catch (error) {
+    // A newly registered account can legitimately be pending and the hardened
+    // backend may return 403 for protected plan data. That must never make
+    // registration/login fail after authentication already succeeded.
+    if (error?.response?.status !== 403) {
+      console.warn('Plan limits unavailable:', error);
+    }
+  }
+  return fallbackPlanLimits(user);
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('nailcost_token'));
@@ -52,16 +94,14 @@ export const AuthProvider = ({ children }) => {
       });
       setUser(res.data);
       setToken(storedToken);
-
-      const limitsRes = await axios.get(`${API}/auth/plan-limits`, {
-        headers: { Authorization: `Bearer ${storedToken}` }
-      });
-      setPlanLimits(limitsRes.data);
+      const limits = await fetchPlanLimitsSafely(storedToken, res.data);
+      setPlanLimits(limits);
     } catch (err) {
       console.error('Auth check failed:', err);
       localStorage.removeItem('nailcost_token');
       setToken(null);
       setUser(null);
+      setPlanLimits(null);
     } finally {
       setLoading(false);
     }
@@ -79,26 +119,25 @@ export const AuthProvider = ({ children }) => {
     setToken(access_token);
     setUser(userData);
 
-    const limitsRes = await axios.get(`${API}/auth/plan-limits`, {
-      headers: { Authorization: `Bearer ${access_token}` }
-    });
-    setPlanLimits(limitsRes.data);
+    const limits = await fetchPlanLimitsSafely(access_token, userData);
+    setPlanLimits(limits);
 
     return userData;
   };
 
   const register = async (userData) => {
+    // Registration itself is the only required operation here. Do not chain a
+    // protected plan-limits request as part of registration success.
     const res = await axios.post(`${API}/auth/register`, userData);
     const { access_token, user: newUser } = res.data;
 
     localStorage.setItem('nailcost_token', access_token);
     setToken(access_token);
     setUser(newUser);
+    setPlanLimits(fallbackPlanLimits(newUser));
 
-    const limitsRes = await axios.get(`${API}/auth/plan-limits`, {
-      headers: { Authorization: `Bearer ${access_token}` }
-    });
-    setPlanLimits(limitsRes.data);
+    // Refresh asynchronously when possible, without making registration fail.
+    fetchPlanLimitsSafely(access_token, newUser).then(setPlanLimits);
 
     return newUser;
   };
@@ -120,12 +159,8 @@ export const AuthProvider = ({ children }) => {
 
   const refreshPlanLimits = async () => {
     if (!token) return;
-    try {
-      const res = await authAxios.get(`${API}/auth/plan-limits`);
-      setPlanLimits(res.data);
-    } catch (err) {
-      console.error('Error refreshing plan limits:', err);
-    }
+    const limits = await fetchPlanLimitsSafely(token, user);
+    setPlanLimits(limits);
   };
 
   const isPremium = user?.plan === 'premium';
