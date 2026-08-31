@@ -30,6 +30,14 @@ const webpackConfig = {
   webpack: {
     alias: { "@": path.resolve(__dirname, "src") },
     configure: (webpackConfig) => {
+      // CRA 5 + newer webpack versions can incorrectly tree-shake
+      // lucide-react's re-exported icon bindings. Keep the rest of
+      // webpack's production optimizations enabled and disable only
+      // sideEffects analysis, which is the failing optimization.
+      webpackConfig.optimization = {
+        ...webpackConfig.optimization,
+        sideEffects: false,
+      };
       webpackConfig.watchOptions = {
         ...webpackConfig.watchOptions,
         ignored: ["**/node_modules/**", "**/.git/**", "**/build/**", "**/dist/**", "**/coverage/**", "**/public/**"],
