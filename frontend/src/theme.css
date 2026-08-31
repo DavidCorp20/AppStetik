@@ -1,0 +1,40 @@
+/* StetikApp theme layer. Kept separate so the existing design system is preserved. */
+html[data-stetik-theme="dark"] {
+  color-scheme: dark;
+  --background: 222 20% 9%;
+  --foreground: 330 20% 96%;
+  --card: 222 18% 13%;
+  --card-foreground: 330 20% 96%;
+  --popover: 222 18% 13%;
+  --popover-foreground: 330 20% 96%;
+  --muted: 222 16% 18%;
+  --muted-foreground: 220 12% 72%;
+  --border: 222 14% 25%;
+  --input: 222 16% 19%;
+}
+html[data-stetik-theme="light"] { color-scheme: light; }
+html[data-stetik-theme="dark"] body,
+html[data-stetik-theme="dark"] #root { background: hsl(var(--background)); color: hsl(var(--foreground)); }
+html[data-stetik-theme="dark"] .bg-white { background-color: hsl(var(--card)) !important; }
+html[data-stetik-theme="dark"] .bg-stone-50,
+html[data-stetik-theme="dark"] .bg-gray-50 { background-color: hsl(var(--muted)) !important; }
+html[data-stetik-theme="dark"] .text-stone-800,
+html[data-stetik-theme="dark"] .text-stone-700,
+html[data-stetik-theme="dark"] .text-stone-600,
+html[data-stetik-theme="dark"] .text-gray-900,
+html[data-stetik-theme="dark"] .text-gray-800,
+html[data-stetik-theme="dark"] .text-gray-700 { color: hsl(var(--foreground)) !important; }
+html[data-stetik-theme="dark"] .text-stone-500,
+html[data-stetik-theme="dark"] .text-stone-400,
+html[data-stetik-theme="dark"] .text-gray-500,
+html[data-stetik-theme="dark"] .text-gray-400 { color: hsl(var(--muted-foreground)) !important; }
+html[data-stetik-theme="dark"] .border-stone-100,
+html[data-stetik-theme="dark"] .border-stone-200,
+html[data-stetik-theme="dark"] .border-gray-100,
+html[data-stetik-theme="dark"] .border-gray-200 { border-color: hsl(var(--border)) !important; }
+html[data-stetik-theme="dark"] input,
+html[data-stetik-theme="dark"] textarea,
+html[data-stetik-theme="dark"] select { background-color: hsl(var(--input)); color: hsl(var(--foreground)); border-color: hsl(var(--border)); }
+html[data-stetik-theme="dark"] .glass,
+html[data-stetik-theme="dark"] .glass-rose,
+html[data-stetik-theme="dark"] .card-corp { background-color: hsl(var(--card)); }
