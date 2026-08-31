@@ -60,6 +60,12 @@ export const AuthProvider = ({ children }) => {
     const requestInterceptor = authAxios.interceptors.request.use((config) => {
       const storedToken = localStorage.getItem('nailcost_token');
       if (storedToken) config.headers.Authorization = `Bearer ${storedToken}`;
+      // AdminPage historically built its URL directly from REACT_APP_BACKEND_URL.
+      // If Vercel did not inject that build-time variable, recover transparently.
+      if (typeof config.url === 'string' && (config.url.startsWith('undefined/') || config.url.startsWith('null/'))) {
+        const suffix = config.url.replace(/^(undefined|null)\//, '');
+        config.url = `${BACKEND_URL}/${suffix.replace(/^\//, '')}`;
+      }
       return config;
     });
     const responseInterceptor = authAxios.interceptors.response.use(normalizeResponse, (error) => Promise.reject(error));
