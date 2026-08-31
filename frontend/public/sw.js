@@ -1,19 +1,23 @@
 // NailCost Pro - Service Worker for Push Notifications
-const CACHE_NAME = 'nailcost-v1';
+// v2: intentionally does not cache application assets; this prevents stale
+// React bundles from surviving a Vercel deployment and avoids UI/runtime drift.
+const CACHE_NAME = 'nailcost-sw-v2';
 
-// Install event
 self.addEventListener('install', (event) => {
-  console.log('Service Worker installing.');
   self.skipWaiting();
 });
 
-// Activate event
 self.addEventListener('activate', (event) => {
-  console.log('Service Worker activating.');
-  event.waitUntil(clients.claim());
+  event.waitUntil(
+    caches.keys().then((keys) => Promise.all(
+      keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+    )).then(() => clients.claim())
+  );
 });
 
-// Push notification handler
+// Never intercept fetches. Vercel must always serve the current application bundle.
+self.addEventListener('fetch', () => {});
+
 self.addEventListener('push', (event) => {
   let data = {
     title: 'NailCost Pro',
@@ -25,52 +29,35 @@ self.addEventListener('push', (event) => {
   };
 
   if (event.data) {
-    try {
-      const payload = event.data.json();
-      data = { ...data, ...payload };
-    } catch (e) {
-      data.body = event.data.text();
-    }
+    try { data = { ...data, ...event.data.json() }; }
+    catch (e) { data.body = event.data.text(); }
   }
 
-  const options = {
+  event.waitUntil(self.registration.showNotification(data.title, {
     body: data.body,
     icon: data.icon,
     badge: data.badge,
     tag: data.tag,
     data: data.data,
     vibrate: [200, 100, 200],
-    actions: data.actions || [],
-    requireInteraction: data.requireInteraction || false
-  };
-
-  event.waitUntil(
-    self.registration.showNotification(data.title, options)
-  );
+    actions: Array.isArray(data.actions) ? data.actions : [],
+    requireInteraction: Boolean(data.requireInteraction)
+  }));
 });
 
-// Notification click handler
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-
   const urlToOpen = event.notification.data?.url || '/';
-
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // If there's already a window open, focus it
       for (const client of clientList) {
         if (client.url.includes(self.location.origin) && 'focus' in client) {
           client.focus();
-          if (urlToOpen !== '/') {
-            client.navigate(urlToOpen);
-          }
+          if (urlToOpen !== '/' && 'navigate' in client) return client.navigate(urlToOpen);
           return;
         }
       }
-      // Otherwise open a new window
-      if (clients.openWindow) {
-        return clients.openWindow(urlToOpen);
-      }
+      if (clients.openWindow) return clients.openWindow(urlToOpen);
     })
   );
 });
